@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GloveUp - Panel de control</title>
+    <link rel="icon" href="../../assets/images/logo-fondo-blanco.jpg">
+    <link rel="stylesheet" href="dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body class="home-bw with-sidebar">
+    <aside class="main-sidebar">
+        <div class="sidebar-header">
+            <img src="../../assets/images/unnamed-removebg-preview.png" alt="Logo GloveUp">
+            <span class="app-name">GloveUp</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="active">
+                    <a href="dashboard.html">
+                        <i class="fas fa-home"></i>
+                        <span>Inicio</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="../../sparring/index.html">
+                        <i class="fas fa-fist-raised"></i>
+                        <span>Buscar Sparring</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="../../gyms/index.html">
+                        <i class="fas fa-dumbbell"></i>
+                        <span>Gimnasios</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="../../profile/index.html">
+                        <i class="fas fa-user"></i>
+                        <span>Mi Perfil</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="../../profile/index.html?tab=sparrings">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Mis Sparrings</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-envelope"></i>
+                        <span>Mensajes</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button id="theme-toggle" class="sidebar-btn">
+                <i class="fas fa-moon"></i>
+                <span>Tema Oscuro</span>
+            </button>
+            <button class="sidebar-btn">
+                <i class="fas fa-cog"></i>
+                <span>Ajustes</span>
+            </button>
+            <button id="logout-button" class="sidebar-btn" style="color: #ef4444;">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <div class="dashboard-title-block">
+                <h1>Tu panel de sparring</h1>
+                <p>Resumen de tu actividad reciente y accesos rápidos.</p>
+            </div>
+            <div class="dashboard-quick-actions">
+                <a href="../../sparring/index.html" class="btn btn-primary">Buscar nuevo sparring</a>
+                <a href="../../gyms/index.html" class="btn btn-secondary">Explorar gimnasios</a>
+            </div>
+        </header>
+
+        <div id="boxer-react-root"></div>
+    </main>
+
+    <div class="chat-fab-container">
+        <button id="chat-toggle-btn" class="chat-toggle-btn">
+            <i class="fas fa-comment-dots"></i>
+        </button>
+
+        <div id="chat-box" class="chat-box hidden">
+            <div class="chat-header">
+                <h3>Chat GloveUp</h3>
+                <i id="chat-close-btn" class="fas fa-times close-icon"></i>
+            </div>
+            <div class="chat-body">
+                <p class="contacts-title">Contactos</p>
+                <ul class="contact-list">
+                    <li><i class="fas fa-user-circle"></i> Umar "Muniru"</li>
+                    <li><i class="fas fa-user-circle"></i> Alex "Sanchez"</li>
+                    <li><i class="fas fa-user-circle"></i> Iuza Gulordava. (Entrenador)</li>
+                    <li><i class="fas fa-user-circle"></i> Ibrahim "Mohamed". (Sparring)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script type="module" src="../../home/home.js"></script>
+    <script type="module" src="./dashboard.react.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeBtn = document.getElementById('theme-toggle');
+            const body = document.body;
+            const THEME_KEY = 'gloveup_theme';
+
+            const savedTheme = localStorage.getItem(THEME_KEY);
+            if (savedTheme === 'dark') {
+                body.classList.add('theme-dark');
+                updateThemeIcon(true);
+            }
+
+            if (themeBtn) {
+                themeBtn.addEventListener('click', () => {
+                    body.classList.toggle('theme-dark');
+                    const isDark = body.classList.contains('theme-dark');
+                    localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+                    updateThemeIcon(isDark);
+                });
+            }
+
+            function updateThemeIcon(isDark) {
+                const icon = themeBtn.querySelector('i');
+                const text = themeBtn.querySelector('span');
+                if (icon) {
+                    icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                }
+                if (text) {
+                    text.textContent = isDark ? 'Tema Claro' : 'Tema Oscuro';
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

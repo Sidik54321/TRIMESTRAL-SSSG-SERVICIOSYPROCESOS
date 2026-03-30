@@ -1,0 +1,80 @@
+@import url("../../home/styles.css");
+
+/* ============================================== */
+/* DASHBOARD BOXER — CLEAN B&W STYLES             */
+/* ============================================== */
+
+/* Metric cards with charts — hide bar */
+.dashboard-metrics .metric-card.has-chart .metric-bar {
+    display: none;
+}
+
+.dashboard-metrics .metric-chart {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dashboard-metrics .metric-chart canvas {
+    width: 100% !important;
+    height: 90px !important;
+    display: block;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.04));
+}
+
+
+/* Staggered card entry */
+.dashboard-metrics .metric-card:nth-child(1) { animation-delay: 100ms; }
+.dashboard-metrics .metric-card:nth-child(2) { animation-delay: 200ms; }
+.dashboard-metrics .metric-card:nth-child(3) { animation-delay: 300ms; }
+.dashboard-metrics .metric-card:nth-child(4) { animation-delay: 400ms; }
+
+/* Card top border gradients — monochrome palette */
+.dashboard-metrics .metric-card:nth-child(1)::before {
+    background: linear-gradient(90deg, #111827, #374151);
+    opacity: 1;
+}
+
+.dashboard-metrics .metric-card:nth-child(2)::before {
+    background: linear-gradient(90deg, #374151, #6b7280);
+    opacity: 1;
+}
+
+.dashboard-metrics .metric-card:nth-child(3)::before {
+    background: linear-gradient(90deg, #6b7280, #9ca3af);
+    opacity: 1;
+}
+
+.dashboard-metrics .metric-card:nth-child(4)::before {
+    background: linear-gradient(90deg, #4b5563, #9ca3af);
+    opacity: 1;
+}
+
+/* Dashboard panels stagger */
+.dashboard-grid .dashboard-panel:nth-child(1) {
+    animation-delay: 350ms;
+}
+
+.dashboard-grid .dashboard-panel:nth-child(2) {
+    animation-delay: 450ms;
+}
+
+/* Dark theme adjustments */
+body.theme-dark .dashboard-metrics .metric-card:nth-child(1)::before {
+    background: linear-gradient(90deg, #e5e7eb, #9ca3af);
+}
+
+body.theme-dark .dashboard-metrics .metric-card:nth-child(2)::before {
+    background: linear-gradient(90deg, #9ca3af, #6b7280);
+}
+
+body.theme-dark .dashboard-metrics .metric-card:nth-child(3)::before {
+    background: linear-gradient(90deg, #6b7280, #4b5563);
+}
+
+body.theme-dark .dashboard-metrics .metric-card:nth-child(4)::before {
+    background: linear-gradient(90deg, #9ca3af, #4b5563);
+}

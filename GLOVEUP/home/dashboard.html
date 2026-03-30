@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GloveUp - Inicio</title>
+    <link rel="icon" href="../assets/images/logo-fondo-blanco.jpg">
+</head>
+
+<body>
+    <script>
+        const role = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();
+        const email = (localStorage.getItem('gloveup_user_email') || '').trim().toLowerCase();
+
+        if (!email) {
+            window.location.href = '../auth/index.html';
+        } else if (role === 'entrenador') {
+            window.location.href = '../dashboard/entrenador/dashboard.html';
+        } else {
+            window.location.href = '../dashboard/boxeador/dashboard.html';
+        }
+    </script>
+</body>
+
+</html>

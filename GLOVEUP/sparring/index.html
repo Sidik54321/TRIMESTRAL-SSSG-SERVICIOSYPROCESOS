@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GloveUp - Buscar Sparrings</title>
+    <link rel="stylesheet" href="../home/styles.css">
+    <link rel="stylesheet" href="sparring.css">
+    <link rel="icon" href="../assets/images/logo-fondo-blanco.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta property="og:title" content="GloveUp - Buscar Sparrings">
+    <meta property="og:description" content="Encuentra tu compañero de sparring por nivel, peso y ubicación.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="../assets/images/Sparring_Club_Collection-Link-Image.jpg">
+</head>
+
+<body class="with-sidebar">
+    <script>
+        // Check for saved theme preference immediately to prevent flash
+        const savedTheme = localStorage.getItem('gloveup_theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('theme-dark');
+        }
+    </script>
+    <!-- SIDEBAR VERTICAL -->
+    <aside class="main-sidebar">
+        <div class="sidebar-header">
+            <img src="../assets/images/unnamed-removebg-preview.png" alt="Logo GloveUp">
+            <span class="app-name">GloveUp</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                <li>
+                    <a id="nav-home-link" href="../home/dashboard.html">
+                        <i class="fas fa-home"></i>
+                        <span>Inicio</span>
+                    </a>
+                </li>
+                <li class="active">
+                    <a href="index.html">
+                        <i class="fas fa-fist-raised"></i>
+                        <span>Buscar Sparring</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="../gyms/index.html">
+                        <i class="fas fa-dumbbell"></i>
+                        <span>Gimnasios</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="../profile/index.html">
+                        <i class="fas fa-user"></i>
+                        <span>Mi Perfil</span>
+                    </a>
+                </li>
+                <li id="nav-sparrings-item">
+                    <a href="../profile/index.html?tab=sparrings">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Mis Sparrings</span>
+                    </a>
+                </li>
+                <li id="coach-nav-item" style="display: none;">
+                    <a href="../dashboard/entrenador/dashboard.html#coach-management">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Gestión</span>
+                    </a>
+                </li>
+                <li id="coach-gym-nav-item" style="display: none;">
+                    <a href="../dashboard/entrenador/dashboard.html#coach-gym">
+                        <i class="fas fa-building"></i>
+                        <span>Mi Gimnasio</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-envelope"></i>
+                        <span>Mensajes</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button id="theme-toggle" class="sidebar-btn">
+                <i class="fas fa-moon"></i>
+                <span>Tema Oscuro</span>
+            </button>
+            <button class="sidebar-btn">
+                <i class="fas fa-cog"></i>
+                <span>Ajustes</span>
+            </button>
+            <button id="logout-btn" class="sidebar-btn" style="color: #ef4444;">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
+    </aside>
+
+    <div class="page-hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Encuentra tu compañero de Sparring</h1>
+            <p class="hero-subtitle">Filtra por nivel, peso y ubicación para encontrar el sparring ideal.</p>
+        </div>
+    </div>
+
+    <main class="sparring-main-content">
+        <h1 class="main-title">Encuentra Tu Compañero de Sparring</h1>
+
+        <section class="sparring-search-filters">
+            <div class="filter-row">
+                <select class="custom-select" id="sparring-filter-level">
+                    <option>Nivel</option>
+                    <option>Principiante</option>
+                    <option>Intermedio</option>
+                    <option>Avanzado</option>
+                    <option>Profesional</option>
+                </select>
+                <select class="custom-select">
+                    <option>Género</option>
+                    <option>Masculino</option>
+                    <option>Femenino</option>
+                    <option>Otro</option>
+                </select>
+                <select class="custom-select">
+                    <option>Frecuencia</option>
+                    <option>Diaria</option>
+                    <option>Semanal</option>
+                    <option>Mensual</option>
+                </select>
+            </div>
+            <div class="filter-row">
+                <select class="custom-select" id="sparring-filter-weight">
+                    <option>Categoría de Peso (lb)</option>
+                    <option>105 - 112 (Mosca)</option>
+                    <option>113 - 118 (Gallo)</option>
+                    <option>119 - 126 (Pluma)</option>
+                    <option>...</option>
+                </select>
+                <select class="custom-select" id="sparring-filter-location">
+                    <option>Todas las Ubicaciones</option>
+                    <option>Madrid</option>
+                    <option>Barcelona</option>
+                    <option>Valencia</option>
+                    <option>...</option>
+                </select>
+                <button class="submit-button" id="sparring-apply-filters">Buscar</button>
+            </div>
+        </section>
+
+        <section class="sparring-results">
+            <div class="results-header">
+                <div class="results-info">
+                    <span class="total-results">342 Sparrings Encontrados</span>
+                    <span class="sort-by">Ordenar por: <a href="#">Relevancia</a> <i class="fas fa-sort-down"></i></span>
+                </div>
+                <div class="pagination-top">
+                    <span class="page-number active">1</span>
+                    <a href="#" class="page-number">2</a>
+                    <a href="#" class="page-number">3</a>
+                    <span>...</span>
+                    <a href="#" class="page-number">23</a>
+                    <a href="#" class="page-number">&gt;</a>
+                </div>
+            </div>
+
+            <div class="sparring-list" id="sparring-list-container">
+                <div class="loading-spinner" style="text-align: center; padding: 40px;">
+                    <i class="fas fa-spinner fa-spin fa-3x" style="color: #000;"></i>
+                    <p style="margin-top: 15px; font-weight: 500;">Cargando sparrings...</p>
+                </div>
+            </div>
+
+            <div class="pagination-bottom">
+                <span class="page-number active">1</span>
+                <a href="#" class="page-number">2</a>
+                <a href="#" class="page-number">3</a>
+                <span>...</span>
+                <a href="#" class="page-number">23</a>
+                <a href="#" class="page-number">&gt;</a>
+            </div>
+
+        </section>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const homeLink = document.getElementById('nav-home-link');
+            const coachNavItem = document.getElementById('coach-nav-item');
+            const coachGymNavItem = document.getElementById('coach-gym-nav-item');
+            const sparringsNavItem = document.getElementById('nav-sparrings-item');
+            if (homeLink) {
+                const role = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();
+                homeLink.href = role === 'entrenador' ? '../dashboard/entrenador/dashboard.html' : '../dashboard/boxeador/dashboard.html';
+                if (coachNavItem) coachNavItem.style.display = role === 'entrenador' ? '' : 'none';
+                if (coachGymNavItem) coachGymNavItem.style.display = role === 'entrenador' ? '' : 'none';
+                if (sparringsNavItem) sparringsNavItem.style.display = role === 'entrenador' ? 'none' : '';
+            }
+
+            const sessionEmail = (localStorage.getItem('gloveup_user_email') || '').trim().toLowerCase();
+            const sessionOk =
+                sessionStorage.getItem('gloveup_session_maintained') === 'true' ||
+                localStorage.getItem('gloveup_session_maintained') === 'true';
+            if (!sessionEmail || !sessionOk) {
+                window.location.href = '../auth/index.html?from=sparring';
+                return;
+            }
+
+            // Theme Toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            const body = document.body;
+            const THEME_KEY = 'gloveup_theme';
+
+            // Check saved theme
+            const savedTheme = localStorage.getItem(THEME_KEY);
+            if (savedTheme === 'dark') {
+                body.classList.add('theme-dark');
+                updateThemeIcon(true);
+            }
+
+            if (themeBtn) {
+                themeBtn.addEventListener('click', () => {
+                    body.classList.toggle('theme-dark');
+                    const isDark = body.classList.contains('theme-dark');
+                    localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+                    updateThemeIcon(isDark);
+                });
+            }
+
+            function updateThemeIcon(isDark) {
+                const icon = themeBtn.querySelector('i');
+                const text = themeBtn.querySelector('span');
+                if (icon) {
+                    icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                }
+                if (text) {
+                    text.textContent = isDark ? 'Tema Claro' : 'Tema Oscuro';
+                }
+            }
+
+            // Logout Logic
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    localStorage.removeItem('gloveup_user_name');
+                    localStorage.removeItem('gloveup_user_email');
+                    localStorage.removeItem('gloveup_session_maintained');
+                    localStorage.removeItem('gloveup_is_registered');
+                    localStorage.removeItem('gloveup_user_role');
+                    localStorage.removeItem('gloveup_user_dni');
+                    sessionStorage.removeItem('gloveup_session_maintained');
+                    sessionStorage.removeItem('gloveup_user_id');
+                    window.location.href = '../auth/index.html';
+                });
+            }
+        });
+    </script>
+
+    <dialog class="modal" id="challenge-modal">
+        <form method="dialog" class="modal-card" id="challenge-form">
+            <div class="modal-header">
+                <h3 id="challenge-title">Retar a sparring</h3>
+                <button class="icon-btn" value="cancel" aria-label="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="field">
+                    <label>Descripción</label>
+                    <select id="challenge-preset" required>
+                        <option value="">Selecciona</option>
+                        <option value="Sparring técnico (ligero)">Sparring técnico (ligero)</option>
+                        <option value="Sparring medio (ritmo constante)">Sparring medio (ritmo constante)</option>
+                        <option value="Sparring duro (intenso)">Sparring duro (intenso)</option>
+                        <option value="Trabajo de distancia y jab">Trabajo de distancia y jab</option>
+                        <option value="Trabajo de defensa y contra">Trabajo de defensa y contra</option>
+                        <option value="Preparación para combate">Preparación para combate</option>
+                    </select>
+                </div>
+                <div class="field field-full">
+                    <label>Entrenador(es) supervisor(es)</label>
+                    <select id="challenge-coaches" multiple required></select>
+                </div>
+                <div class="field field-full">
+                    <label>Gimnasio</label>
+                    <select id="challenge-gym" required></select>
+                </div>
+                <div class="field field-full">
+                    <label>Fecha y hora</label>
+                    <input id="challenge-datetime" type="text" inputmode="none" readonly placeholder="Selecciona fecha y hora" required>
+                </div>
+                <div class="field">
+                    <label>Nota (opcional)</label>
+                    <textarea id="challenge-note" rows="3" placeholder="Horario, objetivo, reglas, protecciones..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" value="cancel" type="button" id="btn-challenge-cancel">Cancelar</button>
+                <button class="btn btn-primary" value="default" type="submit">Enviar reto</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog class="dt-overlay" id="dt-overlay" aria-label="Seleccionar fecha y hora">
+        <div class="dt-panel">
+            <div class="dt-header">
+                <button type="button" class="dt-nav" id="dt-prev" aria-label="Mes anterior">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="dt-title" id="dt-title"></div>
+                <button type="button" class="dt-nav" id="dt-next" aria-label="Mes siguiente">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            <div class="dt-weekdays" id="dt-weekdays"></div>
+            <div class="dt-grid" id="dt-grid"></div>
+            <div class="dt-time">
+                <div class="dt-time-label">Hora</div>
+                <div class="dt-time-controls">
+                    <select id="dt-hour" aria-label="Hora"></select>
+                    <span class="dt-time-sep">:</span>
+                    <select id="dt-minute" aria-label="Minutos"></select>
+                </div>
+            </div>
+            <div class="dt-actions">
+                <button type="button" class="dt-btn dt-btn-ghost" id="dt-today">Hoy</button>
+                <div class="dt-actions-right">
+                    <button type="button" class="dt-btn dt-btn-ghost" id="dt-cancel">Cancelar</button>
+                    <button type="button" class="dt-btn dt-btn-primary" id="dt-apply">Aplicar</button>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const listContainer = document.getElementById('sparring-list-container');
+            const totalResultsElement = document.querySelector('.total-results');
+            const paginationTop = document.querySelector('.pagination-top');
+            const paginationBottom = document.querySelector('.pagination-bottom');
+            const PAGE_SIZE = 10;
+            const API_BASE_URL = (window.localStorage.getItem('gloveup_api_base_url') || 'http://localhost:3000').replace(/\/+$/, '');
+            const SPARRING_STATE_KEY = 'gloveup_sparring_state';
+            let allBoxeadores = [];
+            let filteredBoxeadores = [];
+            let currentPage = 1;
+            const isCoachRole = (localStorage.getItem('gloveup_user_role') || '').toString().trim().toLowerCase() === 'entrenador';
+            const getEmail = () => (localStorage.getItem('gloveup_user_email') || '').toString().trim().toLowerCase();
+            const challengeModal = document.getElementById('challenge-modal');
+            const challengeTitle = document.getElementById('challenge-title');
+            const challengePreset = document.getElementById('challenge-preset');
+            const challengeCoaches = document.getElementById('challenge-coaches');
+            const challengeGym = document.getElementById('challenge-gym');
+            const challengeDatetime = document.getElementById('challenge-datetime');
+            const challengeNote = document.getElementById('challenge-note');
+            const challengeForm = document.getElementById('challenge-form');
+            const challengeCancel = document.getElementById('btn-challenge-cancel');
+            let challengeTargetIdentifier = '';
+            let coachesCache = [];
+            const dtOverlay = document.getElementById('dt-overlay');
+            const dtPrev = document.getElementById('dt-prev');
+            const dtNext = document.getElementById('dt-next');
+            const dtTitle = document.getElementById('dt-title');
+            const dtWeekdays = document.getElementById('dt-weekdays');
+            const dtGrid = document.getElementById('dt-grid');
+            const dtHour = document.getElementById('dt-hour');
+            const dtMinute = document.getElementById('dt-minute');
+            const dtToday = document.getElementById('dt-today');
+            const dtCancel = document.getElementById('dt-cancel');
+            const dtApply = document.getElementById('dt-apply');
+            let dtViewYear = 0;
+            let dtViewMonth = 0;
+            let dtSelected = null;
+            const filterLevelEl = document.getElementById('sparring-filter-level');
+            const filterWeightEl = document.getElementById('sparring-filter-weight');
+            const filterLocationEl = document.getElementById('sparring-filter-location');
+            const applyFiltersBtn = document.getElementById('sparring-apply-filters');
+            const savedState = (() => {
+                try {
+                    const raw = sessionStorage.getItem(SPARRING_STATE_KEY);
+                    if (!raw) return null;
+                    const parsed = JSON.parse(raw);
+                    if (!parsed || typeof parsed !== 'object') return null;
+                    return parsed;
+                } catch {
+                    return null;
+                }
+            })();
+
+            const gymsList = [
+                'Amado Family Boxeo',
+                'Club Boxeo Sanapa',
+                'Club Boxeo Sedaví',
+                'Morales Box Valencia',
+                'Escuela de Boxeo Tsubox',
+                'Deportivo Shaolin',
+                'Brooklyn Fitboxing Mestalla',
+                'Brooklyn Fitboxing Abastos',
+                'Brooklyn Fitboxing Ruzafa',
+                'The Boxer Club Arena',
+                'Club Boxeo Monteolivete',
+                'Training Unit',
+                'Boxing Unitres',
+                'Gimnasio Do Chang',
+                'Cosmobox'
+            ];
+
+            const pad2 = (n) => String(n).padStart(2, '0');
+
+            const formatDisplayDateTime = (iso) => {
+                if (!iso) return '';
+                const dt = new Date(iso);
+                if (Number.isNaN(dt.getTime())) return '';
+                const dd = pad2(dt.getDate());
+                const mm = pad2(dt.getMonth() + 1);
+                const yyyy = dt.getFullYear();
+                const hh = pad2(dt.getHours());
+                const min = pad2(dt.getMinutes());
+                return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+            };
+
+            const buildTimeOptions = () => {
+                if (dtHour && !dtHour.dataset.ready) {
+                    dtHour.innerHTML = Array.from({
+                        length: 24
+                    }).map((_, h) => `<option value="${h}">${pad2(h)}</option>`).join('');
+                    dtHour.dataset.ready = '1';
+                }
+                if (dtMinute && !dtMinute.dataset.ready) {
+                    const mins = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+                    dtMinute.innerHTML = mins.map((m) => `<option value="${m}">${pad2(m)}</option>`).join('');
+                    dtMinute.dataset.ready = '1';
+                }
+            };
+
+            const openDateTimePicker = () => {
+                if (!dtOverlay || !challengeDatetime) return;
+                buildTimeOptions();
+                const currentIso = challengeDatetime.dataset && challengeDatetime.dataset.iso ? String(challengeDatetime.dataset.iso) : '';
+                const base = currentIso ? new Date(currentIso) : new Date();
+                const dt = Number.isNaN(base.getTime()) ? new Date() : base;
+                dtSelected = new Date(dt.getTime());
+                dtViewYear = dtSelected.getFullYear();
+                dtViewMonth = dtSelected.getMonth();
+                if (dtHour) dtHour.value = String(dtSelected.getHours());
+                if (dtMinute) dtMinute.value = String(Math.floor(dtSelected.getMinutes() / 5) * 5);
+                renderDateTimePicker();
+                dtOverlay.showModal();
+            };
+
+            const closeDateTimePicker = () => {
+                if (!dtOverlay) return;
+                dtOverlay.close();
+            };
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key !== 'Escape') return;
+                if (!dtOverlay || !dtOverlay.open) return;
+                e.preventDefault();
+                closeDateTimePicker();
+            });
+
+            const monthName = (m) => ([
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ])[m] || '';
+
+            const sameDay = (a, b) => a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+            const renderDateTimePicker = () => {
+                if (!dtTitle || !dtWeekdays || !dtGrid) return;
+                dtTitle.textContent = `${monthName(dtViewMonth)} ${dtViewYear}`;
+                dtWeekdays.innerHTML = ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((d) => `<div class="dt-weekday">${d}</div>`).join('');
+
+                const first = new Date(dtViewYear, dtViewMonth, 1);
+                const startDay = (first.getDay() + 6) % 7;
+                const daysInMonth = new Date(dtViewYear, dtViewMonth + 1, 0).getDate();
+                const today = new Date();
+
+                const cells = [];
+                for (let i = 0; i < startDay; i += 1) cells.push({
+                    empty: true
+                });
+                for (let d = 1; d <= daysInMonth; d += 1) cells.push({
+                    day: d
+                });
+                while (cells.length % 7 !== 0) cells.push({
+                    empty: true
+                });
+
+                dtGrid.innerHTML = cells.map((c) => {
+                    if (c.empty) return '<div class="dt-cell dt-cell-empty"></div>';
+                    const date = new Date(dtViewYear, dtViewMonth, c.day);
+                    const isToday = sameDay(date, today);
+                    const isSelected = dtSelected && sameDay(date, dtSelected);
+                    const cls = ['dt-cell', isToday ? 'today' : '', isSelected ? 'selected' : ''].filter(Boolean).join(' ');
+                    return `<button type="button" class="${cls}" data-day="${c.day}">${c.day}</button>`;
+                }).join('');
+            };
+
+            const ensureGymOptions = () => {
+                if (!challengeGym) return;
+                if (challengeGym.dataset && challengeGym.dataset.ready === '1') return;
+                challengeGym.innerHTML = [
+                    '<option value="">Selecciona</option>',
+                    ...gymsList.map((name) => `<option value="${encodeURIComponent(name)}">${name}</option>`)
+                ].join('');
+                if (challengeGym.dataset) challengeGym.dataset.ready = '1';
+            };
+
+            const loadCoaches = async () => {
+                if (coachesCache.length) return coachesCache;
+                const res = await fetch(`${API_BASE_URL}/api/entrenadores`);
+                const data = await res.json().catch(() => []);
+                if (!res.ok) throw new Error((data && data.error) || 'No se pudieron cargar entrenadores');
+                coachesCache = Array.isArray(data) ? data : [];
+                coachesCache.sort((a, b) => String(a && a.nombre ? a.nombre : '').localeCompare(String(b && b.nombre ? b.nombre : '')));
+                return coachesCache;
+            };
+
+            const ensureCoachOptions = async () => {
+                if (!challengeCoaches) return;
+                try {
+                    const coaches = await loadCoaches();
+                    const options = ['<option value="" disabled>Selecciona (puedes elegir varios)</option>']
+                        .concat(coaches.map((c) => {
+                            const id = c && c._id ? String(c._id) : '';
+                            const name = c && c.nombre ? String(c.nombre) : 'Entrenador';
+                            const gym = c && c.gimnasio ? ` · ${String(c.gimnasio)}` : '';
+                            return `<option value="${encodeURIComponent(id)}">${name}${gym}</option>`;
+                        }));
+                    challengeCoaches.innerHTML = options.join('');
+                } catch (err) {
+                    challengeCoaches.innerHTML = '<option value="" disabled>No se pudieron cargar entrenadores</option>';
+                }
+            };
+
+            const applyFilters = () => {
+                const level = filterLevelEl ? String(filterLevelEl.value || '') : '';
+                const weight = filterWeightEl ? String(filterWeightEl.value || '') : '';
+                const location = filterLocationEl ? String(filterLocationEl.value || '') : '';
+
+                const wantsLevel = level && level !== 'Nivel';
+                const wantsWeight = weight && !weight.startsWith('Categoría') && weight !== '...';
+                const wantsLocation = location && !location.startsWith('Todas') && location !== '...';
+
+                const weightToken = wantsWeight ? weight.split('(')[0].trim() : '';
+                const locToken = wantsLocation ? location.trim().toLowerCase() : '';
+
+                filteredBoxeadores = allBoxeadores.filter((b) => {
+                    if (wantsLevel && String(b && b.nivel ? b.nivel : '') !== level) return false;
+                    if (wantsWeight) {
+                        const peso = String(b && b.peso ? b.peso : '');
+                        if (weightToken && !peso.includes(weightToken) && !peso.includes(weight)) return false;
+                    }
+                    if (wantsLocation) {
+                        const ubic = String(b && b.ubicacion ? b.ubicacion : '').toLowerCase();
+                        if (!ubic.includes(locToken)) return false;
+                    }
+                    return true;
+                });
+            };
+
+            const renderPagination = (container, page, totalPages) => {
+                if (!container) return;
+                container.innerHTML = '';
+                if (totalPages <= 1) return;
+
+                const addPage = (p, label = null, active = false, disabled = false) => {
+                    if (active || disabled) {
+                        const el = document.createElement('span');
+                        el.className = active ? 'page-number active' : 'page-number';
+                        el.textContent = label || String(p);
+                        if (disabled) el.style.opacity = '0.4';
+                        container.appendChild(el);
+                        return;
+                    }
+                    const el = document.createElement('a');
+                    el.href = '#';
+                    el.className = 'page-number';
+                    el.dataset.page = String(p);
+                    el.textContent = label || String(p);
+                    container.appendChild(el);
+                };
+
+                const addEllipsis = () => {
+                    const el = document.createElement('span');
+                    el.textContent = '...';
+                    container.appendChild(el);
+                };
+
+                const prev = Math.max(1, page - 1);
+                const next = Math.min(totalPages, page + 1);
+                addPage(prev, '<', false, page === 1);
+
+                if (totalPages <= 7) {
+                    for (let p = 1; p <= totalPages; p += 1) {
+                        addPage(p, null, p === page);
+                    }
+                } else {
+                    addPage(1, null, page === 1);
+                    const left = Math.max(2, page - 1);
+                    const right = Math.min(totalPages - 1, page + 1);
+                    if (left > 2) addEllipsis();
+                    for (let p = left; p <= right; p += 1) {
+                        addPage(p, null, p === page);
+                    }
+                    if (right < totalPages - 1) addEllipsis();
+                    addPage(totalPages, null, page === totalPages);
+                }
+
+                addPage(next, '>', false, page === totalPages);
+            };
+
+            const renderList = (page) => {
+                const totalPages = Math.max(1, Math.ceil(filteredBoxeadores.length / PAGE_SIZE));
+                const safePage = Math.min(Math.max(1, page), totalPages);
+                currentPage = safePage;
+
+                if (totalResultsElement) {
+                    totalResultsElement.textContent = `${filteredBoxeadores.length} Sparrings Encontrados`;
+                }
+
+                listContainer.innerHTML = '';
+
+                if (filteredBoxeadores.length === 0) {
+                    listContainer.innerHTML = '<p style="text-align:center; padding: 20px;">No se encontraron sparrings.</p>';
+                    if (paginationTop) paginationTop.innerHTML = '';
+                    if (paginationBottom) paginationBottom.innerHTML = '';
+                    return;
+                }
+
+                const start = (safePage - 1) * PAGE_SIZE;
+                const pageItems = filteredBoxeadores.slice(start, start + PAGE_SIZE);
+
+                pageItems.forEach((boxeador, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'sparring-card';
+
+                    let starsHtml = '';
+                    let starCount = 2;
+                    if (boxeador.nivel === 'Profesional') starCount = 5;
+                    else if (boxeador.nivel === 'Avanzado') starCount = 4;
+                    else if (boxeador.nivel === 'Intermedio') starCount = 3;
+                    else if (boxeador.nivel === 'Principiante') starCount = 1;
+
+                    for (let i = 0; i < 5; i++) {
+                        if (i < starCount) starsHtml += '<i class="fas fa-star filled"></i>';
+                        else starsHtml += '<i class="far fa-star"></i>';
+                    }
+
+                    let imgHtml = `<i class="fas fa-user-circle" style="font-size: 2em; color: #ccc;"></i>`;
+                    if (boxeador.foto) {
+                        const imgSrc = boxeador.foto.startsWith('/') ? '..' + boxeador.foto : boxeador.foto;
+                        imgHtml = `<img src="${imgSrc}" alt="${boxeador.nombre}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">`;
+                    }
+
+                    const globalIndex = start + index + 1;
+                    const identifierRaw = (boxeador && (boxeador.email || boxeador.dniLicencia) ? (boxeador.email || boxeador.dniLicencia) : '').toString().trim();
+                    const identifierEnc = identifierRaw ? encodeURIComponent(identifierRaw) : '';
+                    const canViewProfile = Boolean(identifierRaw);
+                    const canChallenge = canViewProfile && !isCoachRole;
+                    const nameEnc = boxeador && boxeador.nombre ? encodeURIComponent(String(boxeador.nombre)) : '';
+                    card.innerHTML = `
+                        <div class="card-rank"><span>#${globalIndex}</span>${globalIndex === 1 ? '<i class="fas fa-crown"></i>' : ''}</div>
+                        <div class="card-flag">${imgHtml}</div>
+                        <div class="card-name">
+                            <span class="main-name">${boxeador.nombre}</span>
+                            <span class="alias">${boxeador.alias ? '@' + boxeador.alias.replace(/\\s+/g, '').toLowerCase() : ''}</span>
+                        </div>
+                        <div class="card-stars">
+                            ${starsHtml}
+                        </div>
+                        <div class="card-division">${boxeador.peso || 'Peso no especificado'}</div>
+                        <div class="card-record">${boxeador.record || '0-0-0'}</div>
+                        <div class="card-residence">
+                            <i class="fas fa-map-marker-alt"></i> ${boxeador.ubicacion || 'Ubicación desconocida'}
+                        </div>
+                        <div class="card-action">
+                            <button class="view-profile-button" ${canViewProfile ? `data-identifier-enc="${identifierEnc}"` : 'disabled'}>${canViewProfile ? 'Ver Perfil' : 'Sin perfil'}</button>
+                            <button class="challenge-button" ${canChallenge ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>Retar</button>
+                        </div>
+                    `;
+
+                    listContainer.appendChild(card);
+                });
+
+                renderPagination(paginationTop, safePage, totalPages);
+                renderPagination(paginationBottom, safePage, totalPages);
+            };
+
+            if (listContainer) {
+                listContainer.addEventListener('click', async (e) => {
+                    const viewBtn = e.target && e.target.closest ? e.target.closest('.view-profile-button') : null;
+                    if (viewBtn) {
+                        const identifierEnc = viewBtn.dataset && viewBtn.dataset.identifierEnc ? String(viewBtn.dataset.identifierEnc) : '';
+                        if (!identifierEnc) return;
+                        e.preventDefault();
+                        sessionStorage.setItem(SPARRING_STATE_KEY, JSON.stringify({
+                            page: currentPage,
+                            level: filterLevelEl ? String(filterLevelEl.value || '') : '',
+                            weight: filterWeightEl ? String(filterWeightEl.value || '') : '',
+                            location: filterLocationEl ? String(filterLocationEl.value || '') : ''
+                        }));
+                        window.location.href = `../profile/index.html?view=${identifierEnc}&from=sparring`;
+                        return;
+                    }
+                    const challengeBtn = e.target && e.target.closest ? e.target.closest('.challenge-button') : null;
+                    if (!challengeBtn || !challengeModal) return;
+                    const identifierEnc = challengeBtn.dataset && challengeBtn.dataset.identifierEnc ? String(challengeBtn.dataset.identifierEnc) : '';
+                    const nameEnc = challengeBtn.dataset && challengeBtn.dataset.nameEnc ? String(challengeBtn.dataset.nameEnc) : '';
+                    const identifier = identifierEnc ? decodeURIComponent(identifierEnc) : '';
+                    const name = nameEnc ? decodeURIComponent(nameEnc) : '';
+                    if (!identifier) return;
+                    challengeTargetIdentifier = identifier;
+                    if (challengeTitle) challengeTitle.textContent = name ? `Retar a ${name}` : 'Retar a sparring';
+                    if (challengePreset) challengePreset.value = '';
+                    ensureGymOptions();
+                    if (challengeGym) challengeGym.value = '';
+                    if (challengeDatetime) challengeDatetime.value = '';
+                    if (challengeNote) challengeNote.value = '';
+                    if (challengeDatetime && challengeDatetime.dataset) {
+                        challengeDatetime.dataset.iso = '';
+                    }
+                    if (challengeCoaches) {
+                        Array.from(challengeCoaches.options || []).forEach((opt) => {
+                            opt.selected = false;
+                        });
+                        await ensureCoachOptions();
+                    }
+                    challengeModal.showModal();
+                });
+            }
+
+            if (challengeCancel && challengeModal) {
+                challengeCancel.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    challengeModal.close();
+                });
+            }
+
+            if (challengeDatetime) {
+                challengeDatetime.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openDateTimePicker();
+                });
+                challengeDatetime.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openDateTimePicker();
+                    }
+                });
+            }
+
+            if (dtOverlay) dtOverlay.addEventListener('click', (e) => { if (e.target === dtOverlay) closeDateTimePicker(); });
+            if (dtCancel) dtCancel.addEventListener('click', closeDateTimePicker);
+            if (dtPrev) dtPrev.addEventListener('click', () => {
+                dtViewMonth -= 1;
+                if (dtViewMonth < 0) {
+                    dtViewMonth = 11;
+                    dtViewYear -= 1;
+                }
+                renderDateTimePicker();
+            });
+            if (dtNext) dtNext.addEventListener('click', () => {
+                dtViewMonth += 1;
+                if (dtViewMonth > 11) {
+                    dtViewMonth = 0;
+                    dtViewYear += 1;
+                }
+                renderDateTimePicker();
+            });
+            if (dtToday) dtToday.addEventListener('click', () => {
+                const now = new Date();
+                dtViewYear = now.getFullYear();
+                dtViewMonth = now.getMonth();
+                dtSelected = new Date(now.getTime());
+                if (dtHour) dtHour.value = String(now.getHours());
+                if (dtMinute) dtMinute.value = String(Math.floor(now.getMinutes() / 5) * 5);
+                renderDateTimePicker();
+            });
+            if (dtGrid) {
+                dtGrid.addEventListener('click', (e) => {
+                    const btn = e.target && e.target.closest ? e.target.closest('[data-day]') : null;
+                    if (!btn) return;
+                    const day = Number(btn.getAttribute('data-day'));
+                    if (!Number.isFinite(day)) return;
+                    const base = dtSelected && !Number.isNaN(dtSelected.getTime()) ? dtSelected : new Date();
+                    const next = new Date(dtViewYear, dtViewMonth, day, base.getHours(), base.getMinutes(), 0, 0);
+                    dtSelected = next;
+                    renderDateTimePicker();
+                });
+            }
+            if (dtHour) dtHour.addEventListener('change', () => {
+                if (!dtSelected) dtSelected = new Date(dtViewYear, dtViewMonth, 1, 0, 0, 0, 0);
+                dtSelected.setHours(Number(dtHour.value || 0));
+            });
+            if (dtMinute) dtMinute.addEventListener('change', () => {
+                if (!dtSelected) dtSelected = new Date(dtViewYear, dtViewMonth, 1, 0, 0, 0, 0);
+                dtSelected.setMinutes(Number(dtMinute.value || 0));
+            });
+            if (dtApply) dtApply.addEventListener('click', () => {
+                if (!challengeDatetime) return;
+                if (!dtSelected || Number.isNaN(dtSelected.getTime())) {
+                    alert('Selecciona una fecha');
+                    return;
+                }
+                const hour = dtHour ? Number(dtHour.value || 0) : dtSelected.getHours();
+                const minute = dtMinute ? Number(dtMinute.value || 0) : dtSelected.getMinutes();
+                const applied = new Date(dtSelected.getFullYear(), dtSelected.getMonth(), dtSelected.getDate(), hour, minute, 0, 0);
+                const iso = applied.toISOString();
+                if (challengeDatetime.dataset) challengeDatetime.dataset.iso = iso;
+                challengeDatetime.value = formatDisplayDateTime(iso);
+                closeDateTimePicker();
+            });
+
+            if (challengeForm) {
+                challengeForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    if (!challengeTargetIdentifier) return;
+                    const fromEmail = getEmail();
+                    if (!fromEmail) {
+                        window.location.href = '../auth/index.html?from=sparring';
+                        return;
+                    }
+                    const preset = (challengePreset && challengePreset.value ? String(challengePreset.value) : '').trim();
+                    const note = (challengeNote && challengeNote.value ? String(challengeNote.value) : '').trim();
+                    const gymNameEnc = challengeGym && challengeGym.value ? String(challengeGym.value) : '';
+                    const gymName = gymNameEnc ? decodeURIComponent(gymNameEnc) : '';
+                    const scheduledAt = challengeDatetime && challengeDatetime.dataset && challengeDatetime.dataset.iso ? String(challengeDatetime.dataset.iso) : '';
+                    const coachIds = challengeCoaches ? Array.from(challengeCoaches.selectedOptions || []).map((o) => decodeURIComponent(String(o.value || ''))).filter(Boolean) : [];
+                    if (!preset) {
+                        alert('Selecciona una descripción');
+                        return;
+                    }
+                    if (!coachIds.length) {
+                        alert('Selecciona al menos un entrenador');
+                        return;
+                    }
+                    if (!gymName) {
+                        alert('Selecciona un gimnasio');
+                        return;
+                    }
+                    if (!scheduledAt || Number.isNaN(new Date(scheduledAt).getTime())) {
+                        alert('Selecciona una fecha y hora');
+                        return;
+                    }
+                    try {
+                        const res = await fetch(`${API_BASE_URL}/api/boxeadores/challenges`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                fromEmail,
+                                toIdentifier: challengeTargetIdentifier,
+                                preset,
+                                note,
+                                coachIds,
+                                gymName,
+                                scheduledAt
+                            })
+                        });
+                        const data = await res.json().catch(() => ({}));
+                        if (!res.ok) {
+                            throw new Error((data && data.error) || 'No se pudo enviar el reto');
+                        }
+                        if (challengeModal) challengeModal.close();
+                        alert('Reto enviado.');
+                    } catch (err) {
+                        alert(err.message || 'No se pudo enviar el reto');
+                    }
+                });
+            }
+
+            const onPaginationClick = (e) => {
+                const target = e.target;
+                if (!target || !target.classList || !target.classList.contains('page-number')) return;
+                const pageStr = target.dataset && target.dataset.page ? String(target.dataset.page) : '';
+                if (!pageStr) return;
+                e.preventDefault();
+                const nextPage = Number(pageStr);
+                if (!Number.isFinite(nextPage)) return;
+                renderList(nextPage);
+            };
+
+            if (paginationTop) paginationTop.addEventListener('click', onPaginationClick);
+            if (paginationBottom) paginationBottom.addEventListener('click', onPaginationClick);
+            if (applyFiltersBtn) {
+                applyFiltersBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    applyFilters();
+                    renderList(1);
+                });
+            }
+            if (filterLevelEl) {
+                filterLevelEl.addEventListener('change', () => {
+                    applyFilters();
+                    renderList(1);
+                });
+            }
+            if (filterWeightEl) {
+                filterWeightEl.addEventListener('change', () => {
+                    applyFilters();
+                    renderList(1);
+                });
+            }
+            if (filterLocationEl) {
+                filterLocationEl.addEventListener('change', () => {
+                    applyFilters();
+                    renderList(1);
+                });
+            }
+
+            try {
+                // Fetch de la API
+                const response = await fetch(`${API_BASE_URL}/api/boxeadores`);
+
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+
+                allBoxeadores = await response.json();
+                filteredBoxeadores = Array.isArray(allBoxeadores) ? allBoxeadores.slice() : [];
+                if (savedState) {
+                    if (filterLevelEl && typeof savedState.level === 'string') filterLevelEl.value = savedState.level;
+                    if (filterWeightEl && typeof savedState.weight === 'string') filterWeightEl.value = savedState.weight;
+                    if (filterLocationEl && typeof savedState.location === 'string') filterLocationEl.value = savedState.location;
+                    if (typeof savedState.page === 'number' && Number.isFinite(savedState.page)) currentPage = savedState.page;
+                    sessionStorage.removeItem(SPARRING_STATE_KEY);
+                }
+                applyFilters();
+                renderList(currentPage);
+
+            } catch (error) {
+                console.error('Error cargando boxeadores:', error);
+                listContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <i class="fas fa-exclamation-circle fa-2x" style="margin-bottom: 10px; color: #d9534f;"></i>
+                        <p>No se pudieron cargar los sparrings.</p>
+                        <p style="font-size: 0.9em;">Asegúrate de que el servidor esté corriendo (npm start en /server) y la base de datos esté sembrada.</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+
+</html>

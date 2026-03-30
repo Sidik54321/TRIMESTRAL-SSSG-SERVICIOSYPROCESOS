@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GloveUp - Acceso</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="icon" href="../assets/images/logo-fondo-blanco.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+
+    <header class="main-header">
+        <div class="header-logo">
+            <img src="../assets/images/unnamed-removebg-preview.png" alt="GloveUp Logo">
+            <span class="app-name">GloveUp</span>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="../home/home.html">Inicio</a></li>
+                <li><a href="../sparring/index.html">Buscar Sparrings</a></li>
+                <li><a href="../gyms/index.html">Gimnasios</a></li>
+                <li><a href="../profile/index.html">Mi Perfil</a></li>
+                <li><a href="#">Mensajes</a></li>
+            </ul>
+        </nav>
+        <div class="header-icon">
+            <i class="fas fa-bell"></i>
+        </div>
+    </header>
+
+    <video autoplay muted loop poster="../assets/videos/4761706-uhd_4096_2160_25fps.mp4" class="video-background">
+        <source src="../assets/videos/4761706-uhd_4096_2160_25fps.mp4" type="video/mp4">
+        <source src="../assets/videos/videoplayback.webm" type="video/webm">
+    </video>
+
+    <div class="overlay"></div>
+
+    <div class="auth-container">
+        <aside class="promo-panel">
+            <div class="promo-header">
+                <img src="../assets/images/unnamed-removebg-preview.png" alt="GloveUp" class="promo-logo">
+                <span class="promo-brand">GloveUp</span>
+            </div>
+            <h1 class="promo-title">Entrena, conecta y compite</h1>
+            <p class="promo-subtitle">Únete a la comunidad de deportes de combate y encuentra tu próximo sparring.</p>
+            <ul class="promo-list">
+                <li><i class="fas fa-search"></i> Busca sparrings por nivel y ubicación</li>
+                <li><i class="fas fa-dumbbell"></i> Descubre gimnasios en tu zona</li>
+                <li><i class="fas fa-comments"></i> Mensajes directos y coordinación</li>
+                <li><i class="fas fa-trophy"></i> Sigue tu progreso y logros</li>
+            </ul>
+            <div class="promo-cta">
+                <a href="../home/home.html"><i class="fas fa-home"></i> Inicio</a>
+                <a href="../gyms/index.html"><i class="fas fa-map-marker-alt"></i> Gimnasios</a>
+            </div>
+        </aside>
+
+        <div class="login-wrap">
+            <div class="logo-container">
+                <img src="../assets/images/unnamed-removebg-preview.png" alt="GloveUp Logo" class="app-logo">
+            </div>
+
+            <div class="login-html">
+                <div id="redirect-info" class="info-banner" style="display: none;"></div>
+                <input id="tab-1" type="radio" name="tab" class="sign-in"><label for="tab-1" class="tab">Iniciar Sesión</label>
+                <input id="tab-2" type="radio" name="tab" class="sign-up"><label for="tab-2" class="tab">Registrarse</label>
+
+                <div class="login-form">
+
+                    <div class="sign-in-htm">
+                        <h2 class="auth-title">LOGIN</h2>
+                        <div id="signin-error-message" class="error-message" style="display: none;"></div>
+                        <form id="signin-form">
+                            <div class="group">
+                                <label for="user_signin" class="label"> <i class="fas fa-user icon-prefix"></i> Email/Usuario</label>
+                                <input id="user_signin" type="text" class="input" required>
+                            </div>
+                            <div class="group">
+                                <label for="pass_signin" class="label"> <i class="fas fa-lock icon-prefix"></i> Contraseña</label>
+                                <input id="pass_signin" type="password" class="input" data-type="password" required>
+                            </div>
+                            <div class="group">
+                                <input id="check" type="checkbox" class="check" checked>
+                                <label for="check"><span class="icon"></span> Mantener sesión</label>
+                            </div>
+                            <div class="group">
+                                <input type="submit" class="button" value="Iniciar Sesión">
+                            </div>
+                            <div class="hr"></div>
+                            <div class="foot-lnk">
+                                <a id="forgot-password-link" href="#forgot">¿Olvidaste tu Contraseña?</a>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="sign-up-htm">
+                        <h2 class="auth-title">REGISTRO</h2>
+                        <div id="signup-error-message" class="error-message" style="display: none;"></div>
+                        <form id="signup-form">
+                            <div class="group">
+                                <label for="name_signup" class="label"> <i class="fas fa-user icon-prefix"></i> Nombre Completo</label>
+                                <input id="name_signup" type="text" class="input" required>
+                            </div>
+                            <div class="group">
+                                <label for="email_signup" class="label"> <i class="fas fa-envelope icon-prefix"></i> Email</label>
+                                <input id="email_signup" type="email" class="input" required>
+                            </div>
+                            <div class="group">
+                                <label for="account_type_signup" class="label"> <i class="fas fa-id-badge icon-prefix"></i> Tipo de cuenta</label>
+                                <select id="account_type_signup" class="input">
+                                    <option value="boxeador" selected>Boxeador</option>
+                                    <option value="entrenador">Entrenador</option>
+                                </select>
+                            </div>
+                            <div class="group">
+                                <label for="dni_signup" class="label"> <i class="fas fa-address-card icon-prefix"></i> DNI / Licencia</label>
+                                <input id="dni_signup" type="text" class="input" required>
+                            </div>
+                            <div class="group">
+                                <label for="pass_signup" class="label"> <i class="fas fa-lock icon-prefix"></i> Contraseña</label>
+                                <input id="pass_signup" type="password" class="input" data-type="password" required>
+                            </div>
+                            <div class="group">
+                                <label for="pass_repeat_signup" class="label"> <i class="fas fa-lock icon-prefix"></i> Repetir Contraseña</label>
+                                <input id="pass_repeat_signup" type="password" class="input" data-type="password" required>
+                            </div>
+
+                            <div class="group" id="level_signup_group">
+                                <label for="level_signup" class="label"> <i class="fas fa-medal icon-prefix"></i> Nivel de Experiencia</label>
+                                <select id="level_signup" class="input">
+                                    <option value="Amateur">Amateur</option>
+                                    <option value="Profesional">Profesional</option>
+                                    <option value="Principiante">Principiante</option>
+                                    <option value="Intermedio">Intermedio</option>
+                                    <option value="Avanzado">Avanzado</option>
+                                </select>
+                            </div>
+                            <div class="group" id="coach_gym_group" style="display: none;">
+                                <label for="coach_gym_signup" class="label"> <i class="fas fa-dumbbell icon-prefix"></i> Gimnasio</label>
+                                <input id="coach_gym_signup" type="text" class="input">
+                            </div>
+                            <div class="group" id="coach_specialty_group" style="display: none;">
+                                <label for="coach_specialty_signup" class="label"> <i class="fas fa-chalkboard-teacher icon-prefix"></i> Especialidad</label>
+                                <input id="coach_specialty_signup" type="text" class="input" value="Boxeo">
+                            </div>
+
+                            <div class="group">
+                                <input type="submit" class="button" value="Registrarse">
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="forgot-panel" class="forgot-panel" style="display: none;">
+                        <h2 class="auth-title">RECUPERAR</h2>
+                        <div id="forgot-error-message" class="error-message" style="display: none;"></div>
+                        <div id="forgot-success-message" class="success-message" style="display: none;"></div>
+                        <form id="forgot-form">
+                            <div class="group">
+                                <label for="email_forgot" class="label"> <i class="fas fa-envelope icon-prefix"></i> Email</label>
+                                <input id="email_forgot" type="email" class="input" required>
+                            </div>
+                            <div class="group">
+                                <label for="dni_forgot" class="label"> <i class="fas fa-address-card icon-prefix"></i> DNI / Licencia</label>
+                                <input id="dni_forgot" type="text" class="input" required>
+                            </div>
+                            <div class="group">
+                                <label for="pass_forgot" class="label"> <i class="fas fa-lock icon-prefix"></i> Nueva contraseña</label>
+                                <input id="pass_forgot" type="password" class="input" data-type="password" required>
+                            </div>
+                            <div class="group">
+                                <label for="pass_repeat_forgot" class="label"> <i class="fas fa-lock icon-prefix"></i> Repetir nueva contraseña</label>
+                                <input id="pass_repeat_forgot" type="password" class="input" data-type="password" required>
+                            </div>
+                            <div class="group">
+                                <input type="submit" class="button" value="Cambiar contraseña">
+                            </div>
+                            <div class="hr"></div>
+                            <div class="foot-lnk">
+                                <a id="forgot-back-link" href="#login">Volver al login</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { validateSignUpForm, validateSignInForm, validateForgotPasswordForm } from './auth.js';
+
+        document.getElementById('signup-form').addEventListener('submit', validateSignUpForm);
+        document.getElementById('signin-form').addEventListener('submit', validateSignInForm);
+        document.getElementById('forgot-form').addEventListener('submit', validateForgotPasswordForm);
+    </script>
+
+</body>
+
+</html>

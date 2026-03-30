@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GloveUp - Mi Perfil</title>
+    <link rel="icon" href="../assets/images/logo-fondo-blanco.jpg">
+    <link rel="stylesheet" href="profile.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta property="og:title" content="GloveUp - Mi Perfil">
+    <meta property="og:description" content="Gestiona tu perfil y historial de sparrings.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="../assets/images/Sparring_Club_Collection-Link-Image.jpg">
+</head>
+
+<body class="bw">
+    <!-- SIDEBAR VERTICAL -->
+    <aside class="main-sidebar">
+        <div class="sidebar-header">
+            <img src="../assets/images/unnamed-removebg-preview.png" alt="Logo GloveUp">
+            <span class="app-name">GloveUp</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                <li>
+                    <a id="nav-home-link" href="../home/dashboard.html">
+                        <i class="fas fa-home"></i>
+                        <span>Inicio</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="../sparring/index.html">
+                        <i class="fas fa-fist-raised"></i>
+                        <span>Buscar Sparring</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="../gyms/index.html">
+                        <i class="fas fa-dumbbell"></i>
+                        <span>Gimnasios</span>
+                    </a>
+                </li>
+                <li id="nav-profile-item" class="active">
+                    <a href="index.html">
+                        <i class="fas fa-user"></i>
+                        <span>Mi Perfil</span>
+                    </a>
+                </li>
+                <li id="nav-sparrings-item">
+                    <a href="index.html?tab=sparrings">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Mis Sparrings</span>
+                    </a>
+                </li>
+                <li id="coach-nav-item" style="display: none;">
+                    <a href="../dashboard/entrenador/dashboard.html#coach-management">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Gestión</span>
+                    </a>
+                </li>
+                <li id="coach-gym-nav-item" style="display: none;">
+                    <a href="../dashboard/entrenador/dashboard.html#coach-gym">
+                        <i class="fas fa-building"></i>
+                        <span>Mi Gimnasio</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-envelope"></i>
+                        <span>Mensajes</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button id="theme-toggle" class="sidebar-btn">
+                <i class="fas fa-moon"></i>
+                <span>Tema Oscuro</span>
+            </button>
+            <button class="sidebar-btn">
+                <i class="fas fa-cog"></i>
+                <span>Ajustes</span>
+            </button>
+            <button id="logout-btn" class="sidebar-btn" style="color: #ef4444;">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
+    </aside>
+
+    <div class="page">
+        <div class="page-header">
+            <div>
+                <h1 id="profile-title">Mi Perfil</h1>
+                <p class="muted" id="profile-subtitle">Tus datos y tu historial de sparrings.</p>
+            </div>
+            <div class="page-actions">
+                <button class="btn btn-secondary" id="btn-add-sparring" type="button">
+                    <i class="fas fa-plus"></i> Añadir sparring
+                </button>
+                <button class="btn btn-secondary" id="btn-back-sparring" type="button" style="display: none;">
+                    <i class="fas fa-arrow-left"></i> Sparring
+                </button>
+                <button class="btn btn-primary" id="btn-save-profile" type="button">
+                    <i class="fas fa-save"></i> Guardar perfil
+                </button>
+            </div>
+        </div>
+
+        <section class="grid">
+            <div class="card" id="profile-card">
+                <div class="card-title">
+                    <h2 id="profile-role-title">Boxeador</h2>
+                    <span class="pill" id="session-pill">Sesión</span>
+                </div>
+
+                <div class="profile">
+                    <div class="avatar-block">
+                        <img id="profile-photo" class="avatar" src="../assets/images/unnamed-removebg-preview.png" alt="Foto de perfil">
+                        <label class="btn btn-ghost file-btn" id="photo-upload-label">
+                            <input id="photo-input" type="file" accept="image/*">
+                            Cambiar foto
+                        </label>
+                        <button class="btn btn-ghost" id="btn-remove-photo" type="button">Quitar foto</button>
+                    </div>
+
+                    <div class="profile-form">
+                        <div class="field">
+                            <label>Nombre</label>
+                            <input id="name" type="text" placeholder="Tu nombre">
+                        </div>
+                        <div class="field" id="boxer-only-alias">
+                            <label>Alias</label>
+                            <input id="alias" type="text" placeholder="@tuusuario">
+                        </div>
+                        <div class="field">
+                            <label id="discipline-label">Disciplina</label>
+                            <select id="discipline">
+                                <option value="">Selecciona</option>
+                                <option>Boxeo</option>
+                                <option>Muay Thai</option>
+                                <option>MMA</option>
+                                <option>Kickboxing</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Ubicación</label>
+                            <input id="location" type="text" placeholder="Ciudad, país">
+                        </div>
+                        <div class="field" id="boxer-only-level" style="display: none;">
+                            <label>Nivel</label>
+                            <input id="level" type="text" readonly>
+                        </div>
+                        <div class="field" id="boxer-only-gym" style="display: none;">
+                            <label>Gimnasio</label>
+                            <input id="boxer-gym" type="text" readonly>
+                        </div>
+
+                        <!-- Stats Boxes Modernos -->
+                        <div class="stats-grid" id="boxer-only-stats">
+                            <div class="stat-box">
+                                <span class="stat-label">Peso (kg)</span>
+                                <input type="number" id="weight" placeholder="70" class="stat-input">
+                                <i class="fas fa-weight-hanging stat-icon"></i>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Altura (cm)</span>
+                                <input type="number" id="height" placeholder="175" class="stat-input">
+                                <i class="fas fa-ruler-vertical stat-icon"></i>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Edad</span>
+                                <input type="number" id="age" placeholder="25" class="stat-input">
+                                <i class="fas fa-birthday-cake stat-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="field full-width" id="boxer-only-weightclass">
+                            <label>Categoría</label>
+                            <input id="weightClass" type="text" placeholder="Ej: Superligero" readonly>
+                        </div>
+
+                        <div class="field full-width" id="coach-gym-field" style="display: none;">
+                            <label>Gimnasio</label>
+                            <input id="coach-gym" type="text" placeholder="Nombre del gimnasio">
+                        </div>
+
+                        <div class="field full-width" id="coach-price-field" style="display: none;">
+                            <label>Precio mensual (€)</label>
+                            <input id="coach-price" type="number" min="0" step="0.01" placeholder="0">
+                        </div>
+
+                        <div class="field full-width" id="boxer-only-bio">
+                            <label>Bio</label>
+                            <textarea id="bio" rows="4" placeholder="Cuéntanos tu estilo, objetivos, disponibilidad..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="boxer-profile-lookup-card">
+                <div class="card-title">
+                    <h2>Ver Perfil de Otro Boxeador</h2>
+                    <span class="muted">Email o DNI/Licencia</span>
+                </div>
+                <div class="lookup-row">
+                    <input id="other-boxer-identifier" type="text" placeholder="Ej: demo.boxeador01@gloveup.com o BOX0001">
+                    <button class="btn btn-primary" id="btn-view-boxer" type="button">
+                        <i class="fas fa-search"></i> Ver
+                    </button>
+                </div>
+                <p class="muted lookup-hint" id="view-mode-banner" style="display: none;">Estás viendo un perfil en modo solo lectura.</p>
+            </div>
+
+            <div class="card" id="sparring-challenges-card" style="display: none;">
+                <div class="card-title">
+                    <h2>Retos de Sparring</h2>
+                    <span class="muted" id="challenges-count">0</span>
+                </div>
+
+                <div class="table-wrap" style="margin-bottom: 16px;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Recibidos</th>
+                                <th>Detalles</th>
+                                <th>Entrenadores</th>
+                                <th>Estado</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="challenges-received-tbody"></tbody>
+                    </table>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Enviados</th>
+                                <th>Detalles</th>
+                                <th>Entrenadores</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="challenges-sent-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card" id="sparring-sessions-card" style="display: none;">
+                <div class="card-title">
+                    <h2>Sesiones programadas</h2>
+                    <span class="muted" id="sessions-count">0</span>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Fecha y hora</th>
+                                <th>Partner</th>
+                                <th>Gimnasio</th>
+                                <th>Entrenadores</th>
+                                <th>Estado</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="sessions-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card" id="sparring-history-card">
+                <div class="card-title">
+                    <h2>Historial de sparrings</h2>
+                    <span class="muted" id="sparring-count">0 registros</span>
+                </div>
+
+                <div id="empty-state" class="empty hidden">
+                    <div class="empty-inner">
+                        <div class="empty-icon"><i class="fas fa-clipboard-list"></i></div>
+                        <p><strong>Aún no tienes sparrings guardados.</strong></p>
+                        <p class="muted">Añade tus sesiones para llevar un historial.</p>
+                        <button class="btn btn-primary" id="btn-add-first" type="button">Añadir el primero</button>
+                    </div>
+                </div>
+
+                <div class="table-wrap" id="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Partner</th>
+                                <th>Ubicación</th>
+                                <th>Notas</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="sparring-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        </main>
+
+        <dialog class="modal" id="sparring-modal">
+            <form method="dialog" class="modal-card" id="sparring-form">
+                <div class="modal-header">
+                    <h3>Añadir sparring</h3>
+                    <button class="icon-btn" value="cancel" aria-label="Cerrar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="field">
+                        <label>Fecha</label>
+                        <input id="sp-date" type="date" required>
+                    </div>
+                    <div class="field">
+                        <label>Partner</label>
+                        <input id="sp-partner" type="text" placeholder='Ej: "Manuel García"' required>
+                    </div>
+                    <div class="field">
+                        <label>Ubicación</label>
+                        <input id="sp-place" type="text" placeholder="Gimnasio / Ciudad">
+                    </div>
+                    <div class="field">
+                        <label>Notas</label>
+                        <textarea id="sp-notes" rows="3" placeholder="Qué trabajaste, sensaciones, objetivos..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" value="cancel" type="button" id="btn-cancel">Cancelar</button>
+                    <button class="btn btn-primary" value="default" type="submit">Guardar sparring</button>
+                </div>
+            </form>
+        </dialog>
+
+        <dialog class="modal" id="session-review-modal">
+            <form method="dialog" class="modal-card" id="session-review-form">
+                <div class="modal-header">
+                    <h3>Valorar sparring</h3>
+                    <button class="icon-btn" value="cancel" aria-label="Cerrar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="field">
+                        <label>Valoración (1-5)</label>
+                        <div class="star-rating" id="review-stars">
+                            <input type="radio" id="review-star-5" name="review-stars" value="5" required>
+                            <label for="review-star-5" title="5 estrellas">★</label>
+                            <input type="radio" id="review-star-4" name="review-stars" value="4">
+                            <label for="review-star-4" title="4 estrellas">★</label>
+                            <input type="radio" id="review-star-3" name="review-stars" value="3">
+                            <label for="review-star-3" title="3 estrellas">★</label>
+                            <input type="radio" id="review-star-2" name="review-stars" value="2">
+                            <label for="review-star-2" title="2 estrellas">★</label>
+                            <input type="radio" id="review-star-1" name="review-stars" value="1">
+                            <label for="review-star-1" title="1 estrella">★</label>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label>Comentarios rápidos</label>
+                        <div class="chips" id="review-tags">
+                            <button type="button" class="chip" data-tag="Buen ritmo">Buen ritmo</button>
+                            <button type="button" class="chip" data-tag="Técnico">Técnico</button>
+                            <button type="button" class="chip" data-tag="Respetuoso">Respetuoso</button>
+                            <button type="button" class="chip" data-tag="Mucha intensidad">Mucha intensidad</button>
+                            <button type="button" class="chip" data-tag="Buen nivel">Buen nivel</button>
+                            <button type="button" class="chip" data-tag="Aprendí mucho">Aprendí mucho</button>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label>Extra (opcional)</label>
+                        <textarea id="review-note" rows="3" placeholder="Algo a destacar, reglas, protecciones, sensaciones..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" value="cancel" type="button" id="btn-review-cancel">Cancelar</button>
+                    <button class="btn btn-primary" value="default" type="submit">Enviar valoración</button>
+                </div>
+            </form>
+        </dialog>
+
+        <script type="module" src="profile.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const homeLink = document.getElementById('nav-home-link');
+                const coachNavItem = document.getElementById('coach-nav-item');
+                const coachGymNavItem = document.getElementById('coach-gym-nav-item');
+                const profileItem = document.getElementById('nav-profile-item');
+                const sparringsItem = document.getElementById('nav-sparrings-item');
+                if (homeLink) {
+                    const role = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();
+                    homeLink.href = role === 'entrenador' ? '../dashboard/entrenador/dashboard.html' : '../dashboard/boxeador/dashboard.html';
+                    if (coachNavItem) coachNavItem.style.display = role === 'entrenador' ? '' : 'none';
+                    if (coachGymNavItem) coachGymNavItem.style.display = role === 'entrenador' ? '' : 'none';
+                    if (sparringsItem) sparringsItem.style.display = role === 'entrenador' ? 'none' : '';
+                }
+                const params = new URLSearchParams(window.location.search || '');
+                const tab = (params.get('tab') || '').toString().trim().toLowerCase();
+                if (tab === 'sparrings') {
+                    if (profileItem) profileItem.classList.remove('active');
+                    if (sparringsItem) sparringsItem.classList.add('active');
+                }
+
+                // Theme Toggle
+                const themeBtn = document.getElementById('theme-toggle');
+                const body = document.body;
+                const THEME_KEY = 'gloveup_theme';
+
+                // Check saved theme
+                const savedTheme = localStorage.getItem(THEME_KEY);
+                if (savedTheme === 'dark') {
+                    body.classList.add('theme-dark');
+                    updateThemeIcon(true);
+                }
+
+                if (themeBtn) {
+                    themeBtn.addEventListener('click', () => {
+                        body.classList.toggle('theme-dark');
+                        const isDark = body.classList.contains('theme-dark');
+                        localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+                        updateThemeIcon(isDark);
+                    });
+                }
+
+                function updateThemeIcon(isDark) {
+                    const icon = themeBtn.querySelector('i');
+                    const text = themeBtn.querySelector('span');
+                    if (icon) {
+                        icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                    }
+                    if (text) {
+                        text.textContent = isDark ? 'Tema Claro' : 'Tema Oscuro';
+                    }
+                }
+            });
+        </script>
+</body>
+
+</html>

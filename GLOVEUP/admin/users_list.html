@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabla de Usuarios Registrados</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .refresh-btn {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .refresh-btn:hover {
+            background: #0056b3;
+        }
+
+        .json-btn {
+            padding: 10px 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+
+        .json-btn:hover {
+            background: #218838;
+        }
+
+        .controls {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Usuarios Registrados en Base de Datos</h1>
+    <div class="controls">
+        <button class="refresh-btn" onclick="loadUsers()">Actualizar Tabla</button>
+        <button class="json-btn" onclick="toggleJson()">Ver JSON Crudo</button>
+    </div>
+    <div id="status"></div>
+
+    <pre id="jsonView" style="display:none; background: #333; color: #fff; padding: 15px; border-radius: 5px; overflow: auto; max-height: 400px;"></pre>
+
+    <table id="usersTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Fecha Creación</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td colspan="5">Cargando datos...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        async function loadUsers() {
+            const tableBody = document.querySelector('#usersTable tbody');
+            const statusDiv = document.getElementById('status');
+
+            try {
+                const API_BASE_URL = (window.localStorage.getItem('gloveup_api_base_url') || 'http://localhost:3000').replace(/\/+$/, '');
+                const response = await fetch(`${API_BASE_URL}/api/usuarios`);
+                if (!response.ok) throw new Error('Error al conectar con el servidor');
+
+                const users = await response.json();
+
+                tableBody.innerHTML = '';
+                if (users.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5">No hay usuarios registrados</td></tr>';
+                    return;
+                }
+
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user._id}</td>
+                        <td>${user.nombre}</td>
+                        <td>${user.email}</td>
+                        <td>${user.rol}</td>
+                        <td>${new Date(user.createdAt).toLocaleString()}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                statusDiv.textContent = `Total: ${users.length} usuarios`;
+                statusDiv.style.color = 'green';
+            } catch (err) {
+                console.error(err);
+                tableBody.innerHTML = `<tr><td colspan="5" style="color:red">Error: ${err.message}. Asegúrate de que el servidor esté corriendo en el puerto 3000.</td></tr>`;
+                statusDiv.textContent = '';
+            }
+        }
+
+        // Cargar al inicio
+        loadUsers();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,483 @@
+@import url("../../home/styles.css");
+@import url("../../sparring/sparring.css");
+
+#coach-management.dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+}
+
+#coach-dashboard.dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+}
+
+#coach-management .dashboard-panel {
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#coach-dashboard .dashboard-panel {
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#coach-management .dashboard-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 28px;
+}
+
+#coach-dashboard .dashboard-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 28px;
+}
+
+#coach-management .dashboard-metrics .metric-card {
+    min-width: 0;
+}
+
+#coach-dashboard .dashboard-metrics .metric-card {
+    min-width: 0;
+}
+
+#coach-management .metric-card.has-chart .metric-bar {
+    display: none;
+}
+
+#coach-dashboard .metric-card.has-chart .metric-bar {
+    display: none;
+}
+
+#coach-management .metric-chart {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    height: 90px;
+}
+
+#coach-dashboard .metric-chart {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    height: 90px;
+}
+
+#coach-management .metric-chart canvas {
+    width: 100% !important;
+    height: 90px !important;
+    display: block;
+}
+
+#coach-dashboard .metric-chart canvas {
+    width: 100% !important;
+    height: 90px !important;
+    display: block;
+}
+
+.coach-calendar-legend {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.coach-calendar-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-light);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+}
+
+.coach-calendar-pill--sparring {
+    background: #111;
+    border-color: #111;
+    color: #fff;
+}
+
+.coach-calendar-pill--inscripcion {
+    background: rgba(17, 17, 17, 0.08);
+    border-color: rgba(17, 17, 17, 0.16);
+    color: #111;
+}
+
+.coach-calendar-pill--recordatorio {
+    background: #f3f4f6;
+    border-color: rgba(17, 24, 39, 0.14);
+    color: #111;
+}
+
+.gloveup-calendar {
+    border: 1px solid var(--color-border);
+    border-radius: 24px;
+    padding: 14px;
+    background: var(--color-secondary);
+    box-shadow: var(--shadow-sm);
+}
+
+.gloveup-calendar .fc {
+    font-family: var(--font-main);
+}
+
+.gloveup-calendar .fc .fc-toolbar.fc-header-toolbar {
+    margin-bottom: 14px;
+}
+
+.gloveup-calendar .fc .fc-toolbar-title {
+    font-size: 1.05rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.gloveup-calendar .fc .fc-button {
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.75rem;
+    box-shadow: none;
+}
+
+.gloveup-calendar .fc .fc-button-primary {
+    background: #000;
+    border-color: #000;
+}
+
+.gloveup-calendar .fc .fc-button-primary:hover {
+    background: #333;
+    border-color: #333;
+}
+
+.gloveup-calendar .fc .fc-button-primary:disabled {
+    background: #000;
+    border-color: #000;
+    opacity: 0.45;
+}
+
+.gloveup-calendar .fc .fc-scrollgrid,
+.gloveup-calendar .fc .fc-scrollgrid-section>td,
+.gloveup-calendar .fc .fc-col-header-cell,
+.gloveup-calendar .fc .fc-daygrid-day {
+    border-color: var(--color-border);
+}
+
+.gloveup-calendar .fc .fc-col-header-cell-cushion {
+    padding: 10px 6px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-lighter);
+}
+
+.gloveup-calendar .fc .fc-daygrid-day-number {
+    padding: 10px;
+    font-weight: 800;
+    color: var(--color-text-main);
+}
+
+.gloveup-calendar .fc .fc-day-today {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.gloveup-calendar .fc .fc-daygrid-day-frame {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.gloveup-calendar .fc .fc-daygrid-day-frame:hover {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.gloveup-calendar .fc .fc-daygrid-event {
+    border-radius: 999px;
+    padding: 4px 10px;
+    border: none;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.gloveup-calendar .fc .fc-daygrid-event:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 22px rgba(0, 0, 0, 0.08);
+}
+
+.gloveup-calendar .fc .fc-event-title {
+    padding: 0;
+}
+
+.gloveup-calendar .fc .gloveup-event--sparring {
+    background: #000;
+    color: #fff;
+}
+
+.gloveup-calendar .fc .gloveup-event--inscripcion {
+    background: rgba(0, 0, 0, 0.12);
+    color: #111;
+}
+
+.gloveup-calendar .fc .gloveup-event--recordatorio {
+    background: #f3f4f6;
+    color: #111;
+    border: 1px solid rgba(17, 24, 39, 0.14);
+}
+
+.coach-calendar-details {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 18px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-light);
+    color: var(--color-text-lighter);
+    font-weight: 600;
+}
+
+.coach-line-chart {
+    margin-top: 12px;
+    height: 260px;
+    padding: 12px;
+    border-radius: 18px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-light);
+}
+
+body.theme-dark .coach-line-chart {
+    background: #151515;
+    border-color: #333;
+}
+
+body.theme-dark .gloveup-calendar {
+    background: #151515;
+    border-color: #333;
+}
+
+body.theme-dark .gloveup-calendar .fc .fc-toolbar-title {
+    color: #fff;
+}
+
+body.theme-dark .gloveup-calendar .fc .fc-col-header-cell-cushion {
+    color: #9ca3af;
+}
+
+body.theme-dark .gloveup-calendar .fc .fc-daygrid-day-number {
+    color: #e5e7eb;
+}
+
+body.theme-dark .gloveup-calendar .fc .fc-day-today {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+body.theme-dark .gloveup-calendar .fc .fc-scrollgrid,
+body.theme-dark .gloveup-calendar .fc .fc-scrollgrid-section>td,
+body.theme-dark .gloveup-calendar .fc .fc-col-header-cell,
+body.theme-dark .gloveup-calendar .fc .fc-daygrid-day {
+    border-color: #333;
+}
+
+body.theme-dark .gloveup-calendar .fc .gloveup-event--inscripcion {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+body.theme-dark .gloveup-calendar .fc .gloveup-event--recordatorio {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.14);
+}
+
+body.theme-dark .coach-calendar-pill--inscripcion {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+
+body.theme-dark .coach-calendar-pill--recordatorio {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+
+body.theme-dark .coach-calendar-details {
+    background: #151515;
+    border-color: #333;
+    color: #d1d5db;
+}
+
+.coach-filter-input {
+    padding: 12px 20px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background-color: var(--color-bg-light);
+    color: var(--color-text-main);
+    font-family: var(--font-main);
+    font-size: 0.95rem;
+    outline: none;
+    flex: 1;
+    min-width: 180px;
+    transition: all 0.3s ease;
+}
+
+.coach-filter-input:hover,
+.coach-filter-input:focus {
+    border-color: var(--color-primary);
+    background-color: var(--color-secondary);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.coach-remove-button {
+    background-color: transparent;
+    color: var(--color-primary);
+    border: 1px solid var(--color-border-dark);
+}
+
+.coach-remove-button:hover {
+    background-color: var(--color-primary);
+    color: var(--color-secondary);
+    border-color: var(--color-primary);
+}
+
+.coach-boxers-toolbar {
+    display: grid;
+    gap: 12px;
+    margin-top: 12px;
+    margin-bottom: 14px;
+}
+
+.coach-boxers-search {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg-light);
+    font-family: var(--font-main);
+    outline: none;
+}
+
+.coach-boxers-assign {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.coach-boxers-email {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg-light);
+    font-family: var(--font-main);
+    outline: none;
+}
+
+.coach-boxers-assign-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.coach-boxers-list {
+    display: grid;
+    gap: 12px;
+}
+
+.coach-boxer-card {
+    background-color: var(--color-secondary);
+    border-radius: 24px;
+    padding: 14px 18px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid transparent;
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.coach-boxer-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-border);
+}
+
+.coach-boxer-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-bg-light);
+    color: var(--color-text-light);
+    font-size: 1.4rem;
+}
+
+.coach-boxer-main {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+}
+
+.coach-boxer-title {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+
+.coach-boxer-name {
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--color-text-main);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 520px;
+}
+
+.coach-boxer-email-text {
+    font-size: 0.9rem;
+    color: var(--color-text-lighter);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 520px;
+}
+
+.coach-boxer-meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+}
+
+.coach-boxer-pill {
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg-light);
+    font-weight: 600;
+}
+
+@media (max-width: 680px) {
+    .coach-boxers-assign {
+        grid-template-columns: 1fr;
+    }
+
+    .coach-boxer-card {
+        grid-template-columns: 44px 1fr;
+        gap: 12px;
+    }
+}
