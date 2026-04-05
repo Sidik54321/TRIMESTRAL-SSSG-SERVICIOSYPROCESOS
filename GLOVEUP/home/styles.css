@@ -15,10 +15,10 @@
     --color-primary: #0a0a0a;
     --color-primary-hover: #1a1a1a;
     --color-secondary: #ffffff;
-    --color-accent: #111827;
-    --color-accent-hover: #1f2937;
-    --color-accent-soft: rgba(17, 24, 39, 0.07);
-    --color-accent-glow: rgba(17, 24, 39, 0.18);
+    --color-accent: #f97316;
+    --color-accent-hover: #ea580c;
+    --color-accent-soft: rgba(249, 115, 22, 0.1);
+    --color-accent-glow: rgba(249, 115, 22, 0.25);
 
     /* Action */
     --color-action: #374151;
@@ -263,7 +263,7 @@ a {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--color-accent) 0%, #374151 100%);
+    background: linear-gradient(135deg, var(--color-accent) 0%, #ea580c 100%);
     color: var(--color-text-inverse);
     border: 1px solid transparent;
     box-shadow: var(--shadow-accent);
@@ -599,7 +599,7 @@ body.with-sidebar {
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--color-accent), var(--color-action));
+    background: linear-gradient(90deg, var(--color-accent), #ea580c);
     opacity: 0;
     transition: opacity var(--transition-base);
 }
@@ -662,7 +662,7 @@ body.with-sidebar {
     left: 0;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, var(--color-accent), var(--color-action));
+    background: linear-gradient(90deg, var(--color-accent), #ea580c);
     transition: width var(--transition-slow);
 }
 
@@ -871,7 +871,7 @@ body.with-sidebar {
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--color-accent), var(--color-action));
+    background: linear-gradient(90deg, var(--color-accent), #ea580c);
     transform: scaleX(0);
     transition: transform var(--transition-base);
 }
@@ -887,7 +887,7 @@ body.with-sidebar {
 }
 
 .icon-circle {
-    background: linear-gradient(135deg, var(--color-accent) 0%, #374151 100%);
+    background: linear-gradient(135deg, var(--color-accent) 0%, #ea580c 100%);
     color: var(--color-text-inverse);
     width: 64px;
     height: 64px;
@@ -1057,7 +1057,7 @@ body.with-sidebar {
 }
 
 .chat-toggle-btn {
-    background: linear-gradient(135deg, var(--color-accent) 0%, #374151 100%);
+    background: linear-gradient(135deg, var(--color-accent) 0%, #ea580c 100%);
     color: var(--color-text-inverse);
     border: none;
     border-radius: 50%;
@@ -1270,7 +1270,7 @@ body.with-sidebar {
     width: calc(100% - 24px);
     margin: 10px 12px 8px;
     display: block;
-    background: linear-gradient(135deg, var(--color-accent) 0%, #374151 100%);
+    background: linear-gradient(135deg, var(--color-accent) 0%, #ea580c 100%);
     color: white;
     padding: 10px 16px;
     border: none;
@@ -1495,10 +1495,10 @@ body.theme-dark {
     --color-primary: #ffffff;
     --color-primary-hover: #e5e7eb;
     --color-secondary: #0c0c0c;
-    --color-accent: #9ca3af;
-    --color-accent-hover: #F43F5E;
-    --color-accent-soft: rgba(0, 0, 0, 0.1);
-    --color-accent-glow: rgba(0, 0, 0, 0.3);
+    --color-accent: #f97316;
+    --color-accent-hover: #fdba74;
+    --color-accent-soft: rgba(249, 115, 22, 0.15);
+    --color-accent-glow: rgba(249, 115, 22, 0.3);
 
     --color-text-main: #f1f5f9;
     --color-text-light: #94a3b8;

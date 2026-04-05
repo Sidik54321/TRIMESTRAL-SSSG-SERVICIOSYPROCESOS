@@ -202,7 +202,7 @@ function BoxerDashboard() {
                     label: 'Pendientes',
                     value: pending,
                     max: 10,
-                    color: '#9ca3af'
+                    color: '#f97316'
                 }
             })
         ),

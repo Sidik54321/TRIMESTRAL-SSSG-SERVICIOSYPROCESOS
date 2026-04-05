@@ -44,7 +44,7 @@
 }
 
 .dashboard-metrics .metric-card:nth-child(3)::before {
-    background: linear-gradient(90deg, #6b7280, #9ca3af);
+    background: linear-gradient(90deg, #ea580c, #f97316);
     opacity: 1;
 }
 
@@ -72,7 +72,7 @@ body.theme-dark .dashboard-metrics .metric-card:nth-child(2)::before {
 }
 
 body.theme-dark .dashboard-metrics .metric-card:nth-child(3)::before {
-    background: linear-gradient(90deg, #6b7280, #4b5563);
+    background: linear-gradient(90deg, #f97316, #fdba74);
 }
 
 body.theme-dark .dashboard-metrics .metric-card:nth-child(4)::before {
