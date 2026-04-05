@@ -16,6 +16,7 @@
     <meta property="og:image" content="../assets/images/Sparring_Club_Collection-Link-Image.jpg">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <link rel="stylesheet" href="../home/notifications.css">
 </head>
 
 <body class="with-sidebar">
@@ -283,6 +284,73 @@
     </script>
     <script type="module" src="gyms.js"></script>
 
+    <!-- 🔔 Notificaciones -->
+    <div class="glv-notif-container">
+        <button id="glv-notif-btn" class="glv-notif-btn" aria-label="Notificaciones">
+            🔔<span id="glv-notif-badge" class="glv-notif-badge" style="display:none">0</span>
+        </button>
+        <div id="glv-notif-panel" class="glv-notif-panel hidden">
+            <div class="glv-notif-header">
+                <span>Notificaciones</span>
+                <div style="display:flex;gap:8px;align-items:center">
+                    <button id="glv-notif-mark-all" class="glv-notif-mark-all">Marcar todo</button>
+                    <i id="glv-notif-close" class="fas fa-times" style="cursor:pointer;opacity:.6"></i>
+                </div>
+            </div>
+            <ul id="glv-notif-list" class="glv-notif-list"></ul>
+        </div>
+    </div>
+
+    <!-- 💬 Chat -->
+    <div class="chat-fab-container">
+        <button id="chat-toggle-btn" class="chat-toggle-btn" aria-label="Chat">
+            <i class="fas fa-comment-dots"></i>
+            <span id="glv-chat-badge" class="glv-chat-badge" style="display:none">0</span>
+        </button>
+
+        <div id="chat-box" class="chat-box hidden">
+
+            <!-- Panel 1: Historial -->
+            <div id="glv-home-panel" class="glv-panel">
+                <div class="chat-header">
+                    <h3 style="flex:1">Mensajes</h3>
+                    <button id="glv-new-chat-btn" class="glv-new-chat-btn" title="Nueva conversación">＋</button>
+                    <i id="chat-close-btn" class="fas fa-times close-icon"></i>
+                </div>
+                <ul id="glv-conv-list" class="glv-conv-list"></ul>
+            </div>
+
+            <!-- Panel 2: Buscar -->
+            <div id="glv-search-panel" class="glv-panel hidden">
+                <div class="chat-header">
+                    <i id="glv-search-back" class="fas fa-arrow-left close-icon"></i>
+                    <h3 style="flex:1;font-size:.9rem">Nueva conversación</h3>
+                    <i id="glv-search-close" class="fas fa-times close-icon"></i>
+                </div>
+                <div class="glv-search-bar">
+                    <input id="glv-search-input" class="glv-search-input" placeholder="🔍 Buscar por nombre o email…" autocomplete="off">
+                </div>
+                <ul id="glv-search-results" class="contact-list glv-search-results"></ul>
+            </div>
+
+            <!-- Panel 3: Conversación -->
+            <div id="glv-conv-panel" class="glv-panel hidden">
+                <div class="chat-header">
+                    <i id="glv-back-btn" class="fas fa-arrow-left close-icon"></i>
+                    <h3 id="glv-conv-name" style="flex:1;text-align:center;font-size:.9rem"></h3>
+                    <i id="glv-conv-close-btn" class="fas fa-times close-icon"></i>
+                </div>
+                <div id="glv-messages" class="glv-messages"></div>
+                <div class="glv-input-row">
+                    <input id="glv-input" type="text" class="glv-input" placeholder="Escribe un mensaje…" maxlength="500" autocomplete="off">
+                    <button id="glv-send-btn" class="glv-send-btn" aria-label="Enviar">&#10148;</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <script src="../home/chat.js"></script>
+    <script src="../home/notifications.js"></script>
 </body>
 
 </html>
