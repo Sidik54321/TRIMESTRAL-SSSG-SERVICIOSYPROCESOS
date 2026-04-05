@@ -601,7 +601,7 @@ function CoachStatsDashboard() {
                         label: 'Inscripciones',
                         value: metricas.inscripcionesMes || 0,
                         max: 30,
-                        color: '#6b7280'
+                        color: '#f97316'
                     }
                 }),
                 h(MetricCard, {
@@ -612,7 +612,7 @@ function CoachStatsDashboard() {
                         label: 'Ingresos',
                         value: metricas.ingresosMes || 0,
                         max: revenueMax,
-                        color: '#9ca3af'
+                        color: '#f97316'
                     }
                 })
             )

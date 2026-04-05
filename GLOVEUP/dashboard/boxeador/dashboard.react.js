@@ -190,7 +190,7 @@ function BoxerDashboard() {
                     label: 'Minutos',
                     value: minutes,
                     max: 300,
-                    color: '#6b7280'
+                    color: '#f97316'
                 }
             }),
             h(MetricCard, {

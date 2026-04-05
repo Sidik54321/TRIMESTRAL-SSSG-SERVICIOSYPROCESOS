@@ -32,26 +32,7 @@
 .dashboard-metrics .metric-card:nth-child(3) { animation-delay: 300ms; }
 .dashboard-metrics .metric-card:nth-child(4) { animation-delay: 400ms; }
 
-/* Card top border gradients — monochrome palette */
-.dashboard-metrics .metric-card:nth-child(1)::before {
-    background: linear-gradient(90deg, #111827, #374151);
-    opacity: 1;
-}
-
-.dashboard-metrics .metric-card:nth-child(2)::before {
-    background: linear-gradient(90deg, #374151, #6b7280);
-    opacity: 1;
-}
-
-.dashboard-metrics .metric-card:nth-child(3)::before {
-    background: linear-gradient(90deg, #ea580c, #f97316);
-    opacity: 1;
-}
-
-.dashboard-metrics .metric-card:nth-child(4)::before {
-    background: linear-gradient(90deg, #4b5563, #9ca3af);
-    opacity: 1;
-}
+/* Removed nth-child gradient overrides to allow global orange tertiary accent */
 
 /* Dashboard panels stagger */
 .dashboard-grid .dashboard-panel:nth-child(1) {
@@ -62,19 +43,4 @@
     animation-delay: 450ms;
 }
 
-/* Dark theme adjustments */
-body.theme-dark .dashboard-metrics .metric-card:nth-child(1)::before {
-    background: linear-gradient(90deg, #e5e7eb, #9ca3af);
-}
-
-body.theme-dark .dashboard-metrics .metric-card:nth-child(2)::before {
-    background: linear-gradient(90deg, #9ca3af, #6b7280);
-}
-
-body.theme-dark .dashboard-metrics .metric-card:nth-child(3)::before {
-    background: linear-gradient(90deg, #f97316, #fdba74);
-}
-
-body.theme-dark .dashboard-metrics .metric-card:nth-child(4)::before {
-    background: linear-gradient(90deg, #9ca3af, #4b5563);
-}
+/* Removed nth-child gradient overrides for dark theme to allow global orange tertiary accent */
