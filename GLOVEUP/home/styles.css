@@ -1818,7 +1818,7 @@ body.theme-dark .glv-search-input { background: var(--color-bg-card); border-col
 .glv-notif-btn { background: #fff; border: 1.5px solid var(--color-border, rgba(0,0,0,.1)); border-radius: 50%; width: 48px; height: 48px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,.12); position: relative; transition: transform .15s; }
 .glv-notif-btn:hover { transform: scale(1.08); }
 body.theme-dark .glv-notif-btn { background: var(--color-bg-elevated); border-color: var(--color-border); }
-.glv-notif-badge { position: absolute; top: -4px; right: -4px; background: var(--color-accent); color: #fff; font-size: .6rem; font-weight: 800; border-radius: 999px; width: 16px; height: 16px; align-items: center; justify-content: center; pointer-events: none; }
+.glv-notif-badge { position: absolute; top: -4px; left: -4px; background: #ef4444; color: #fff; font-size: .6rem; font-weight: 800; border-radius: 999px; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; pointer-events: none; }
 
 /* ── Notification panel ── */
 .glv-notif-panel { position: absolute; bottom: 56px; right: 0; width: 320px; max-height: 420px; background: #fff; border: 1px solid var(--color-border, rgba(0,0,0,.1)); border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.15); display: flex; flex-direction: column; overflow: hidden; }
@@ -1837,4 +1837,6 @@ body.theme-dark .glv-notif-panel { background: var(--color-bg-elevated); border-
 .glv-notif-cuerpo { font-size: .78rem; opacity: .7; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .glv-notif-time { font-size: .7rem; opacity: .45; margin-top: 3px; }
 .glv-notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-accent); flex-shrink: 0; margin-top: 5px; }
+.glv-notif-delete { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; color: #9ca3af; font-size: .8rem; cursor: pointer; transition: all .15s; background: none; border: none; padding: 0; margin-top: 2px; }
+.glv-notif-delete:hover { background: #fee2e2; color: #ef4444; }
 

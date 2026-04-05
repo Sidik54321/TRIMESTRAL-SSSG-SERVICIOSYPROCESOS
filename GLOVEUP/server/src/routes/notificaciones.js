@@ -51,4 +51,12 @@ router.put('/leer-todas', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// DELETE /api/notificaciones/:id
+router.delete('/:id', async (req, res) => {
+    try {
+        await Notificacion.findByIdAndDelete(req.params.id);
+        res.json({ ok: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 export default router;
