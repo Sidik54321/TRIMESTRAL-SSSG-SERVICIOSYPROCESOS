@@ -204,6 +204,15 @@ router.post('/me/boxeadores', async (req, res) => {
             de: coach.email
         });
 
+        // Notificación al entrenador (confirmación)
+        await crearNotificacion({
+            para: coach.email,
+            tipo: 'gimnasio',
+            titulo: `✅ Boxeador añadido: ${boxer.nombre || boxer.email}`,
+            cuerpo: `${boxer.nombre || boxer.email} ha sido inscrito en tu gimnasio.`,
+            de: boxer.email
+        });
+
         const safe = boxer.toObject();
         delete safe.password;
         return res.json(safe);
@@ -250,6 +259,23 @@ router.delete('/me/boxeadores', async (req, res) => {
         boxer.gimnasio = '';
         boxer.fechaInscripcion = undefined;
         await boxer.save();
+
+        // Notificación al entrenador
+        await crearNotificacion({
+            para: coach.email,
+            tipo: 'gimnasio',
+            titulo: `❌ Boxeador eliminado del gimnasio: ${boxer.nombre || boxer.email}`,
+            cuerpo: `${boxer.nombre || boxer.email} ha sido dado de baja de tu gimnasio.`,
+            de: coach.email
+        });
+        // Notificar también al boxeador
+        await crearNotificacion({
+            para: boxer.email,
+            tipo: 'gimnasio',
+            titulo: 'Has sido dado de baja del gimnasio',
+            cuerpo: `El entrenador ${coach.nombre || coach.email} te ha dado de baja.`,
+            de: coach.email
+        });
 
         const safe = boxer.toObject();
         delete safe.password;
@@ -332,6 +358,23 @@ router.post('/me/boxeadores/create', async (req, res) => {
             sparringHistory: []
         });
 
+        // Notificación al entrenador (confirmación de creación)
+        await crearNotificacion({
+            para: coach.email,
+            tipo: 'gimnasio',
+            titulo: `✅ Cuenta creada para ${nombre}`,
+            cuerpo: `El boxeador ${nombre} ha sido registrado y añadido a tu gimnasio.`,
+            de: coach.email
+        });
+        // Notificación al nuevo boxeador
+        await crearNotificacion({
+            para: email,
+            tipo: 'gimnasio',
+            titulo: `Bienvenido/a a GloveUp, ${nombre}!`,
+            cuerpo: `Tu cuenta ha sido creada por ${coach.nombre || coach.email}. ¡Ya formas parte del gimnasio!`,
+            de: coach.email
+        });
+
         const safe = boxer.toObject();
         delete safe.password;
         return res.status(201).json(safe);
@@ -379,13 +422,18 @@ router.put('/me/boxeadores/:id', async (req, res) => {
             if (payload.dniLicencia !== undefined) updateUser.dniLicencia = boxer.dniLicencia;
             if (payload.email !== undefined) updateUser.email = boxer.email;
             if (Object.keys(updateUser).length > 0) {
-                await Usuario.updateOne({
-                    _id: boxer.usuarioId
-                }, {
-                    $set: updateUser
-                });
+                await Usuario.updateOne({ _id: boxer.usuarioId }, { $set: updateUser });
             }
         }
+
+        // Notificación al entrenador (confirmación de edición)
+        await crearNotificacion({
+            para: coach.email,
+            tipo: 'general',
+            titulo: `✏️ Perfil de ${boxer.nombre || boxer.email} actualizado`,
+            cuerpo: `Has guardado los cambios del boxeador ${boxer.nombre || boxer.email}.`,
+            de: coach.email
+        });
 
         const safe = boxer.toObject();
         delete safe.password;
@@ -419,19 +467,23 @@ router.delete('/me/boxeadores/:id', async (req, res) => {
             });
         }
 
+        const boxerName = boxer.nombre || boxer.email;
         const usuarioId = boxer.usuarioId;
-        await Boxeador.deleteOne({
-            _id: boxer._id
-        });
+        await Boxeador.deleteOne({ _id: boxer._id });
         if (usuarioId) {
-            await Usuario.deleteOne({
-                _id: usuarioId
-            });
+            await Usuario.deleteOne({ _id: usuarioId });
         }
 
-        return res.json({
-            ok: true
+        // Notificación al entrenador
+        await crearNotificacion({
+            para: coach.email,
+            tipo: 'gimnasio',
+            titulo: `🗑️ Boxeador eliminado: ${boxerName}`,
+            cuerpo: `La cuenta de ${boxerName} ha sido eliminada del sistema.`,
+            de: coach.email
         });
+
+        return res.json({ ok: true });
     } catch (err) {
         return res.status(err.status || 400).json({
             error: err.message
