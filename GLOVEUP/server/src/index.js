@@ -6,6 +6,7 @@ import gimnasiosRouter from './routes/gimnasios.js';
 import authRouter from './routes/auth.js';
 import usuariosRouter from './routes/usuarios.js';
 import chatRouter from './routes/chat.js';
+import notificacionesRouter from './routes/notificaciones.js';
 
 const app = express();
 
@@ -49,6 +50,7 @@ app.use('/api/gimnasios', gimnasiosRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/usuarios', usuariosRouter);
 app.use('/api/chat', chatRouter);
+app.use('/api/notificaciones', notificacionesRouter);
 
 // Puerto
 const PORT = process.env.PORT || 3000;

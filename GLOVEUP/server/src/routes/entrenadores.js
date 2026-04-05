@@ -1,9 +1,8 @@
-import {
-    Router
-} from 'express';
+import { Router } from 'express';
 import Entrenador from '../models/Entrenador.js';
 import Boxeador from '../models/Boxeador.js';
 import Usuario from '../models/Usuario.js';
+import { crearNotificacion } from './notificaciones.js';
 
 const router = Router();
 
@@ -192,11 +191,18 @@ router.post('/me/boxeadores', async (req, res) => {
         }
 
         boxer.entrenadorId = coach._id;
-        if (coach.gimnasio) {
-            boxer.gimnasio = coach.gimnasio;
-        }
+        if (coach.gimnasio) boxer.gimnasio = coach.gimnasio;
         boxer.fechaInscripcion = new Date();
         await boxer.save();
+
+        // Notificación al boxeador
+        await crearNotificacion({
+            para: boxer.email,
+            tipo: 'gimnasio',
+            titulo: `Te han añadido al gimnasio ${coach.gimnasio || 'de un entrenador'}`,
+            cuerpo: `El entrenador ${coach.nombre || coach.email} te ha inscrito en su gimnasio.`,
+            de: coach.email
+        });
 
         const safe = boxer.toObject();
         delete safe.password;

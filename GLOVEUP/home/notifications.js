@@ -1,0 +1,108 @@
+/* notifications.js — Sistema de notificaciones GloveUp */
+(function () {
+    'use strict';
+
+    const API = (localStorage.getItem('gloveup_api_base_url') || 'http://localhost:3000').replace(/\/+$/, '');
+    const me = () => (localStorage.getItem('gloveup_user_email') || '').trim().toLowerCase();
+    const $ = id => document.getElementById(id);
+
+    const apiFetch = (path, opts = {}) =>
+        fetch(API + path, {
+            method: opts.method || 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined
+        }).then(r => r.json()).catch(() => null);
+
+    const ICONS = { mensaje: '💬', sparring: '🥊', gimnasio: '🏋️', general: '🔔' };
+
+    function formatTime(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        const now = new Date();
+        const diff = Math.floor((now - d) / 60000);
+        if (diff < 1) return 'ahora';
+        if (diff < 60) return `hace ${diff}m`;
+        if (diff < 1440) return `hace ${Math.floor(diff / 60)}h`;
+        return d.getDate() + '/' + (d.getMonth() + 1);
+    }
+
+    async function updateBadge() {
+        if (!me()) return;
+        const data = await apiFetch(`/api/notificaciones/no-leidas?email=${encodeURIComponent(me())}`);
+        const badge = $('glv-notif-badge');
+        if (!badge || !data) return;
+        if (data.count > 0) { badge.textContent = data.count > 9 ? '9+' : data.count; badge.style.display = 'flex'; }
+        else badge.style.display = 'none';
+    }
+
+    async function loadNotifications() {
+        const list = $('glv-notif-list');
+        if (!list || !me()) return;
+        list.innerHTML = '<li class="glv-list-hint">Cargando…</li>';
+        const notifs = await apiFetch(`/api/notificaciones?email=${encodeURIComponent(me())}`);
+        list.innerHTML = '';
+        if (!Array.isArray(notifs) || !notifs.length) {
+            list.innerHTML = '<li class="glv-list-hint">Sin notificaciones por ahora.</li>';
+            return;
+        }
+        notifs.forEach(n => {
+            const li = document.createElement('li');
+            li.className = 'glv-notif-item' + (n.leida ? ' leida' : '');
+            li.dataset.id = n._id;
+            li.innerHTML = `
+                <span class="glv-notif-icon">${ICONS[n.tipo] || '🔔'}</span>
+                <div class="glv-notif-body">
+                    <div class="glv-notif-title">${n.titulo}</div>
+                    ${n.cuerpo ? `<div class="glv-notif-cuerpo">${n.cuerpo}</div>` : ''}
+                    <div class="glv-notif-time">${formatTime(n.createdAt)}</div>
+                </div>
+                ${!n.leida ? '<span class="glv-notif-dot"></span>' : ''}`;
+            li.addEventListener('click', async () => {
+                if (!n.leida) {
+                    await apiFetch(`/api/notificaciones/leer/${n._id}`, { method: 'PUT' });
+                    li.classList.add('leida');
+                    const dot = li.querySelector('.glv-notif-dot');
+                    if (dot) dot.remove();
+                    updateBadge();
+                }
+            });
+            list.appendChild(li);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const bell = $('glv-notif-btn');
+        const panel = $('glv-notif-panel');
+        const closeBtn = $('glv-notif-close');
+        const markAllBtn = $('glv-notif-mark-all');
+
+        if (bell && panel) {
+            bell.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const open = !panel.classList.contains('hidden');
+                if (open) { panel.classList.add('hidden'); }
+                else { panel.classList.remove('hidden'); loadNotifications(); }
+            });
+        }
+
+        if (closeBtn) closeBtn.addEventListener('click', () => { if (panel) panel.classList.add('hidden'); });
+
+        if (markAllBtn) markAllBtn.addEventListener('click', async () => {
+            await apiFetch(`/api/notificaciones/leer-todas?email=${encodeURIComponent(me())}`, { method: 'PUT' });
+            loadNotifications();
+            updateBadge();
+        });
+
+        // Cierra al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (panel && !panel.classList.contains('hidden') && !panel.contains(e.target) && e.target !== bell) {
+                panel.classList.add('hidden');
+            }
+        });
+
+        if (me()) {
+            updateBadge();
+            setInterval(updateBadge, 30000);
+        }
+    });
+})();

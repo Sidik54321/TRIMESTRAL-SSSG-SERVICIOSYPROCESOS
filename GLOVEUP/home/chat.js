@@ -1,176 +1,204 @@
-/* ============================================== */
-/* CHAT EN TIEMPO REAL — GLOVEUP                  */
-/* ============================================== */
-
+/* chat.js — Sistema de chat GloveUp con historial de conversaciones */
 (function () {
     'use strict';
 
-    const API = (window.localStorage.getItem('gloveup_api_base_url') || 'http://localhost:3000').replace(/\/+$/, '');
-    const userEmail = () => (localStorage.getItem('gloveup_user_email') || '').trim().toLowerCase();
+    const API = (localStorage.getItem('gloveup_api_base_url') || 'http://localhost:3000').replace(/\/+$/, '');
+    const me = () => (localStorage.getItem('gloveup_user_email') || '').trim().toLowerCase();
 
-    let currentContact = null;
-    let pollInterval = null;
+    let activeContact = null;
+    let pollId = null;
 
-    const $ = (id) => document.getElementById(id);
+    const $ = id => document.getElementById(id);
+    const apiFetch = (path, opts = {}) =>
+        fetch(API + path, {
+            method: opts.method || 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined
+        }).then(r => r.json()).catch(() => null);
 
-    const apiFetch = (path, opts = {}) => fetch(API + path, {
-        method: opts.method || 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined
-    }).then(r => r.json()).catch(() => null);
-
-    function renderContact(c) {
-        const li = document.createElement('li');
-        const role = c.rol === 'entrenador' ? ' <small style="opacity:.55">(Entrenador)</small>' : '';
-        li.innerHTML = `<i class="fas fa-user-circle"></i> <span>${c.nombre || c.email}</span>${role}`;
-        li.style.cursor = 'pointer';
-        li.dataset.email = c.email;
-        li.addEventListener('click', () => openConversation(c));
-        return li;
+    /* ── Panels ───────────────────────────────────── */
+    function showPanel(id) {
+        ['glv-home-panel', 'glv-search-panel', 'glv-conv-panel'].forEach(p => {
+            const el = $(p);
+            if (el) el.classList.toggle('hidden', p !== id);
+        });
     }
 
-    function renderMessage(msg) {
-        const mine = msg.de === userEmail();
-        const div = document.createElement('div');
-        div.className = 'glv-bubble ' + (mine ? 'glv-mine' : 'glv-theirs');
-        const text = document.createElement('span');
-        text.className = 'glv-bubble-text';
-        text.textContent = msg.texto;
-        const time = document.createElement('span');
-        time.className = 'glv-bubble-time';
-        const d = new Date(msg.createdAt || Date.now());
-        time.textContent = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
-        div.appendChild(text);
-        div.appendChild(time);
-        return div;
+    /* ── Conversation List ────────────────────────── */
+    async function loadConversations() {
+        const list = $('glv-conv-list');
+        if (!list || !me()) return;
+        list.innerHTML = '<li class="glv-list-hint">Cargando…</li>';
+        const convs = await apiFetch(`/api/chat/conversaciones?email=${encodeURIComponent(me())}`);
+        list.innerHTML = '';
+        if (!Array.isArray(convs) || !convs.length) {
+            list.innerHTML = '<li class="glv-list-hint">Aún no hay conversaciones.<br>Pulsa <b>+</b> para empezar.</li>';
+            return;
+        }
+        convs.forEach(c => {
+            const li = document.createElement('li');
+            li.className = 'glv-conv-item';
+            const initials = (c.nombre || c.email).charAt(0).toUpperCase();
+            const preview = c.ultimo ? truncate(c.ultimo.texto, 38) : 'Sin mensajes';
+            const ts = c.ultimo ? formatTime(c.ultimo.fecha) : '';
+            li.innerHTML = `
+                <div class="glv-avatar">${initials}</div>
+                <div class="glv-conv-meta">
+                    <div class="glv-conv-top">
+                        <span class="glv-conv-name">${c.nombre || c.email}</span>
+                        <span class="glv-conv-ts">${ts}</span>
+                    </div>
+                    <div class="glv-conv-preview">${preview}${c.noLeidos > 0 ? `<span class="glv-unread-badge">${c.noLeidos}</span>` : ''}</div>
+                </div>`;
+            li.addEventListener('click', () => openConversation({ email: c.email, nombre: c.nombre }));
+            list.appendChild(li);
+        });
     }
 
-    async function loadMessages(scroll) {
-        if (!currentContact) return;
-        const msgs = await apiFetch(`/api/chat/mensajes?email=${encodeURIComponent(userEmail())}&con=${encodeURIComponent(currentContact.email)}`);
-        if (!Array.isArray(msgs)) return;
-        const container = $('glv-messages');
-        if (!container) return;
-        const wasBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 40;
-        container.innerHTML = '';
-        msgs.forEach(m => container.appendChild(renderMessage(m)));
-        if (wasBottom || scroll) container.scrollTop = container.scrollHeight;
+    /* ── Search ───────────────────────────────────── */
+    let searchTimeout = null;
+    async function doSearch(q) {
+        const results = $('glv-search-results');
+        if (!results) return;
+        results.innerHTML = '<li class="glv-list-hint">Buscando…</li>';
+        const contacts = await apiFetch(`/api/chat/buscar?email=${encodeURIComponent(me())}&q=${encodeURIComponent(q)}`);
+        results.innerHTML = '';
+        if (!Array.isArray(contacts) || !contacts.length) {
+            results.innerHTML = '<li class="glv-list-hint">Sin resultados.</li>';
+            return;
+        }
+        contacts.forEach(c => {
+            const li = document.createElement('li');
+            li.className = 'glv-search-item';
+            const roleLabel = c.rol === 'entrenador' ? ' <small>(Entrenador)</small>' : '';
+            li.innerHTML = `<div class="glv-avatar sm">${(c.nombre || c.email).charAt(0).toUpperCase()}</div><span>${c.nombre || c.email}${roleLabel}</span>`;
+            li.addEventListener('click', () => { openConversation(c); });
+            results.appendChild(li);
+        });
     }
 
+    /* ── Conversation ─────────────────────────────── */
     function openConversation(contact) {
-        currentContact = contact;
+        activeContact = contact;
         const nameEl = $('glv-conv-name');
         if (nameEl) nameEl.textContent = contact.nombre || contact.email;
-        const contactsPanel = $('glv-contacts-panel');
-        const convPanel = $('glv-conv-panel');
-        if (contactsPanel) contactsPanel.classList.add('hidden');
-        if (convPanel) convPanel.classList.remove('hidden');
-        loadMessages(true);
+        showPanel('glv-conv-panel');
+        fetchMessages(true);
         startPolling();
     }
 
     function closeConversation() {
         stopPolling();
-        currentContact = null;
-        const contactsPanel = $('glv-contacts-panel');
-        const convPanel = $('glv-conv-panel');
-        if (convPanel) convPanel.classList.add('hidden');
-        if (contactsPanel) contactsPanel.classList.remove('hidden');
+        activeContact = null;
+        showPanel('glv-home-panel');
+        loadConversations();
     }
 
-    function startPolling() {
-        stopPolling();
-        pollInterval = setInterval(() => loadMessages(false), 3000);
+    function renderBubble(msg) {
+        const mine = msg.de === me();
+        const div = document.createElement('div');
+        div.className = 'glv-bubble ' + (mine ? 'glv-mine' : 'glv-theirs');
+        const txt = document.createElement('span');
+        txt.className = 'glv-bubble-text';
+        txt.textContent = msg.texto;
+        const ts = document.createElement('span');
+        ts.className = 'glv-bubble-time';
+        ts.textContent = formatTime(msg.createdAt);
+        div.appendChild(txt);
+        div.appendChild(ts);
+        return div;
     }
 
-    function stopPolling() {
-        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+    async function fetchMessages(scroll) {
+        if (!activeContact) return;
+        const msgs = await apiFetch(`/api/chat/mensajes?email=${encodeURIComponent(me())}&con=${encodeURIComponent(activeContact.email)}`);
+        if (!Array.isArray(msgs)) return;
+        const box = $('glv-messages');
+        if (!box) return;
+        const wasBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
+        box.innerHTML = '';
+        msgs.forEach(m => box.appendChild(renderBubble(m)));
+        if (wasBottom || scroll) box.scrollTop = box.scrollHeight;
     }
 
     async function sendMessage() {
         const input = $('glv-input');
-        const texto = (input ? input.value : '').trim();
-        if (!texto || !currentContact) return;
+        const text = (input ? input.value : '').trim();
+        if (!text || !activeContact) return;
         if (input) input.value = '';
-        await apiFetch('/api/chat/mensajes', {
-            method: 'POST',
-            body: { de: userEmail(), para: currentContact.email, texto }
-        });
-        await loadMessages(true);
+        await apiFetch('/api/chat/mensajes', { method: 'POST', body: { de: me(), para: activeContact.email, texto: text } });
+        fetchMessages(true);
     }
 
+    function startPolling() { stopPolling(); pollId = setInterval(() => fetchMessages(false), 3000); }
+    function stopPolling() { if (pollId) { clearInterval(pollId); pollId = null; } }
+
+    /* ── Badge ────────────────────────────────────── */
     async function updateBadge() {
-        const email = userEmail();
-        if (!email) return;
-        const data = await apiFetch(`/api/chat/no-leidos?email=${encodeURIComponent(email)}`);
+        const data = await apiFetch(`/api/chat/no-leidos?email=${encodeURIComponent(me())}`);
         const badge = $('glv-chat-badge');
         if (!badge || !data) return;
-        if (data.count > 0) {
-            badge.textContent = data.count > 9 ? '9+' : String(data.count);
-            badge.style.display = 'flex';
-        } else {
-            badge.style.display = 'none';
-        }
+        if (data.count > 0) { badge.textContent = data.count > 9 ? '9+' : data.count; badge.style.display = 'flex'; }
+        else badge.style.display = 'none';
     }
 
-    async function initContacts() {
-        const email = userEmail();
-        if (!email) return;
-        const list = $('glv-contact-list');
-        if (!list) return;
-        list.innerHTML = '<li style="opacity:.5;padding:12px 20px">Cargando contactos…</li>';
-        const contacts = await apiFetch(`/api/chat/contactos?email=${encodeURIComponent(email)}`);
-        list.innerHTML = '';
-        if (!Array.isArray(contacts) || contacts.length === 0) {
-            list.innerHTML = '<li style="opacity:.5;padding:12px 20px">Sin contactos disponibles aún.</li>';
-            return;
-        }
-        contacts.forEach(c => list.appendChild(renderContact(c)));
-        updateBadge();
+    /* ── Utils ────────────────────────────────────── */
+    function truncate(str, n) { return str && str.length > n ? str.slice(0, n) + '…' : str || ''; }
+    function formatTime(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        const now = new Date();
+        const sameDay = d.toDateString() === now.toDateString();
+        if (sameDay) return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+        return d.getDate() + '/' + (d.getMonth() + 1);
     }
 
+    /* ── Init ─────────────────────────────────────── */
     document.addEventListener('DOMContentLoaded', () => {
         const toggleBtn = $('chat-toggle-btn');
         const chatBox = $('chat-box');
 
         if (toggleBtn && chatBox) {
             toggleBtn.addEventListener('click', () => {
-                const open = !chatBox.classList.contains('hidden');
-                if (open) {
-                    chatBox.classList.add('hidden');
-                    stopPolling();
-                } else {
-                    chatBox.classList.remove('hidden');
-                    initContacts();
-                }
+                const isOpen = !chatBox.classList.contains('hidden');
+                if (isOpen) { chatBox.classList.add('hidden'); stopPolling(); }
+                else { chatBox.classList.remove('hidden'); showPanel('glv-home-panel'); loadConversations(); }
             });
         }
 
+        // Home panel buttons
         const closeBtn = $('chat-close-btn');
-        if (closeBtn) closeBtn.addEventListener('click', () => {
-            if (chatBox) chatBox.classList.add('hidden');
-            stopPolling();
+        if (closeBtn) closeBtn.addEventListener('click', () => { if (chatBox) chatBox.classList.add('hidden'); stopPolling(); });
+
+        const newChatBtn = $('glv-new-chat-btn');
+        if (newChatBtn) newChatBtn.addEventListener('click', () => {
+            showPanel('glv-search-panel');
+            const si = $('glv-search-input');
+            if (si) { si.value = ''; si.focus(); doSearch(''); }
         });
 
+        // Search panel
+        const searchBack = $('glv-search-back');
+        if (searchBack) searchBack.addEventListener('click', () => showPanel('glv-home-panel'));
+        const searchClose = $('glv-search-close');
+        if (searchClose) searchClose.addEventListener('click', () => { if (chatBox) chatBox.classList.add('hidden'); });
+        const searchInput = $('glv-search-input');
+        if (searchInput) searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => doSearch(searchInput.value.trim()), 300);
+        });
+
+        // Conv panel
         const backBtn = $('glv-back-btn');
         if (backBtn) backBtn.addEventListener('click', closeConversation);
-
-        const convCloseBtn = $('glv-conv-close-btn');
-        if (convCloseBtn) convCloseBtn.addEventListener('click', () => {
-            if (chatBox) chatBox.classList.add('hidden');
-            closeConversation();
-        });
-
+        const convClose = $('glv-conv-close-btn');
+        if (convClose) convClose.addEventListener('click', () => { if (chatBox) chatBox.classList.add('hidden'); closeConversation(); });
         const sendBtn = $('glv-send-btn');
         if (sendBtn) sendBtn.addEventListener('click', sendMessage);
-
         const inputEl = $('glv-input');
-        if (inputEl) inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+        if (inputEl) inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
 
-        // Badge de no leídos cada 30s
-        if (userEmail()) {
-            updateBadge();
-            setInterval(updateBadge, 30000);
-        }
+        // Badge
+        if (me()) { updateBadge(); setInterval(updateBadge, 30000); }
     });
 })();
