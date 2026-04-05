@@ -73,38 +73,13 @@ const updateDoughnutChart = (canvas, {
     });
 };
 
-// Función unificada para abrir/cerrar la caja de chat.
+// Función legacy — ahora gestionada por chat.js
 export function toggleChatBox() {
     const chatBox = document.getElementById('chat-box');
-    if (chatBox) {
-        chatBox.classList.toggle('hidden');
-    }
+    if (chatBox) chatBox.classList.toggle('hidden');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // --- Lógica del Chat ---
-    const toggleBtn = document.getElementById('chat-toggle-btn');
-    const closeBtn = document.getElementById('chat-close-btn');
-    const contactLink = document.getElementById('contacta-link');
-
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', toggleChatBox);
-    }
-
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function() {
-            const chatBox = document.getElementById('chat-box');
-            if (chatBox) {
-                chatBox.classList.add('hidden');
-            }
-        });
-    }
-
-    if (contactLink) {
-        contactLink.addEventListener('click', toggleChatBox);
-    }
-
-    // --- Lógica del Menú de Usuario y Sesión ---
     const userIcon = document.getElementById('user-icon');
     const userDropdownMenu = document.getElementById('user-dropdown-menu');
     const logoutButton = document.getElementById('logout-button');
