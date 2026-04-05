@@ -4,14 +4,12 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "start": "C:\\Progra~1\\nodejs\\node.exe src/index.js",
-        "dev": "nodemon src/index.js",
-        "seed:boxeadores": "node src/seed/seedBoxeadores.js"
+        "start": "C:\\Progra~1\\nodejs\\node.exe --env-file=.env src/index.js",
+        "dev": "nodemon --exec \"node --env-file=.env\" src/index.js",
+        "seed:boxeadores": "node --env-file=.env src/seed/seedBoxeadores.js"
     },
     "dependencies": {
         "bcrypt": "^6.0.0",
-        "cors": "^2.8.5",
-        "dotenv": "^16.4.5",
         "express": "^4.18.2",
         "mongoose": "^7.6.0"
     },
