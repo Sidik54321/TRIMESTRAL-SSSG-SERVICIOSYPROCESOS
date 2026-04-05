@@ -1717,8 +1717,9 @@ function CoachManagement() {
                             )
                         )
                     )
-                ),
-                h(
+                )
+            ),
+            h(
                 'div', {
                     className: 'results-header',
                     style: { marginTop: 14, marginBottom: 10, padding: 0 }
