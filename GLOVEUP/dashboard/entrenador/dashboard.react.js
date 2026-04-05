@@ -1717,184 +1717,158 @@ function CoachManagement() {
                             )
                         )
                     )
-                )
-            ),
-            h(
+                ),
+                h(
                 'div', {
                     className: 'results-header',
-                    style: {
-                        marginTop: 14,
-                        marginBottom: 10,
-                        padding: 0
-                    }
+                    style: { marginTop: 14, marginBottom: 10, padding: 0 }
                 },
-                h('div', {
-                    className: 'results-info'
-                }, h('span', {
-                    className: 'total-results'
-                }, `${filteredBoxers.length} Boxeadores`))
-            ),
-            h(
-                'div', {
-                    className: 'coach-boxers-list'
-                },
-                filteredBoxers.length === 0 ?
-                h('div', null, 'Todavía no tienes boxeadores asignados.') :
-                filteredBoxers.map((b) => h(
-                    'div', {
-                        key: b && (b._id || b.email) ? (b._id || b.email) : Math.random().toString(36).slice(2),
-                        className: 'coach-boxer-card',
-                        style: {
-                            cursor: 'pointer'
-                        },
-                        onClick: () => selectForEdit(b)
-                    },
-                    h(
-                        'div', {
-                            className: 'coach-boxer-avatar'
-                        },
-                        h('i', {
-                            className: 'fas fa-user-circle'
-                        })
-                    ),
-                    h(
-                        'div', {
-                            className: 'coach-boxer-main'
-                        },
-                        h(
-                            'div', {
-                                className: 'coach-boxer-title'
-                            },
-                            h('div', {
-                                className: 'coach-boxer-name'
-                            }, b && b.nombre ? b.nombre : 'Boxeador')
-                        ),
-                        h('div', {
-                            className: 'coach-boxer-email-text'
-                        }, b && b.email ? b.email : ''),
-                        h(
-                            'div', {
-                                className: 'coach-boxer-meta'
-                            },
-                            h('span', {
-                                className: 'coach-boxer-pill'
-                            }, b && b.nivel ? b.nivel : 'Amateur'),
-                            h('span', {
-                                className: 'coach-boxer-pill'
-                            }, b && b.dniLicencia ? b.dniLicencia : '-')
-                        )
-                    )
-                ))
-            ),
-            h(
-                'div', {
-                    style: {
-                        marginTop: 18,
-                        display: 'grid',
-                        gap: 16
-                    }
-                },
-                h(
-                    'div', {
-                        style: {
-                            display: 'grid',
-                            gap: 10
-                        }
-                    },
-                    h('h3', {
-                        style: {
-                            margin: 0
-                        }
-                    }, 'Editar boxeador'),
-                    h('input', {
-                        value: editId,
-                        type: 'hidden',
-                        readOnly: true
-                    }),
-                    h(
-                        'div', {
-                            style: {
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                                gap: 10
-                            }
-                        },
-                        h('input', {
-                            value: editName,
-                            onChange: (e) => setEditName(e.target.value),
-                            type: 'text',
-                            placeholder: 'Nombre',
-                            style: {
-                                width: '100%',
-                                padding: 12,
-                                borderRadius: 12,
-                                border: '1px solid #e5e7eb'
-                            }
-                        }),
-                        h('input', {
-                            value: editDni,
-                            onChange: (e) => setEditDni(e.target.value),
-                            type: 'text',
-                            placeholder: 'DNI/Licencia',
-                            style: {
-                                width: '100%',
-                                padding: 12,
-                                borderRadius: 12,
-                                border: '1px solid #e5e7eb'
-                            }
-                        }),
-                        h(
-                            'select', {
-                                value: editLevel,
-                                onChange: (e) => setEditLevel(e.target.value),
-                                style: {
-                                    width: '100%',
-                                    padding: 12,
-                                    borderRadius: 12,
-                                    border: '1px solid #e5e7eb'
-                                }
-                            },
-                            h('option', {
-                                value: 'Principiante'
-                            }, 'Principiante'),
-                            h('option', {
-                                value: 'Intermedio'
-                            }, 'Intermedio'),
-                            h('option', {
-                                value: 'Avanzado'
-                            }, 'Avanzado'),
-                            h('option', {
-                                value: 'Amateur'
-                            }, 'Amateur'),
-                            h('option', {
-                                value: 'Profesional'
-                            }, 'Profesional')
-                        )
-                    ),
-                    h(
-                        'div', {
-                            style: {
-                                display: 'flex',
-                                gap: 10,
-                                flexWrap: 'wrap'
-                            }
-                        },
-                        h('button', {
-                            className: 'btn btn-secondary',
-                            type: 'button',
-                            onClick: saveEdit
-                        }, 'Guardar cambios'),
-                        h('button', {
-                            className: 'btn btn-secondary',
-                            type: 'button',
-                            onClick: deleteEdit,
-                            style: {
-                                color: '#4b5563',
-                                borderColor: '#ef4444'
-                            }
-                        }, 'Eliminar boxeador')
-                    )
+                h('div', { className: 'results-info' },
+                    h('span', { className: 'total-results' }, `${filteredBoxers.length} Boxeadores`)
                 )
+            ),
+
+            // Lista de boxeadores en formato sparring-card
+            h(
+                'div', { className: 'sparring-list' },
+                filteredBoxers.length === 0 ?
+                h('div', { style: { padding: '20px', opacity: .5, textAlign: 'center' } }, 'Todavía no tienes boxeadores asignados.') :
+                filteredBoxers.map((b, index) => {
+                    const levelScore = (nivel = '') => {
+                        const n = String(nivel).toLowerCase();
+                        if (n.includes('principiante')) return 1;
+                        if (n.includes('intermedio')) return 2;
+                        if (n.includes('avanzado')) return 3;
+                        if (n.includes('amateur')) return 4;
+                        if (n.includes('profesional')) return 5;
+                        return 3;
+                    };
+                    const renderStars = (v) => {
+                        const filled = Math.max(0, Math.min(5, Number(v) || 0));
+                        return Array.from({ length: 5 }, (_, i) =>
+                            h('i', { key: i, className: i < filled ? 'fas fa-star' : 'far fa-star', style: { color: i < filled ? '#f97316' : '#d1d5db', fontSize: '0.75rem' } })
+                        );
+                    };
+                    const isEditing = editId === (b._id || '');
+                    return h(
+                        React.Fragment,
+                        { key: b._id || b.email },
+                        // Tarjeta estilo sparring
+                        h('div', {
+                            className: 'sparring-card',
+                            style: { cursor: 'default', position: 'relative' }
+                        },
+                            h('div', { className: 'card-rank' },
+                                h('span', null, `#${index + 1}`),
+                                index === 0 ? h('i', { className: 'fas fa-crown' }) : null
+                            ),
+                            h('div', { className: 'card-flag' },
+                                h('div', {
+                                    style: {
+                                        width: 44, height: 44, borderRadius: '50%',
+                                        background: 'var(--color-accent, #f97316)',
+                                        color: '#fff', display: 'flex',
+                                        alignItems: 'center', justifyContent: 'center',
+                                        fontWeight: 800, fontSize: '1.1rem'
+                                    }
+                                }, (b.nombre || 'B').charAt(0).toUpperCase())
+                            ),
+                            h('div', { className: 'card-name' },
+                                h('span', { className: 'main-name' }, b.nombre || 'Boxeador'),
+                                h('span', { className: 'alias' }, b.email || '')
+                            ),
+                            h('div', { className: 'card-stars' }, ...renderStars(levelScore(b.nivel))),
+                            h('div', { className: 'card-division' }, b.dniLicencia || 'Sin DNI'),
+                            h('div', { className: 'card-record' }, b.nivel || 'Amateur'),
+                            h('div', { className: 'card-residence' },
+                                h('i', { className: 'fas fa-map-marker-alt' }),
+                                ` ${b.gimnasio || 'Sin gimnasio'}`
+                            ),
+                            // Acciones directas en la tarjeta
+                            h('div', { className: 'card-action', style: { display: 'flex', gap: 8 } },
+                                h('button', {
+                                    className: 'view-profile-button',
+                                    type: 'button',
+                                    style: { background: 'var(--color-accent, #f97316)', color: '#fff' },
+                                    onClick: (e) => { e.stopPropagation(); selectForEdit(b); }
+                                }, 'Editar'),
+                                h('button', {
+                                    className: 'view-profile-button',
+                                    type: 'button',
+                                    style: { background: '#fff', color: '#ef4444', border: '1.5px solid #ef4444' },
+                                    onClick: async (e) => {
+                                        e.stopPropagation();
+                                        if (!b._id) return;
+                                        await selectForEdit(b);
+                                        deleteEdit();
+                                    }
+                                }, 'Eliminar')
+                            )
+                        ),
+                        // Formulario de edición inline (solo visible cuando esta tarjeta está seleccionada)
+                        isEditing ? h('div', {
+                            style: {
+                                margin: '0 0 16px 0',
+                                padding: '16px',
+                                borderRadius: 14,
+                                border: '2px solid var(--color-accent, #f97316)',
+                                background: 'var(--color-bg-card, #fff)',
+                                display: 'grid',
+                                gap: 12
+                            }
+                        },
+                            h('div', { style: { fontWeight: 700, fontSize: '.9rem', color: 'var(--color-accent, #f97316)' } },
+                                `✏️ Editando: ${b.nombre || b.email}`
+                            ),
+                            h('div', {
+                                style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }
+                            },
+                                h('input', {
+                                    value: editName,
+                                    onChange: (e) => setEditName(e.target.value),
+                                    type: 'text',
+                                    placeholder: 'Nombre',
+                                    style: { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: '.88rem' }
+                                }),
+                                h('input', {
+                                    value: editDni,
+                                    onChange: (e) => setEditDni(e.target.value),
+                                    type: 'text',
+                                    placeholder: 'DNI/Licencia',
+                                    style: { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: '.88rem' }
+                                }),
+                                h('select', {
+                                    value: editLevel,
+                                    onChange: (e) => setEditLevel(e.target.value),
+                                    style: { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: '.88rem' }
+                                },
+                                    h('option', { value: 'Principiante' }, 'Principiante'),
+                                    h('option', { value: 'Intermedio' }, 'Intermedio'),
+                                    h('option', { value: 'Avanzado' }, 'Avanzado'),
+                                    h('option', { value: 'Amateur' }, 'Amateur'),
+                                    h('option', { value: 'Profesional' }, 'Profesional')
+                                )
+                            ),
+                            h('div', { style: { display: 'flex', gap: 10 } },
+                                h('button', {
+                                    className: 'submit-button',
+                                    type: 'button',
+                                    onClick: saveEdit
+                                }, 'Guardar cambios'),
+                                h('button', {
+                                    type: 'button',
+                                    style: { padding: '10px 18px', borderRadius: 10, border: '1.5px solid #ef4444', background: 'none', color: '#ef4444', fontWeight: 700, cursor: 'pointer' },
+                                    onClick: deleteEdit
+                                }, 'Eliminar boxeador'),
+                                h('button', {
+                                    type: 'button',
+                                    style: { padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: 'none', color: '#6b7280', cursor: 'pointer' },
+                                    onClick: () => { setEditId(''); setEditName(''); setEditDni(''); setEditLevel('Amateur'); }
+                                }, 'Cancelar')
+                            )
+                        ) : null
+                    );
+                })
             )
         ),
         h(
