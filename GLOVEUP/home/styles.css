@@ -334,8 +334,8 @@ h2 {
 .sidebar-header {
     display: flex;
     align-items: center;
-    margin-bottom: 48px;
-    padding-bottom: 24px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
     border-bottom: 1px solid var(--color-border);
 }
 
@@ -362,6 +362,9 @@ h2 {
 
 .sidebar-nav {
     flex-grow: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
 }
 
 .sidebar-nav ul {
@@ -370,7 +373,7 @@ h2 {
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 2px;
 }
 
 .sidebar-nav li a {
@@ -379,8 +382,8 @@ h2 {
     color: var(--color-text-light);
     text-decoration: none;
     font-weight: 600;
-    font-size: 0.92rem;
-    padding: 11px var(--spacing-md);
+    font-size: 0.88rem;
+    padding: 8px var(--spacing-md);
     border-radius: var(--radius-md);
     transition: all var(--transition-base);
     position: relative;
@@ -429,12 +432,12 @@ h2 {
 }
 
 .sidebar-footer {
-    margin-top: auto;
+    flex-shrink: 0;
     border-top: 1px solid var(--color-border);
-    padding-top: var(--spacing-lg);
+    padding-top: 8px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
 }
 
 .sidebar-btn {
@@ -465,20 +468,21 @@ h2 {
 
 /* Sidebar Manuals Download Box */
 .sidebar-manuals {
-    margin-top: 18px;
-    margin-bottom: 20px;
-    padding-top: 20px;
+    flex-shrink: 0;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    padding-top: 12px;
     border-top: 1px solid var(--color-border);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
 }
 
 .manual-box {
     background: rgba(0, 0, 0, 0.03);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    padding: 14px;
+    padding: 8px 10px;
     text-align: center;
 }
 
@@ -487,9 +491,9 @@ body.theme-dark .manual-box {
 }
 
 .manual-box h4 {
-    font-size: 0.78rem;
+    font-size: 0.73rem;
     font-weight: 700;
-    margin: 0 0 10px 0;
+    margin: 0 0 6px 0;
     color: var(--color-text-main);
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -503,7 +507,7 @@ body.theme-dark .manual-box {
     background: var(--color-accent);
     color: #fff !important;
     text-decoration: none;
-    padding: 8px 12px;
+    padding: 6px 10px;
     border-radius: var(--radius-sm);
     font-size: 0.75rem;
     font-weight: 800;
