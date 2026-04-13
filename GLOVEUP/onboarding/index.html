@@ -246,6 +246,54 @@
                 if (coachNavItem) coachNavItem.style.display = role === 'entrenador' ? '' : 'none';
                 if (coachGymNavItem) coachGymNavItem.style.display = role === 'entrenador' ? '' : 'none';
                 if (sparringsNavItem) sparringsNavItem.style.display = role === 'entrenador' ? 'none' : '';
+
+                const themeBtn = document.getElementById('theme-toggle');
+                const body = document.body;
+                const THEME_KEY = 'gloveup_theme';
+
+                const savedTheme = localStorage.getItem(THEME_KEY);
+                if (savedTheme === 'dark') {
+                    body.classList.add('theme-dark');
+                    updateThemeIcon(true);
+                } else {
+                    updateThemeIcon(false);
+                }
+
+                if (themeBtn) {
+                    themeBtn.addEventListener('click', () => {
+                        body.classList.toggle('theme-dark');
+                        const isDark = body.classList.contains('theme-dark');
+                        localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+                        updateThemeIcon(isDark);
+                    });
+                }
+
+                function updateThemeIcon(isDark) {
+                    if (!themeBtn) return;
+                    const icon = themeBtn.querySelector('i');
+                    const text = themeBtn.querySelector('span');
+                    if (icon) {
+                        icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                    }
+                    if (text) {
+                        text.textContent = isDark ? 'Tema Claro' : 'Tema Oscuro';
+                    }
+                }
+
+                const logoutBtn = document.getElementById('logout-button');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', () => {
+                        localStorage.removeItem('gloveup_user_name');
+                        localStorage.removeItem('gloveup_user_email');
+                        localStorage.removeItem('gloveup_session_maintained');
+                        localStorage.removeItem('gloveup_is_registered');
+                        localStorage.removeItem('gloveup_user_role');
+                        localStorage.removeItem('gloveup_user_dni');
+                        sessionStorage.removeItem('gloveup_session_maintained');
+                        sessionStorage.removeItem('gloveup_user_id');
+                        window.location.href = '../auth/index.html';
+                    });
+                }
             });
         </script>
     </aside>

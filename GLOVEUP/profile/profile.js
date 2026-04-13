@@ -896,7 +896,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    const logoutBtn = $('logout-btn');
+    const logoutBtn = $('logout-button');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             localStorage.removeItem(STORED_USERNAME_KEY);

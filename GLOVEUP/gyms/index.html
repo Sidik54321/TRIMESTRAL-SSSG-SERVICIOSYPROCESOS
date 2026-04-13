@@ -35,7 +35,7 @@
             <span class="app-name">GloveUp</span>
         </div>
 
-                <nav class="sidebar-nav">
+        <nav class="sidebar-nav">
             <ul>
                 <li>
                     <a href="../onboarding/index.html">
@@ -43,13 +43,13 @@
                         <span>Primeros Pasos</span>
                     </a>
                 </li>
-                <li id="nav-item-inicio" >
+                <li id="nav-item-inicio">
                     <a id="nav-home-link" href="../home/dashboard.html">
                         <i class="fas fa-home"></i>
                         <span>Inicio</span>
                     </a>
                 </li>
-                <li id="nav-item-sparring" >
+                <li id="nav-item-sparring">
                     <a href="../sparring/index.html">
                         <i class="fas fa-fist-raised"></i>
                         <span>Buscar Sparring</span>
@@ -61,13 +61,13 @@
                         <span>Gimnasios</span>
                     </a>
                 </li>
-                <li id="nav-profile-item" >
+                <li id="nav-profile-item">
                     <a href="../profile/index.html">
                         <i class="fas fa-user"></i>
                         <span>Mi Perfil</span>
                     </a>
                 </li>
-                <li id="nav-sparrings-item" >
+                <li id="nav-sparrings-item">
                     <a href="../profile/index.html?tab=sparrings">
                         <i class="fas fa-clipboard-list"></i>
                         <span>Mis Sparrings</span>
@@ -110,31 +110,31 @@
                 <i class="fas fa-cog"></i>
                 <span>Ajustes</span>
             </button>
-            <button id="logout-btn" class="sidebar-btn" style="color: #ef4444;">
+            <button id="logout-button" class="sidebar-btn" style="color: #ef4444;">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Cerrar Sesión</span>
             </button>
         </div>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const role = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();
-            const coachNavItem = document.getElementById('coach-nav-item');
-            const coachGymNavItem = document.getElementById('coach-gym-nav-item');
-            const sparringsNavItem = document.getElementById('nav-sparrings-item');
-            const buscarSparringNavItem = document.getElementById('nav-item-sparring');
-            const homeLink = document.getElementById('nav-home-link');
-            
-            if (homeLink) {
-                homeLink.href = role === 'entrenador' ? '../dashboard/entrenador/dashboard.html' : '../dashboard/boxeador/dashboard.html';
-            }
-            if (coachNavItem) coachNavItem.style.display = role === 'entrenador' ? '' : 'none';
-            if (coachGymNavItem) coachGymNavItem.style.display = role === 'entrenador' ? '' : 'none';
-            if (sparringsNavItem) sparringsNavItem.style.display = role === 'entrenador' ? 'none' : '';
-            if (buscarSparringNavItem) buscarSparringNavItem.style.display = '';
-        });
-    </script>
-</aside>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const role = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();
+                const coachNavItem = document.getElementById('coach-nav-item');
+                const coachGymNavItem = document.getElementById('coach-gym-nav-item');
+                const sparringsNavItem = document.getElementById('nav-sparrings-item');
+                const buscarSparringNavItem = document.getElementById('nav-item-sparring');
+                const homeLink = document.getElementById('nav-home-link');
+
+                if (homeLink) {
+                    homeLink.href = role === 'entrenador' ? '../dashboard/entrenador/dashboard.html' : '../dashboard/boxeador/dashboard.html';
+                }
+                if (coachNavItem) coachNavItem.style.display = role === 'entrenador' ? '' : 'none';
+                if (coachGymNavItem) coachGymNavItem.style.display = role === 'entrenador' ? '' : 'none';
+                if (sparringsNavItem) sparringsNavItem.style.display = role === 'entrenador' ? 'none' : '';
+                if (buscarSparringNavItem) buscarSparringNavItem.style.display = '';
+            });
+        </script>
+    </aside>
 
     <div class="page-hero-section">
         <div class="hero-content">
@@ -298,7 +298,7 @@
             }
 
             // Logout Logic
-            const logoutBtn = document.getElementById('logout-btn');
+            const logoutBtn = document.getElementById('logout-button');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', () => {
                     localStorage.removeItem('gloveup_user_name');
