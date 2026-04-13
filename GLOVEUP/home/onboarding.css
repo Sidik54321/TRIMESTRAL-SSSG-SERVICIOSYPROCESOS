@@ -1,0 +1,193 @@
+/* ============================================== */
+/* ONBOARDING — PRIMEROS PASOS                    */
+/* ============================================== */
+
+.onboarding-section {
+    margin: 32px 0 40px;
+    animation: fadeSlideIn 0.5s ease both;
+}
+
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.onboarding-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.onboarding-header h2 {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: var(--color-primary, #0a0a0a);
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+}
+
+.onboarding-header p {
+    color: var(--color-text-light, #64748b);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* Progress bar */
+.onboarding-progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 20px 0 32px;
+}
+
+.onboarding-progress-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text-light, #64748b);
+    white-space: nowrap;
+}
+
+.onboarding-progress-track {
+    flex: 1;
+    height: 10px;
+    background: rgba(0,0,0,0.07);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.onboarding-progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #f97316, #ea580c);
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 2px 8px rgba(249,115,22,0.35);
+}
+
+.onboarding-progress-pct {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #f97316;
+    min-width: 36px;
+    text-align: right;
+}
+
+/* Cards grid */
+.onboarding-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+}
+
+.onboarding-card {
+    background: #fff;
+    border: 1.5px solid rgba(0,0,0,0.08);
+    border-radius: 16px;
+    padding: 22px 20px 20px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.onboarding-card:hover:not(.done) {
+    border-color: #f97316;
+    box-shadow: 0 8px 28px rgba(249,115,22,0.12);
+    transform: translateY(-3px);
+}
+
+.onboarding-card.done {
+    opacity: 0.55;
+    cursor: default;
+    border-color: #22c55e;
+    background: #f0fdf4;
+}
+
+.onboarding-card.done::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2322c55e' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E") no-repeat top 14px right 14px / 20px;
+}
+
+.onboarding-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(249,115,22,0.1);
+    color: #f97316;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.onboarding-card.done .onboarding-card-icon {
+    background: rgba(34,197,94,0.12);
+    color: #22c55e;
+}
+
+.onboarding-card-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-primary, #0a0a0a);
+    line-height: 1.3;
+}
+
+.onboarding-card.done .onboarding-card-title {
+    text-decoration: line-through;
+    color: var(--color-text-light, #64748b);
+}
+
+.onboarding-card-desc {
+    font-size: 0.85rem;
+    color: var(--color-text-light, #64748b);
+    line-height: 1.55;
+    flex: 1;
+}
+
+.onboarding-card-action {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #f97316;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    transition: gap 0.2s;
+}
+
+.onboarding-card:hover:not(.done) .onboarding-card-action {
+    gap: 8px;
+}
+
+.onboarding-card.done .onboarding-card-action {
+    color: #22c55e;
+}
+
+/* Dark mode */
+body.theme-dark .onboarding-card {
+    background: var(--color-bg-card, #1e293b);
+    border-color: var(--color-border, rgba(255,255,255,0.08));
+}
+
+body.theme-dark .onboarding-card.done {
+    background: rgba(34,197,94,0.08);
+    border-color: #22c55e;
+}
+
+body.theme-dark .onboarding-header h2 {
+    color: #f1f5f9;
+}
+
+body.theme-dark .onboarding-card-title {
+    color: #f1f5f9;
+}
+
+body.theme-dark .onboarding-progress-track {
+    background: rgba(255,255,255,0.1);
+}

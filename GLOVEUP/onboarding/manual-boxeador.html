@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual del Boxeador — GloveUp</title>
+    <link rel="icon" href="../assets/images/logo-fondo-blanco.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --accent: #f97316;
+            --accent-dark: #ea580c;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: rgba(0,0,0,0.08);
+            --bg: #f8fafc;
+            --card: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        /* ── Print styles ── */
+        @media print {
+            body { background: #fff; font-size: 13px; }
+            .no-print { display: none !important; }
+            .cover { page-break-after: always; }
+            .section { page-break-inside: avoid; }
+            a { color: inherit; }
+        }
+
+        /* ── Top bar (screen only) ── */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #0f172a;
+            color: #fff;
+            padding: 14px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .topbar-left { display: flex; align-items: center; gap: 14px; }
+        .topbar-logo { width: 36px; height: 36px; border-radius: 8px; object-fit: contain; background: #fff; padding: 3px; }
+        .topbar-title { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 800; letter-spacing: 0.04em; }
+        .topbar-badge { background: var(--accent); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.06em; }
+        .btn-print {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+        .btn-print:hover { background: var(--accent-dark); }
+        .btn-back {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: none;
+            padding: 9px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .btn-back:hover { background: rgba(255,255,255,0.18); }
+
+        /* ── Layout ── */
+        .wrapper { max-width: 860px; margin: 0 auto; padding: 48px 32px 80px; }
+
+        /* ── Cover ── */
+        .cover {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #f97316 160%);
+            border-radius: 24px;
+            padding: 64px 56px;
+            color: #fff;
+            margin-bottom: 56px;
+            position: relative;
+            overflow: hidden;
+        }
+        .cover::before {
+            content: '🥊';
+            position: absolute;
+            right: 44px;
+            bottom: 36px;
+            font-size: 7rem;
+            opacity: 0.12;
+        }
+        .cover-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(249,115,22,0.25);
+            border: 1px solid rgba(249,115,22,0.5);
+            color: #fed7aa;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 99px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+        }
+        .cover h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 14px;
+            letter-spacing: -0.02em;
+        }
+        .cover p {
+            opacity: 0.72;
+            font-size: 1rem;
+            max-width: 480px;
+        }
+        .cover-version {
+            margin-top: 36px;
+            font-size: 0.78rem;
+            opacity: 0.45;
+            font-weight: 600;
+        }
+
+        /* ── Table of contents ── */
+        .toc {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 48px;
+        }
+        .toc h2 { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 800; margin-bottom: 16px; color: var(--text); }
+        .toc ol { list-style: none; counter-reset: toc-counter; }
+        .toc li {
+            counter-increment: toc-counter;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.92rem;
+        }
+        .toc li:last-child { border-bottom: none; }
+        .toc li::before {
+            content: counter(toc-counter, decimal-leading-zero);
+            font-weight: 800;
+            font-size: 0.78rem;
+            color: var(--accent);
+            min-width: 24px;
+        }
+        .toc a { color: var(--text); text-decoration: none; font-weight: 600; }
+        .toc a:hover { color: var(--accent); }
+
+        /* ── Sections ── */
+        .section { margin-bottom: 52px; }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid var(--border);
+        }
+        .section-num {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .section-header h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .section p { color: #334155; margin-bottom: 14px; }
+        .section p:last-child { margin-bottom: 0; }
+
+        /* Steps */
+        .steps { display: flex; flex-direction: column; gap: 14px; margin: 20px 0; }
+        .step {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 18px;
+        }
+        .step-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            background: rgba(249,115,22,0.1);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .step-body h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+        .step-body p { font-size: 0.88rem; color: var(--muted); margin: 0; }
+
+        /* Tips */
+        .tip {
+            background: rgba(249,115,22,0.07);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 10px 10px 0;
+            padding: 14px 18px;
+            margin: 18px 0;
+            font-size: 0.9rem;
+            color: #7c2d12;
+        }
+        .tip strong { color: var(--accent-dark); }
+
+        /* Info box */
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-size: 0.9rem;
+            color: #1e40af;
+            margin: 18px 0;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            font-size: 0.9rem;
+        }
+        th {
+            background: #f1f5f9;
+            font-weight: 700;
+            text-align: left;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+        }
+        td {
+            padding: 9px 14px;
+            border: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+        tr:nth-child(even) td { background: #fafafa; }
+
+        /* Footer */
+        .doc-footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted);
+            font-size: 0.82rem;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+        .doc-footer strong { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<!-- Top bar -->
+<nav class="topbar no-print">
+    <div class="topbar-left">
+        <img class="topbar-logo" src="../assets/images/unnamed-removebg-preview.png" alt="GloveUp">
+        <span class="topbar-title">GloveUp</span>
+        <span class="topbar-badge"><i class="fas fa-boxing-glove"></i> Manual del Boxeador</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+        <a class="btn-back" href="../onboarding/index.html"><i class="fas fa-arrow-left"></i> Volver</a>
+        <button class="btn-print" onclick="window.print()"><i class="fas fa-print"></i> Guardar PDF</button>
+    </div>
+</nav>
+
+<div class="wrapper">
+
+    <!-- Cover -->
+    <div class="cover">
+        <div class="cover-badge"><i class="fas fa-book-open"></i> Guía oficial</div>
+        <h1>Manual del<br>Boxeador</h1>
+        <p>Todo lo que necesitas saber para aprovechar GloveUp al máximo: registra sparrings, reta rivales, gestiona tu perfil y conecta con otros luchadores.</p>
+        <div class="cover-version">GloveUp · Versión 1.0 · 2026</div>
+    </div>
+
+    <!-- ToC -->
+    <div class="toc">
+        <h2><i class="fas fa-list" style="color:var(--accent);margin-right:8px"></i>Contenidos</h2>
+        <ol>
+            <li><a href="#s1">¿Qué es GloveUp?</a></li>
+            <li><a href="#s2">Registro e inicio de sesión</a></li>
+            <li><a href="#s3">Tu perfil de boxeador</a></li>
+            <li><a href="#s4">Buscar sparring</a></li>
+            <li><a href="#s5">Enviar y gestionar retos</a></li>
+            <li><a href="#s6">Mis Sparrings</a></li>
+            <li><a href="#s7">Explorar gimnasios</a></li>
+            <li><a href="#s8">Chat y mensajes</a></li>
+            <li><a href="#s9">Notificaciones</a></li>
+            <li><a href="#s10">Preguntas frecuentes</a></li>
+        </ol>
+    </div>
+
+    <!-- Sections -->
+    <div class="section" id="s1">
+        <div class="section-header">
+            <div class="section-num">1</div>
+            <h2>¿Qué es GloveUp?</h2>
+        </div>
+        <p>GloveUp es una plataforma digital diseñada para conectar <strong>boxeadores</strong> y <strong>entrenadores</strong> en todo el mundo. Permite encontrar compañeros de sparring, gestionar sesiones de combate, comunicarse en tiempo real y acceder a un directorio de gimnasios de artes marciales.</p>
+        <p>Con GloveUp puedes:</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-fist-raised"></i></div>
+                <div class="step-body"><h4>Encuentra sparrings</h4><p>Filtra por nivel, categoría de peso y ubicación para hallar a tu compañero ideal.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-paper-plane"></i></div>
+                <div class="step-body"><h4>Reta a otros boxeadores</h4><p>Envía propuestas de sparring con fecha, gimnasio y entrenador incluidos.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-chart-line"></i></div>
+                <div class="step-body"><h4>Controla tu historial</h4><p>Visualiza todas tus sesiones, estadísticas mensuales y valoraciones recibidas.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-comments"></i></div>
+                <div class="step-body"><h4>Comunícate</h4><p>Chatea directamente con otros boxeadores o entrenadores desde cualquier página.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="s2">
+        <div class="section-header">
+            <div class="section-num">2</div>
+            <h2>Registro e inicio de sesión</h2>
+        </div>
+        <p>El acceso a GloveUp se realiza a través de la pantalla de autenticación (<code>auth/index.html</code>).</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-user-plus"></i></div>
+                <div class="step-body"><h4>Crear cuenta</h4><p>Introduce tu nombre, email y contraseña. Selecciona el rol <strong>Boxeador</strong>. Tu cuenta se crea automáticamente en la base de datos.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-sign-in-alt"></i></div>
+                <div class="step-body"><h4>Iniciar sesión</h4><p>Escribe tu email y contraseña registrados. Al entrar, serás redirigido a tu panel de control de boxeador.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-sign-out-alt"></i></div>
+                <div class="step-body"><h4>Cerrar sesión</h4><p>Usa el botón "Cerrar Sesión" en la parte inferior del menú lateral en cualquier página.</p></div>
+            </div>
+        </div>
+        <div class="tip"><strong>💡 Consejo:</strong> Usa una contraseña segura con al menos 8 caracteres. GloveUp nunca comparte tu información personal.</div>
+    </div>
+
+    <div class="section" id="s3">
+        <div class="section-header">
+            <div class="section-num">3</div>
+            <h2>Tu perfil de boxeador</h2>
+        </div>
+        <p>Tu perfil es tu carta de presentación. Cuanto más completo esté, más fácil será que otros boxeadores y entrenadores te encuentren.</p>
+        <table>
+            <tr><th>Campo</th><th>Descripción</th><th>Importancia</th></tr>
+            <tr><td>Foto de perfil</td><td>URL de imagen o foto subida</td><td>⭐⭐⭐ Esencial</td></tr>
+            <tr><td>Alias / Apodo</td><td>Tu nombre en el ring</td><td>⭐⭐ Recomendado</td></tr>
+            <tr><td>Disciplina</td><td>Boxeo, Kickboxing, MMA…</td><td>⭐⭐⭐ Esencial</td></tr>
+            <tr><td>Categoría de peso</td><td>Peso pluma, ligero, pesado…</td><td>⭐⭐⭐ Esencial</td></tr>
+            <tr><td>Nivel</td><td>Principiante, Amateur, Intermedio, Avanzado, Profesional</td><td>⭐⭐⭐ Esencial</td></tr>
+            <tr><td>Ubicación</td><td>Ciudad o región</td><td>⭐⭐⭐ Esencial</td></tr>
+            <tr><td>Biografía</td><td>Texto libre sobre tu trayectoria</td><td>⭐ Opcional</td></tr>
+            <tr><td>Historial</td><td>Registro D-N-E (victorias, derrotas, empates)</td><td>⭐⭐ Recomendado</td></tr>
+        </table>
+        <p>Accede a tu perfil desde <strong>Mi Perfil</strong> en el menú lateral. Pulsa el botón <strong>Editar perfil</strong> para modificar tus datos y guarda con el botón correspondiente.</p>
+        <div class="info-box"><i class="fas fa-info-circle"></i>&nbsp; Los campos <em>Disciplina</em>, <em>Peso</em>, <em>Nivel</em> y <em>Ubicación</em> son obligatorios para aparecer en los resultados de búsqueda de sparring.</div>
+    </div>
+
+    <div class="section" id="s4">
+        <div class="section-header">
+            <div class="section-num">4</div>
+            <h2>Buscar sparring</h2>
+        </div>
+        <p>La sección <strong>Buscar Sparring</strong> te muestra un listado de todos los boxeadores registrados con los que puedes contactar.</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-filter"></i></div>
+                <div class="step-body"><h4>Usar los filtros</h4><p>Filtra por <strong>Nivel</strong>, <strong>Categoría de peso</strong> y <strong>Ubicación</strong> para encontrar el rival adecuado.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-user-circle"></i></div>
+                <div class="step-body"><h4>Ver perfil</h4><p>Pulsa <em>"Ver Perfil"</em> en una tarjeta para ver el historial completo y estadísticas de ese boxeador.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-fist-raised"></i></div>
+                <div class="step-body"><h4>Retar</h4><p>Pulsa <em>"Retar"</em> para abrir el formulario de reto y seleccionar fecha, gimnasio, promo y entrenadores.</p></div>
+            </div>
+        </div>
+        <div class="tip"><strong>💡 Consejo:</strong> Los resultados se ordenan por nivel. Usa la paginación inferior para ver más boxeadores.</div>
+    </div>
+
+    <div class="section" id="s5">
+        <div class="section-header">
+            <div class="section-num">5</div>
+            <h2>Enviar y gestionar retos</h2>
+        </div>
+        <p>Al pulsar <em>"Retar"</em> sobre la tarjeta de un boxeador se abre el formulario de reto. Completa los siguientes campos:</p>
+        <table>
+            <tr><th>Campo</th><th>Descripción</th></tr>
+            <tr><td>Tipo de sparring</td><td>Técnico, de preparación física, competitivo…</td></tr>
+            <tr><td>Nota personal</td><td>Mensaje libre para el rival (opcional)</td></tr>
+            <tr><td>Entrenadores</td><td>Selecciona uno o más entrenadores que supervisarán el sparring</td></tr>
+            <tr><td>Gimnasio</td><td>Elige el gimnasio donde se realizará</td></tr>
+            <tr><td>Fecha y hora</td><td>Cuándo quieres que se celebre el sparring</td></tr>
+        </table>
+        <p>Una vez enviado, el reto aparecerá en la sección <strong>Mis Sparrings → Retos enviados</strong>. El rival verá el reto en su pestaña <em>Retos recibidos</em> y podrá aceptarlo o rechazarlo.</p>
+        <div class="info-box"><i class="fas fa-info-circle"></i>&nbsp; Si el reto es aceptado, se crea automáticamente una sesión de sparring programada para ambos boxeadores.</div>
+    </div>
+
+    <div class="section" id="s6">
+        <div class="section-header">
+            <div class="section-num">6</div>
+            <h2>Mis Sparrings</h2>
+        </div>
+        <p>Accede desde <strong>Mi Perfil → pestaña Sparrings</strong> o desde el menú lateral <em>Mis Sparrings</em>. Aquí encontrarás tres sub-pestañas:</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-paper-plane"></i></div>
+                <div class="step-body"><h4>Retos enviados</h4><p>Todos los retos que has mandado y su estado: pendiente / aceptado / rechazado.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-inbox"></i></div>
+                <div class="step-body"><h4>Retos recibidos</h4><p>Retos que otros boxeadores te han enviado. Puedes aceptarlos o rechazarlos desde aquí.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-calendar-check"></i></div>
+                <div class="step-body"><h4>Sesiones programadas</h4><p>Sparrings confirmados. Cuando terminen, puedes marcarlos como completados y dejar una valoración (1-5 estrellas + etiquetas).</p></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="s7">
+        <div class="section-header">
+            <div class="section-num">7</div>
+            <h2>Explorar gimnasios</h2>
+        </div>
+        <p>La sección <strong>Gimnasios</strong> muestra un mapa interactivo y una lista de todos los recintos registrados en la plataforma.</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-map-marker-alt"></i></div>
+                <div class="step-body"><h4>Ver en mapa</h4><p>Pulsa sobre los marcadores del mapa para ver detalles del gimnasio.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-search"></i></div>
+                <div class="step-body"><h4>Filtrar</h4><p>Usa la barra de búsqueda y filtros laterales (tipo, precio, ubicación) para acotar resultados.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-heart"></i></div>
+                <div class="step-body"><h4>Guardar favoritos</h4><p>Haz clic en el icono de corazón de una tarjeta de gimnasio para añadirla a tus favoritos.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="s8">
+        <div class="section-header">
+            <div class="section-num">8</div>
+            <h2>Chat y mensajes</h2>
+        </div>
+        <p>El chat está disponible en todas las páginas de la plataforma (esquina inferior derecha). Te permite comunicarte en tiempo real con cualquier usuario de GloveUp.</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-comment-dots"></i></div>
+                <div class="step-body"><h4>Abrir el chat</h4><p>Pulsa el botón flotante del chat (icono de burbuja) en cualquier página.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-plus-circle"></i></div>
+                <div class="step-body"><h4>Nueva conversación</h4><p>Pulsa el botón "＋" en el panel de mensajes y busca a la persona por nombre o email.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-paper-plane"></i></div>
+                <div class="step-body"><h4>Enviar mensaje</h4><p>Escribe en el campo inferior y pulsa el botón enviar o presiona Enter.</p></div>
+            </div>
+        </div>
+        <div class="tip"><strong>💡 Consejo:</strong> El chat se actualiza automáticamente. Si tienes mensajes nuevos sin leer, verás un número en rojo sobre el icono del chat.</div>
+    </div>
+
+    <div class="section" id="s9">
+        <div class="section-header">
+            <div class="section-num">9</div>
+            <h2>Notificaciones</h2>
+        </div>
+        <p>El sistema de notificaciones te avisa de eventos importantes: retos recibidos, sparrings aceptados, mensajes nuevos, etc.</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-bell"></i></div>
+                <div class="step-body"><h4>Ver notificaciones</h4><p>Pulsa el icono de campana (🔔) en la esquina superior derecha. El número rojo indica cuántas tienes sin leer.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-check-double"></i></div>
+                <div class="step-body"><h4>Marcar como leídas</h4><p>Haz clic en "Marcar todo" para limpiar el contador o en la ✕ de cada notificación para eliminarla.</p></div>
+            </div>
+        </div>
+        <div class="info-box"><i class="fas fa-info-circle"></i>&nbsp; Las notificaciones se revisan automáticamente cada 30 segundos mientras estés en la aplicación.</div>
+    </div>
+
+    <div class="section" id="s10">
+        <div class="section-header">
+            <div class="section-num">10</div>
+            <h2>Preguntas frecuentes</h2>
+        </div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-question"></i></div>
+                <div class="step-body"><h4>¿Por qué no aparezco en el buscador de sparring?</h4><p>Asegúrate de que tu perfil tiene foto, disciplina, peso, nivel y ubicación completados.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-question"></i></div>
+                <div class="step-body"><h4>¿Puedo rechazar un reto?</h4><p>Sí, desde la pestaña "Retos recibidos" en Mis Sparrings puedes rechazar cualquier propuesta.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-question"></i></div>
+                <div class="step-body"><h4>¿Dónde veo mis sparrings confirmados?</h4><p>En la pestaña "Sesiones programadas" dentro de Mis Sparrings.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-question"></i></div>
+                <div class="step-body"><h4>¿Puedo cambiar mi email o contraseña?</h4><p>Actualmente puedes editar los datos de perfil desde Mi Perfil. Para cambiar el email, contacta con el administrador.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-question"></i></div>
+                <div class="step-body"><h4>¿Cómo funciona el modo oscuro?</h4><p>Pulsa el botón "Tema Oscuro" en la parte inferior del menú lateral. La preferencia se guarda automáticamente.</p></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="doc-footer">
+    <p><strong>GloveUp</strong> — Manual del Boxeador · Versión 1.0 · 2026</p>
+    <p>Para soporte técnico contacta con el administrador del sistema.</p>
+</div>
+
+</body>
+</html>

@@ -13,10 +13,12 @@
     <meta property="og:description" content="Gestiona tu perfil y historial de sparrings.">
     <meta property="og:type" content="website">
     <meta property="og:image" content="../assets/images/Sparring_Club_Collection-Link-Image.jpg">
+    <link rel="stylesheet" href="../home/styles.css">
     <link rel="stylesheet" href="../home/notifications.css">
+    <link rel="stylesheet" href="profile.css">
 </head>
 
-<body class="bw">
+<body class="bw with-sidebar">
     <!-- SIDEBAR VERTICAL -->
     <aside class="main-sidebar">
         <div class="sidebar-header">
@@ -26,6 +28,12 @@
 
                 <nav class="sidebar-nav">
             <ul>
+                <li>
+                    <a href="../onboarding/index.html">
+                        <i class="fas fa-rocket"></i>
+                        <span>Primeros Pasos</span>
+                    </a>
+                </li>
                 <li id="nav-item-inicio" >
                     <a id="nav-home-link" href="../home/dashboard.html">
                         <i class="fas fa-home"></i>
@@ -68,12 +76,8 @@
                         <span>Mi Gimnasio</span>
                     </a>
                 </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-envelope"></i>
-                        <span>Mensajes</span>
-                    </a>
-                </li>
+
+
             </ul>
         </nav>
 
@@ -107,7 +111,7 @@
             if (coachNavItem) coachNavItem.style.display = role === 'entrenador' ? '' : 'none';
             if (coachGymNavItem) coachGymNavItem.style.display = role === 'entrenador' ? '' : 'none';
             if (sparringsNavItem) sparringsNavItem.style.display = role === 'entrenador' ? 'none' : '';
-            if (buscarSparringNavItem) buscarSparringNavItem.style.display = role === 'entrenador' ? 'none' : '';
+            if (buscarSparringNavItem) buscarSparringNavItem.style.display = '';
         });
     </script>
 </aside>

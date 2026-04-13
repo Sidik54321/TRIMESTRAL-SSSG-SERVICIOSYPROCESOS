@@ -163,16 +163,24 @@ router.post('/challenges', async (req, res) => {
             });
         }
 
-        const from = await Boxeador.findOne({
+        let from = await Boxeador.findOne({
             email: fromEmail
         }).lean();
+        if (!from) {
+            from = await Entrenador.findOne({
+                email: fromEmail
+            }).lean();
+        }
         if (!from) {
             return res.status(404).json({
                 error: 'Perfil origen no encontrado'
             });
         }
 
-        const to = await findBoxeadorByIdentifier(toIdentifier);
+        let to = await findBoxeadorByIdentifier(toIdentifier);
+        if (!to) {
+            to = await Entrenador.findOne({ email: toIdentifier }).lean() || await Entrenador.findById(toIdentifier).lean();
+        }
         if (!to) {
             return res.status(404).json({
                 error: 'Perfil destino no encontrado'
@@ -218,21 +226,41 @@ router.post('/challenges', async (req, res) => {
             respondedAt: ''
         };
 
-        await Boxeador.updateOne({
-            email: fromEmail
-        }, {
-            $push: {
-                sparringChallengesSent: record
-            }
-        });
+        if (await Boxeador.findOne({ email: fromEmail })) {
+            await Boxeador.updateOne({
+                email: fromEmail
+            }, {
+                $push: {
+                    sparringChallengesSent: record
+                }
+            });
+        } else {
+            await Entrenador.updateOne({
+                email: fromEmail
+            }, {
+                $push: {
+                    sparringChallengesSent: record
+                }
+            });
+        }
 
-        await Boxeador.updateOne({
-            email: record.toEmail
-        }, {
-            $push: {
-                sparringChallengesReceived: record
-            }
-        });
+        if (await Boxeador.findOne({ email: record.toEmail })) {
+            await Boxeador.updateOne({
+                email: record.toEmail
+            }, {
+                $push: {
+                    sparringChallengesReceived: record
+                }
+            });
+        } else {
+            await Entrenador.updateOne({
+                email: record.toEmail
+            }, {
+                $push: {
+                    sparringChallengesReceived: record
+                }
+            });
+        }
 
         return res.status(201).json(record);
     } catch (err) {

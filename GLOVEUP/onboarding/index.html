@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GloveUp - Primeros Pasos</title>
+    <link rel="icon" href="../assets/images/logo-fondo-blanco.jpg">
+    <link rel="stylesheet" href="../home/styles.css">
+    <link rel="stylesheet" href="../home/notifications.css">
+    <link rel="stylesheet" href="../home/onboarding.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .onboarding-page-main {
+            padding: 48px 40px 80px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .onboarding-section {
+            margin: 0;
+        }
+
+        /* Hero banner at the top */
+        .onboarding-hero {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1e293b 60%, #f97316 150%);
+            border-radius: 20px;
+            padding: 40px 44px;
+            color: #fff;
+            margin-bottom: 36px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .onboarding-hero::before {
+            content: '🥊';
+            position: absolute;
+            right: 32px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 6rem;
+            opacity: 0.12;
+        }
+
+        .onboarding-hero h1 {
+            font-family: var(--font-heading, 'Outfit', sans-serif);
+            font-size: 2rem;
+            font-weight: 900;
+            margin: 0 0 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .onboarding-hero p {
+            margin: 0;
+            opacity: 0.75;
+            font-size: 1rem;
+            max-width: 520px;
+        }
+
+        .onboarding-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(249,115,22,0.25);
+            border: 1px solid rgba(249,115,22,0.5);
+            color: #fed7aa;
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 99px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        /* Help link */
+        .onboarding-help-row {
+            margin-top: 40px;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .onboarding-help-card {
+            flex: 1;
+            min-width: 240px;
+            background: #fff;
+            border: 1.5px solid rgba(0,0,0,0.08);
+            border-radius: 16px;
+            padding: 22px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s;
+        }
+
+        .onboarding-help-card:hover {
+            border-color: #f97316;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(249,115,22,0.1);
+        }
+
+        .onboarding-help-card-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: rgba(249,115,22,0.1);
+            color: #f97316;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        .onboarding-help-card-body h4 {
+            font-family: var(--font-heading, 'Outfit', sans-serif);
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin: 0 0 4px;
+            color: #0a0a0a;
+        }
+
+        .onboarding-help-card-body p {
+            font-size: 0.82rem;
+            color: #64748b;
+            margin: 0;
+        }
+
+        body.theme-dark .onboarding-help-card {
+            background: #1e293b;
+            border-color: rgba(255,255,255,0.08);
+        }
+
+        body.theme-dark .onboarding-help-card-body h4 {
+            color: #f1f5f9;
+        }
+    </style>
+</head>
+
+<body class="with-sidebar">
+    <script>
+        const savedTheme = localStorage.getItem('gloveup_theme');
+        if (savedTheme === 'dark') document.body.classList.add('theme-dark');
+    </script>
+
+    <!-- SIDEBAR VERTICAL -->
+    <aside class="main-sidebar">
+        <div class="sidebar-header">
+            <img src="../assets/images/unnamed-removebg-preview.png" alt="Logo GloveUp">
+            <span class="app-name">GloveUp</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="active">
+                    <a href="../onboarding/index.html">
+                        <i class="fas fa-rocket"></i>
+                        <span>Primeros Pasos</span>
+                    </a>
+                </li>
+                <li id="nav-item-inicio">
+                    <a id="nav-home-link" href="../home/dashboard.html">
+                        <i class="fas fa-home"></i>
+                        <span>Inicio</span>
+                    </a>
+                </li>
+                <li id="nav-item-sparring">
+                    <a href="../sparring/index.html">
+                        <i class="fas fa-fist-raised"></i>
+                        <span>Buscar Sparring</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="../gyms/index.html">
+                        <i class="fas fa-building"></i>
+                        <span>Gimnasios</span>
+                    </a>
+                </li>
+                <li id="nav-profile-item">
+                    <a href="../profile/index.html">
+                        <i class="fas fa-user"></i>
+                        <span>Mi Perfil</span>
+                    </a>
+                </li>
+                <li id="nav-sparrings-item">
+                    <a href="../profile/index.html?tab=sparrings">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Mis Sparrings</span>
+                    </a>
+                </li>
+                <li id="coach-nav-item" style="display:none">
+                    <a href="../dashboard/entrenador/dashboard.html#coach-management">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Gestión</span>
+                    </a>
+                </li>
+                <li id="coach-gym-nav-item" style="display:none">
+                    <a href="../dashboard/entrenador/dashboard.html#coach-gym">
+                        <i class="fas fa-building"></i>
+                        <span>Mi Gimnasio</span>
+                    </a>
+                </li>
+
+
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button id="theme-toggle" class="sidebar-btn">
+                <i class="fas fa-moon"></i>
+                <span>Tema Oscuro</span>
+            </button>
+            <button class="sidebar-btn">
+                <i class="fas fa-cog"></i>
+                <span>Ajustes</span>
+            </button>
+            <button id="logout-button" class="sidebar-btn" style="color:#ef4444">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const role = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();
+                const coachNavItem = document.getElementById('coach-nav-item');
+                const coachGymNavItem = document.getElementById('coach-gym-nav-item');
+                const sparringsNavItem = document.getElementById('nav-sparrings-item');
+                const homeLink = document.getElementById('nav-home-link');
+                if (homeLink) homeLink.href = role === 'entrenador' ? '../dashboard/entrenador/dashboard.html' : '../dashboard/boxeador/dashboard.html';
+                if (coachNavItem) coachNavItem.style.display = role === 'entrenador' ? '' : 'none';
+                if (coachGymNavItem) coachGymNavItem.style.display = role === 'entrenador' ? '' : 'none';
+                if (sparringsNavItem) sparringsNavItem.style.display = role === 'entrenador' ? 'none' : '';
+            });
+        </script>
+    </aside>
+
+    <main class="dashboard-main">
+        <div class="onboarding-page-main">
+
+            <!-- Hero -->
+            <div class="onboarding-hero">
+                <span class="onboarding-hero-badge"><i class="fas fa-rocket"></i> Bienvenido a GloveUp</span>
+                <h1>Tus Primeros Pasos</h1>
+                <p>Completa la configuración inicial para disfrutar al máximo de la plataforma. Cada paso te acerca más a tu próximo sparring.</p>
+            </div>
+
+            <!-- Onboarding widget (filled by onboarding.js) -->
+            <section class="onboarding-section" id="onboarding-full-root">
+                <div style="text-align:center;padding:60px;color:#94a3b8"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i></div>
+            </section>
+
+            <!-- Ayuda adicional -->
+            <div class="onboarding-help-row">
+                <a class="onboarding-help-card" id="manual-link-boxer" href="#" onclick="return false" style="display:none">
+                    <div class="onboarding-help-card-icon"><i class="fas fa-book-open"></i></div>
+                    <div class="onboarding-help-card-body">
+                        <h4>Manual del Boxeador</h4>
+                        <p>Aprende a usar todas las funcionalidades diseñadas para ti.</p>
+                    </div>
+                </a>
+                <a class="onboarding-help-card" id="manual-link-coach" href="#" onclick="return false" style="display:none">
+                    <div class="onboarding-help-card-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                    <div class="onboarding-help-card-body">
+                        <h4>Manual del Entrenador</h4>
+                        <p>Gestiona tu gimnasio, boxeadores y sparrings de forma profesional.</p>
+                    </div>
+                </a>
+                <a class="onboarding-help-card" href="../sparring/index.html">
+                    <div class="onboarding-help-card-icon"><i class="fas fa-search"></i></div>
+                    <div class="onboarding-help-card-body">
+                        <h4>Encontrar Sparring</h4>
+                        <p>Busca por nivel, peso y ubicación a tu próximo rival.</p>
+                    </div>
+                </a>
+                <a class="onboarding-help-card" href="../gyms/index.html">
+                    <div class="onboarding-help-card-icon"><i class="fas fa-map-marked-alt"></i></div>
+                    <div class="onboarding-help-card-body">
+                        <h4>Mapa de Gimnasios</h4>
+                        <p>Encuentra instalaciones de boxeo cerca de tu ubicación.</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notificaciones -->
+    <div class="glv-notif-container">
+        <button id="glv-notif-btn" class="glv-notif-btn" aria-label="Notificaciones">
+            🔔<span id="glv-notif-badge" class="glv-notif-badge" style="display:none">0</span>
+        </button>
+        <div id="glv-notif-panel" class="glv-notif-panel hidden">
+            <div class="glv-notif-header">
+                <span>Notificaciones</span>
+                <div style="display:flex;gap:8px;align-items:center">
+                    <button id="glv-notif-mark-all" class="glv-notif-mark-all">Marcar todo</button>
+                    <i id="glv-notif-close" class="fas fa-times" style="cursor:pointer;opacity:.6"></i>
+                </div>
+            </div>
+            <ul id="glv-notif-list" class="glv-notif-list"></ul>
+        </div>
+    </div>
+
+    <!-- Chat -->
+    <div class="chat-fab-container">
+        <button id="chat-toggle-btn" class="chat-toggle-btn" aria-label="Chat">
+            <i class="fas fa-comment-dots"></i>
+            <span id="glv-chat-badge" class="glv-chat-badge" style="display:none">0</span>
+        </button>
+        <div id="chat-box" class="chat-box hidden">
+            <div id="glv-home-panel" class="glv-panel">
+                <div class="chat-header">
+                    <h3 style="flex:1">Mensajes</h3>
+                    <button id="glv-new-chat-btn" class="glv-new-chat-btn" title="Nueva conversación">＋</button>
+                    <i id="chat-close-btn" class="fas fa-times close-icon"></i>
+                </div>
+                <ul id="glv-conv-list" class="glv-conv-list"></ul>
+            </div>
+            <div id="glv-search-panel" class="glv-panel hidden">
+                <div class="chat-header">
+                    <i id="glv-search-back" class="fas fa-arrow-left close-icon"></i>
+                    <h3 style="flex:1;font-size:.9rem">Nueva conversación</h3>
+                    <i id="glv-search-close" class="fas fa-times close-icon"></i>
+                </div>
+                <div class="glv-search-bar">
+                    <input id="glv-search-input" class="glv-search-input" placeholder="🔍 Buscar por nombre o email…" autocomplete="off">
+                </div>
+                <ul id="glv-search-results" class="contact-list glv-search-results"></ul>
+            </div>
+            <div id="glv-conv-panel" class="glv-panel hidden">
+                <div class="chat-header">
+                    <i id="glv-back-btn" class="fas fa-arrow-left close-icon"></i>
+                    <h3 id="glv-conv-name" style="flex:1;text-align:center;font-size:.9rem"></h3>
+                    <i id="glv-conv-close-btn" class="fas fa-times close-icon"></i>
+                </div>
+                <div id="glv-messages" class="glv-messages"></div>
+                <div class="glv-input-row">
+                    <input id="glv-input" type="text" class="glv-input" placeholder="Escribe un mensaje…" maxlength="500" autocomplete="off">
+                    <button id="glv-send-btn" class="glv-send-btn" aria-label="Enviar">&#10148;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../home/chat.js"></script>
+    <script src="../home/notifications.js"></script>
+    <script src="../home/onboarding.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Logout
+            const logoutBtn = document.getElementById('logout-button');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    ['gloveup_user_email','gloveup_user_role','gloveup_user_nombre'].forEach(k => localStorage.removeItem(k));
+                    window.location.href = '../auth/index.html';
+                });
+            }
+
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            const body = document.body;
+            const THEME_KEY = 'gloveup_theme';
+            if (themeBtn) {
+                themeBtn.addEventListener('click', () => {
+                    body.classList.toggle('theme-dark');
+                    const isDark = body.classList.contains('theme-dark');
+                    localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+                    const icon = themeBtn.querySelector('i');
+                    const text = themeBtn.querySelector('span');
+                    if (icon) icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                    if (text) text.textContent = isDark ? 'Tema Claro' : 'Tema Oscuro';
+                });
+            }
+
+            // Show manual links based on role
+            const role = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();
+            const boxerLink = document.getElementById('manual-link-boxer');
+            const coachLink = document.getElementById('manual-link-coach');
+            if (role === 'entrenador') {
+                if (coachLink) { coachLink.style.display = ''; coachLink.href = '../onboarding/manual-entrenador.html'; }
+            } else {
+                if (boxerLink) { boxerLink.style.display = ''; boxerLink.href = '../onboarding/manual-boxeador.html'; }
+            }
+        });
+    </script>
+</body>
+
+</html>

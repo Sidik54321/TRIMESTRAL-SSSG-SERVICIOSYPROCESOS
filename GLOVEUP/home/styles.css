@@ -315,6 +315,9 @@ h2 {
     top: 0;
     left: 0;
     width: 270px;
+    min-width: 270px;
+    max-width: 270px;
+    flex-shrink: 0;
     height: 100vh;
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);

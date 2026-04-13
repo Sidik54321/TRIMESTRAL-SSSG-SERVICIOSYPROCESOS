@@ -6,8 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GloveUp - Panel de entrenador</title>
     <link rel="icon" href="../../assets/images/logo-fondo-blanco.jpg">
+    <link rel="stylesheet" href="../../home/styles.css">
     <link rel="stylesheet" href="dashboard.css">
     <link rel="stylesheet" href="../../home/notifications.css">
+    <link rel="stylesheet" href="../../home/onboarding.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -22,6 +24,12 @@
 
                 <nav class="sidebar-nav">
             <ul>
+                <li>
+                    <a href="../../onboarding/index.html">
+                        <i class="fas fa-rocket"></i>
+                        <span>Primeros Pasos</span>
+                    </a>
+                </li>
                 <li id="nav-item-inicio" class="active">
                     <a id="nav-home-link" href="../../home/dashboard.html">
                         <i class="fas fa-home"></i>
@@ -64,12 +72,8 @@
                         <span>Mi Gimnasio</span>
                     </a>
                 </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-envelope"></i>
-                        <span>Mensajes</span>
-                    </a>
-                </li>
+
+
             </ul>
         </nav>
 
@@ -103,7 +107,7 @@
             if (coachNavItem) coachNavItem.style.display = role === 'entrenador' ? '' : 'none';
             if (coachGymNavItem) coachGymNavItem.style.display = role === 'entrenador' ? '' : 'none';
             if (sparringsNavItem) sparringsNavItem.style.display = role === 'entrenador' ? 'none' : '';
-            if (buscarSparringNavItem) buscarSparringNavItem.style.display = role === 'entrenador' ? 'none' : '';
+            if (buscarSparringNavItem) buscarSparringNavItem.style.display = '';
         });
     </script>
 </aside>
@@ -204,6 +208,7 @@
     <script type="module" src="./dashboard.react.js"></script>
     <script src="../../home/chat.js"></script>
     <script src="../../home/notifications.js"></script>
+    <script src="../../home/onboarding.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const themeBtn = document.getElementById('theme-toggle');

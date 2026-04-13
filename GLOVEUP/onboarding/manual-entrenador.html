@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual del Entrenador — GloveUp</title>
+    <link rel="icon" href="../assets/images/logo-fondo-blanco.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --accent: #3b82f6;
+            --accent-dark: #1d4ed8;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: rgba(0,0,0,0.08);
+            --bg: #f8fafc;
+            --card: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        @media print {
+            body { background: #fff; font-size: 13px; }
+            .no-print { display: none !important; }
+            .cover { page-break-after: always; }
+            .section { page-break-inside: avoid; }
+            a { color: inherit; }
+        }
+
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #1e293b;
+            color: #fff;
+            padding: 14px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .topbar-left { display: flex; align-items: center; gap: 14px; }
+        .topbar-logo { width: 36px; height: 36px; border-radius: 8px; object-fit: contain; background: #fff; padding: 3px; }
+        .topbar-title { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 800; letter-spacing: 0.04em; }
+        .topbar-badge { background: var(--accent); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.06em; }
+        .btn-print {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+        .btn-print:hover { background: var(--accent-dark); }
+        .btn-back {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: none;
+            padding: 9px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .btn-back:hover { background: rgba(255,255,255,0.18); }
+
+        .wrapper { max-width: 860px; margin: 0 auto; padding: 48px 32px 80px; }
+
+        .cover {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 55%, #3b82f6 160%);
+            border-radius: 24px;
+            padding: 64px 56px;
+            color: #fff;
+            margin-bottom: 56px;
+            position: relative;
+            overflow: hidden;
+        }
+        .cover::before {
+            content: '🏋️';
+            position: absolute;
+            right: 44px;
+            bottom: 36px;
+            font-size: 7rem;
+            opacity: 0.12;
+        }
+        .cover-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(59,130,246,0.25);
+            border: 1px solid rgba(59,130,246,0.5);
+            color: #bfdbfe;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 99px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+        }
+        .cover h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 14px;
+            letter-spacing: -0.02em;
+        }
+        .cover p { opacity: 0.72; font-size: 1rem; max-width: 480px; }
+        .cover-version { margin-top: 36px; font-size: 0.78rem; opacity: 0.45; font-weight: 600; }
+
+        .toc {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 48px;
+        }
+        .toc h2 { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 800; margin-bottom: 16px; }
+        .toc ol { list-style: none; counter-reset: toc-counter; }
+        .toc li {
+            counter-increment: toc-counter;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.92rem;
+        }
+        .toc li:last-child { border-bottom: none; }
+        .toc li::before {
+            content: counter(toc-counter, decimal-leading-zero);
+            font-weight: 800;
+            font-size: 0.78rem;
+            color: var(--accent);
+            min-width: 24px;
+        }
+        .toc a { color: var(--text); text-decoration: none; font-weight: 600; }
+        .toc a:hover { color: var(--accent); }
+
+        .section { margin-bottom: 52px; }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid var(--border);
+        }
+        .section-num {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .section-header h2 { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 800; }
+        .section p { color: #334155; margin-bottom: 14px; }
+        .section p:last-child { margin-bottom: 0; }
+
+        .steps { display: flex; flex-direction: column; gap: 14px; margin: 20px 0; }
+        .step {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 18px;
+        }
+        .step-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            background: rgba(59,130,246,0.1);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .step-body h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+        .step-body p { font-size: 0.88rem; color: var(--muted); margin: 0; }
+
+        .tip {
+            background: rgba(59,130,246,0.07);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 10px 10px 0;
+            padding: 14px 18px;
+            margin: 18px 0;
+            font-size: 0.9rem;
+            color: #1e3a8a;
+        }
+        .tip strong { color: var(--accent-dark); }
+
+        .info-box {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-size: 0.9rem;
+            color: #9a3412;
+            margin: 18px 0;
+        }
+
+        .warn-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-size: 0.9rem;
+            color: #991b1b;
+            margin: 18px 0;
+        }
+
+        table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.9rem; }
+        th { background: #f1f5f9; font-weight: 700; text-align: left; padding: 10px 14px; border: 1px solid #e2e8f0; }
+        td { padding: 9px 14px; border: 1px solid #e2e8f0; vertical-align: top; }
+        tr:nth-child(even) td { background: #fafafa; }
+
+        .doc-footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted);
+            font-size: 0.82rem;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+        .doc-footer strong { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<nav class="topbar no-print">
+    <div class="topbar-left">
+        <img class="topbar-logo" src="../assets/images/unnamed-removebg-preview.png" alt="GloveUp">
+        <span class="topbar-title">GloveUp</span>
+        <span class="topbar-badge"><i class="fas fa-chalkboard-teacher"></i> Manual del Entrenador</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+        <a class="btn-back" href="../onboarding/index.html"><i class="fas fa-arrow-left"></i> Volver</a>
+        <button class="btn-print" onclick="window.print()"><i class="fas fa-print"></i> Guardar PDF</button>
+    </div>
+</nav>
+
+<div class="wrapper">
+
+    <div class="cover">
+        <div class="cover-badge"><i class="fas fa-book-open"></i> Guía oficial</div>
+        <h1>Manual del<br>Entrenador</h1>
+        <p>Todo lo que necesitas saber para gestionar tu gimnasio, tus boxeadores y sus sesiones de sparring desde GloveUp de forma profesional.</p>
+        <div class="cover-version">GloveUp · Versión 1.0 · 2026</div>
+    </div>
+
+    <div class="toc">
+        <h2><i class="fas fa-list" style="color:var(--accent);margin-right:8px"></i>Contenidos</h2>
+        <ol>
+            <li><a href="#s1">¿Qué puede hacer un entrenador en GloveUp?</a></li>
+            <li><a href="#s2">Registro e inicio de sesión</a></li>
+            <li><a href="#s3">Configurar tu perfil de entrenador</a></li>
+            <li><a href="#s4">Crear y gestionar tu gimnasio</a></li>
+            <li><a href="#s5">Gestión de boxeadores</a></li>
+            <li><a href="#s6">Panel de control (Dashboard)</a></li>
+            <li><a href="#s7">Buscar sparrings para tus pupilos</a></li>
+            <li><a href="#s8">Métricas e ingresos</a></li>
+            <li><a href="#s9">Chat y notificaciones</a></li>
+            <li><a href="#s10">Preguntas frecuentes</a></li>
+        </ol>
+    </div>
+
+    <div class="section" id="s1">
+        <div class="section-header">
+            <div class="section-num">1</div>
+            <h2>¿Qué puede hacer un entrenador en GloveUp?</h2>
+        </div>
+        <p>El rol de <strong>Entrenador</strong> en GloveUp te da acceso a un conjunto de herramientas diseñadas para gestionar tu equipo, tu gimnasio y las actividades de sparring de tus boxeadores.</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-users-cog"></i></div>
+                <div class="step-body"><h4>Gestión de boxeadores</h4><p>Añade, supervisa y elimina boxeadores bajo tu responsabilidad. Controla su historial y actividad.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-dumbbell"></i></div>
+                <div class="step-body"><h4>Administración del gimnasio</h4><p>Registra tu gimnasio en la plataforma con nombre, ubicación, descripción y precio mensual.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-chart-bar"></i></div>
+                <div class="step-body"><h4>Métricas económicas</h4><p>Visualiza el número de boxeadores activos, inscripciones del mes e ingresos generados.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-fist-raised"></i></div>
+                <div class="step-body"><h4>Buscar sparrings</h4><p>Accede al buscador de sparring y contacta con otros entrenadores para organizar sesiones.</p></div>
+            </div>
+        </div>
+        <div class="info-box"><i class="fas fa-info-circle"></i>&nbsp; A diferencia del boxeador, el entrenador NO puede retar directamente a un boxeador rival. Los retos se envían al entrenador del boxeador objetivo.</div>
+    </div>
+
+    <div class="section" id="s2">
+        <div class="section-header">
+            <div class="section-num">2</div>
+            <h2>Registro e inicio de sesión</h2>
+        </div>
+        <p>El acceso se realiza en la pantalla de autenticación (<code>auth/index.html</code>).</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-user-plus"></i></div>
+                <div class="step-body"><h4>Crear cuenta de entrenador</h4><p>Introduce tu nombre, email y contraseña. Selecciona el rol <strong>Entrenador</strong> antes de registrarte. Este rol define las funciones que tendrás disponibles.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-sign-in-alt"></i></div>
+                <div class="step-body"><h4>Iniciar sesión</h4><p>Usa tu email y contraseña. Serás redirigido automáticamente al <strong>Panel de control del entrenador</strong>.</p></div>
+            </div>
+        </div>
+        <div class="warn-box"><i class="fas fa-exclamation-triangle"></i>&nbsp; El rol (Boxeador o Entrenador) se asigna al registrarse y <strong>no puede cambiarse posteriormente</strong>. Si te equivocas, deberás crear una nueva cuenta.</div>
+    </div>
+
+    <div class="section" id="s3">
+        <div class="section-header">
+            <div class="section-num">3</div>
+            <h2>Configurar tu perfil de entrenador</h2>
+        </div>
+        <p>Ve a <strong>Mi Perfil</strong> en el menú lateral para completar y editar tu información profesional.</p>
+        <table>
+            <tr><th>Campo</th><th>Descripción</th><th>Importancia</th></tr>
+            <tr><td>Foto de perfil</td><td>URL o enlace a tu foto profesional</td><td>⭐⭐⭐ Esencial</td></tr>
+            <tr><td>Nombre</td><td>Tu nombre real o nombre profesional</td><td>⭐⭐⭐ Esencial</td></tr>
+            <tr><td>Especialidad</td><td>Boxeo, Kickboxing, Muay Thai, MMA…</td><td>⭐⭐⭐ Esencial</td></tr>
+            <tr><td>Gimnasio</td><td>Nombre del gimnasio donde trabajas</td><td>⭐⭐⭐ Esencial</td></tr>
+            <tr><td>Precio mensual</td><td>Cuota mensual que cobras a tus boxeadores (€)</td><td>⭐⭐ Recomendado</td></tr>
+            <tr><td>Ubicación</td><td>Ciudad o zona donde operas</td><td>⭐⭐ Recomendado</td></tr>
+        </table>
+        <div class="tip"><strong>💡 Consejo:</strong> Un perfil completo con foto y especialidad genera más confianza entre boxeadores que buscan entrenador.</div>
+    </div>
+
+    <div class="section" id="s4">
+        <div class="section-header">
+            <div class="section-num">4</div>
+            <h2>Crear y gestionar tu gimnasio</h2>
+        </div>
+        <p>La sección <strong>Gimnasios</strong> te permite registrar tu propio recinto o ver los disponibles en la plataforma.</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-plus-circle"></i></div>
+                <div class="step-body"><h4>Crear un gimnasio nuevo</h4><p>Desde la sección Gimnasios, usa el formulario de creación: introduce el nombre, ubicación completa, dirección y una descripción de las instalaciones.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-map-marker-alt"></i></div>
+                <div class="step-body"><h4>Añadir coordenadas</h4><p>Opcionalmente puedes añadir latitud y longitud para que el gimnasio aparezca en el mapa interactivo.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-images"></i></div>
+                <div class="step-body"><h4>Añadir fotos</h4><p>Puedes incluir hasta 12 URLs de imágenes del recinto. Aparecerán en la ficha del gimnasio.</p></div>
+            </div>
+        </div>
+        <div class="info-box"><i class="fas fa-info-circle"></i>&nbsp; El nombre del gimnasio que introduces en tu <em>perfil de entrenador</em> y el <em>nombre del gimnasio creado</em> deberían coincidir para mayor consistencia en la plataforma.</div>
+        <p>Una vez creado tu gimnasio, puedes indicarlo en el campo "Gimnasio" de tu perfil. Esto conectará tu actividad de entrenador con ese recinto.</p>
+    </div>
+
+    <div class="section" id="s5">
+        <div class="section-header">
+            <div class="section-num">5</div>
+            <h2>Gestión de boxeadores</h2>
+        </div>
+        <p>En el panel de control, la sección <strong>Gestión</strong> te permite administrar a los boxeadores que están bajo tu responsabilidad.</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-user-plus"></i></div>
+                <div class="step-body"><h4>Añadir un boxeador</h4><p>Introduce el <strong>email o DNI/Licencia</strong> del boxeador en el campo de búsqueda y pulsa "Añadir". El boxeador debe estar ya registrado en GloveUp.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-edit"></i></div>
+                <div class="step-body"><h4>Editar datos</h4><p>Pulsa el botón <i class="fas fa-edit"></i> en la tarjeta del boxeador para modificar sus datos (nombre, nivel, peso, etc.).</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-trash-alt"></i></div>
+                <div class="step-body"><h4>Eliminar boxeador</h4><p>Pulsa el botón <i class="fas fa-trash-alt"></i> para desasociar al boxeador de tu gestión. Esta acción es irreversible.</p></div>
+            </div>
+        </div>
+        <div class="tip"><strong>💡 Consejo:</strong> Al añadir un boxeador, su campo "Gimnasio" se actualiza automáticamente con el nombre de tu gimnasio si lo tienes configurado.</div>
+    </div>
+
+    <div class="section" id="s6">
+        <div class="section-header">
+            <div class="section-num">6</div>
+            <h2>Panel de control (Dashboard)</h2>
+        </div>
+        <p>Al iniciar sesión accedes al <strong>Panel de control del entrenador</strong>. Aquí encontrarás tres secciones principales:</p>
+        <table>
+            <tr><th>Sección</th><th>Contenido</th></tr>
+            <tr><td><strong>Dashboard</strong></td><td>Resumen de métricas: boxeadores activos, inscripciones del mes, ingresos estimados, precio mensual.</td></tr>
+            <tr><td><strong>Gestión</strong></td><td>Lista de tus boxeadores con opciones de editar y eliminar. Buscador para añadir nuevos.</td></tr>
+            <tr><td><strong>Mi Gimnasio</strong></td><td>Vista detallada de tu gimnasio: datos, boxeadores asociados y calendario (si está configurado).</td></tr>
+        </table>
+        <p>Navega entre secciones usando el menú lateral izquierdo o los enlaces de las tarjetas bajo el menú.</p>
+    </div>
+
+    <div class="section" id="s7">
+        <div class="section-header">
+            <div class="section-num">7</div>
+            <h2>Buscar sparrings para tus pupilos</h2>
+        </div>
+        <p>Los entrenadores pueden acceder a la sección <strong>Buscar Sparring</strong> para encontrar boxeadores a los que proponer sesiones de combate.</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-filter"></i></div>
+                <div class="step-body"><h4>Filtrar boxeadores</h4><p>Usa los filtros de nivel, peso y ubicación para encontrar rivales adecuados para tus pupilos.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-paper-plane"></i></div>
+                <div class="step-body"><h4>Contactar al entrenador rival</h4><p>Al pulsar "Retar", como entrenador el reto se dirige al <strong>entrenador del boxeador objetivo</strong>, no directamente al boxeador. Selecciona el entrenador en el desplegable del formulario.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-calendar-alt"></i></div>
+                <div class="step-body"><h4>Proponer fecha y lugar</h4><p>Completa el formulario con el tipo de sparring, gimnasio, fecha y una nota para el entrenador receptor.</p></div>
+            </div>
+        </div>
+        <div class="info-box"><i class="fas fa-info-circle"></i>&nbsp; El reto quedará registrado en tu historial de retos enviados. El entrenador receptor recibirá una notificación automática.</div>
+    </div>
+
+    <div class="section" id="s8">
+        <div class="section-header">
+            <div class="section-num">8</div>
+            <h2>Métricas e ingresos</h2>
+        </div>
+        <p>El panel de métricas del entrenador muestra estadísticas en tiempo real calculadas desde la base de datos.</p>
+        <table>
+            <tr><th>Métrica</th><th>Cómo se calcula</th></tr>
+            <tr><td>Boxeadores activos</td><td>Número total de boxeadores con tu ID de entrenador asignado.</td></tr>
+            <tr><td>Inscripciones este mes</td><td>Boxeadores cuya fecha de inscripción o alta es del mes actual.</td></tr>
+            <tr><td>Precio mensual</td><td>La cuota que has configurado en tu perfil (campo "Precio mensual €").</td></tr>
+            <tr><td>Ingresos estimados</td><td>Precio mensual × inscripciones del mes. Es una estimación orientativa.</td></tr>
+        </table>
+        <div class="tip"><strong>💡 Consejo:</strong> Para que los ingresos estimados sean precisos, mantén actualizado tu precio mensual en el perfil y asegúrate de que todos tus boxeadores estén correctamente asociados.</div>
+    </div>
+
+    <div class="section" id="s9">
+        <div class="section-header">
+            <div class="section-num">9</div>
+            <h2>Chat y notificaciones</h2>
+        </div>
+        <p>Igual que los boxeadores, los entrenadores tienen acceso completo al sistema de mensajería y notificaciones.</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-comment-dots"></i></div>
+                <div class="step-body"><h4>Chat en tiempo real</h4><p>Accede desde el botón flotante (esquina inferior derecha) en cualquier página. Busca contactos por nombre o email.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-bell"></i></div>
+                <div class="step-body"><h4>Notificaciones automáticas</h4><p>Recibirás avisos cuando un boxeador sea añadido a tu lista, cuando se confirme un sparring o cuando recibas un mensaje nuevo.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-check-double"></i></div>
+                <div class="step-body"><h4>Gestionar notificaciones</h4><p>Desde el panel de notificaciones (icono 🔔) puedes marcar todo como leído o eliminar notificaciones individualmente con la ✕.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="s10">
+        <div class="section-header">
+            <div class="section-num">10</div>
+            <h2>Preguntas frecuentes</h2>
+        </div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-question"></i></div>
+                <div class="step-body"><h4>¿Cómo añado un boxeador que no está registrado?</h4><p>El boxeador debe registrarse primero en GloveUp con rol "Boxeador". Una vez registrado, puedes añadirlo con su email o DNI.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-question"></i></div>
+                <div class="step-body"><h4>¿Puedo tener varios gimnasios?</h4><p>Actualmente el perfil de entrenador admite un gimnasio principal. Puedes crear varios gimnasios en la sección Gimnasios, pero el perfil referenciará solo uno.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-question"></i></div>
+                <div class="step-body"><h4>¿Qué ocurre si elimino a un boxeador de mi lista?</h4><p>Se desasocia de tu perfil de entrenador. El boxeador no pierde su cuenta ni datos propios, pero deja de aparecer en tu panel de gestión.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-question"></i></div>
+                <div class="step-body"><h4>¿Puedo ver el historial de sparrings de mis boxeadores?</h4><p>Sí, accede a la tarjeta del boxeador en la sección Gestión y consulta sus estadísticas desde la opción "Ver perfil".</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-question"></i></div>
+                <div class="step-body"><h4>¿Cómo aparece mi gimnasio en el mapa?</h4><p>Al crear el gimnasio, introduce las coordenadas de latitud y longitud. Usa Google Maps para obtenerlas: clic derecho en la ubicación → "¿Qué hay aquí?"</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-question"></i></div>
+                <div class="step-body"><h4>¿Los ingresos mostrados son reales?</h4><p>Son estimaciones basadas en el precio mensual configurado y las inscripciones del mes. No están vinculados a ningún sistema de pago real.</p></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="doc-footer">
+    <p><strong>GloveUp</strong> — Manual del Entrenador · Versión 1.0 · 2026</p>
+    <p>Para soporte técnico contacta con el administrador del sistema.</p>
+</div>
+
+</body>
+</html>
