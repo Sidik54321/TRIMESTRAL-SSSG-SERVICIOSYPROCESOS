@@ -346,7 +346,7 @@ function buildGymCard(gym, boxers) {
     const viewBtn = document.createElement('button');
     viewBtn.className = 'view-gym-button';
     viewBtn.type = 'button';
-    viewBtn.textContent = 'Ver boxeadores';
+    viewBtn.textContent = 'Ver gimnasio';
 
     footer.appendChild(price);
     footer.appendChild(viewBtn);
@@ -360,23 +360,84 @@ function buildGymCard(gym, boxers) {
     boxersTitle.textContent = 'Boxeadores';
     boxersWrap.appendChild(boxersTitle);
 
-    const ul = document.createElement('ul');
-    ul.className = 'gym-boxers-list';
+    const cardsList = document.createElement('div');
+    cardsList.className = 'gym-boxers-list';
     if (boxerCount) {
-        boxers.forEach((b) => {
-            const li = document.createElement('li');
-            const n = b && b.nombre ? String(b.nombre) : '';
-            const a = b && b.alias ? String(b.alias) : '';
-            const lvl = b && b.nivel ? String(b.nivel) : '';
-            li.textContent = [n, a ? `@${a.replace(/^@/, '')}` : '', lvl ? `· ${lvl}` : ''].filter(Boolean).join(' ');
-            ul.appendChild(li);
+        boxers.forEach((boxeador, index) => {
+            const card = document.createElement('div');
+            card.className = 'sparring-card';
+            
+            let starsHtml = '';
+            let starCount = 2;
+            if (boxeador.nivel === 'Profesional') starCount = 5;
+            else if (boxeador.nivel === 'Avanzado') starCount = 4;
+            else if (boxeador.nivel === 'Intermedio') starCount = 3;
+            else if (boxeador.nivel === 'Principiante') starCount = 1;
+
+            for (let i = 0; i < 5; i++) {
+                if (i < starCount) starsHtml += '<i class="fas fa-star filled"></i>';
+                else starsHtml += '<i class="far fa-star"></i>';
+            }
+
+            let imgHtml = `<i class="fas fa-user-circle" style="font-size: 2em; color: #ccc;"></i>`;
+            if (boxeador.foto) {
+                const imgSrc = boxeador.foto.startsWith('/') ? '..' + boxeador.foto : boxeador.foto;
+                imgHtml = `<img src="${imgSrc}" alt="${boxeador.nombre}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">`;
+            }
+
+            const identifierRaw = (boxeador && (boxeador.email || boxeador.dniLicencia) ? (boxeador.email || boxeador.dniLicencia) : '').toString().trim();
+            const identifierEnc = identifierRaw ? encodeURIComponent(identifierRaw) : '';
+            const canViewProfile = Boolean(identifierRaw);
+            const nameEnc = boxeador && boxeador.nombre ? encodeURIComponent(String(boxeador.nombre)) : '';
+            
+            card.innerHTML = `
+                <div class="card-flag">${imgHtml}</div>
+                <div class="card-name">
+                    <span class="main-name">${boxeador.nombre}</span>
+                    <span class="alias">${boxeador.alias ? '@' + boxeador.alias.replace(/\\s+/g, '').toLowerCase() : ''}</span>
+                </div>
+                <div class="card-stars">
+                    ${starsHtml}
+                </div>
+                <div class="card-division">${boxeador.peso || 'Peso no especificado'}</div>
+                <div class="card-action">
+                    <button class="view-profile-button" ${canViewProfile ? `data-identifier-enc="${identifierEnc}"` : 'disabled'}>${canViewProfile ? 'Ver Perfil' : 'Sin perfil'}</button>
+                    <!-- Al pulsar Retar, enviamos al usuario a la vista de sparring para que use el modal completo, pre-configurado -->
+                    <button class="challenge-button gyms-challenge-btn" ${canViewProfile ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>Retar</button>
+                </div>
+            `;
+            
+            cardsList.appendChild(card);
         });
     } else {
-        const li = document.createElement('li');
-        li.textContent = 'No hay boxeadores asociados todavía.';
-        ul.appendChild(li);
+        const emptyState = document.createElement('div');
+        emptyState.style.padding = '10px 0';
+        emptyState.textContent = 'No hay boxeadores asociados todavía.';
+        cardsList.appendChild(emptyState);
     }
-    boxersWrap.appendChild(ul);
+    boxersWrap.appendChild(cardsList);
+
+    // List event delegation for Buttons
+    cardsList.addEventListener('click', (e) => {
+        const viewBtn = e.target.closest('.view-profile-button');
+        const challengeBtn = e.target.closest('.challenge-button');
+        
+        if (viewBtn) {
+            const identifierEnc = viewBtn.dataset.identifierEnc;
+            if (identifierEnc) {
+                window.location.href = '../profile/index.html?view=' + identifierEnc + '&from=gyms';
+            }
+        }
+        
+        if (challengeBtn) {
+            const identifierEnc = challengeBtn.dataset.identifierEnc;
+            const nameEnc = challengeBtn.dataset.nameEnc;
+            if (identifierEnc) {
+                // Redirigir a Sparring con parámetros para abrir el modal automáticamente
+                window.location.href = '../sparring/index.html?action=challenge&id=' + identifierEnc + '&name=' + nameEnc;
+            }
+        }
+    });
 
     info.appendChild(header);
     info.appendChild(location);
@@ -389,8 +450,8 @@ function buildGymCard(gym, boxers) {
 
     viewBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        const open = boxersWrap.style.display !== 'none';
-        boxersWrap.style.display = open ? 'none' : '';
+        const key = gym.key || normalizeGymKey(gym.name);
+        window.location.href = 'gym.html?key=' + encodeURIComponent(key);
     });
 
     favBtn.addEventListener('click', (e) => {

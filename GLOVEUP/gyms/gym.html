@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GloveUp - Detalle Gimnasio</title>
+    <link rel="stylesheet" href="../home/styles.css">
+    <link rel="stylesheet" href="gyms.css">
+    <link rel="icon" href="../assets/images/logo-fondo-blanco.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../home/notifications.css">
+    <style>
+        .gym-detail-hero {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+            color: #fff;
+            padding: 60px 40px 50px;
+            position: relative;
+            overflow: hidden;
+        }
+        .gym-detail-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--hero-bg-image) center / cover no-repeat;
+            opacity: 0.2;
+            z-index: 0;
+        }
+        .gym-detail-hero .hero-inner {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .gym-detail-hero .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.88rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            transition: color 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .gym-detail-hero .back-link:hover { color: #fff; }
+        .gym-detail-hero h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: 900;
+            margin: 0 0 10px;
+            letter-spacing: -0.02em;
+        }
+        .gym-detail-hero .gym-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.8);
+        }
+        .gym-detail-hero .gym-meta i { margin-right: 6px; color: var(--color-accent); }
+        .gym-detail-hero .gym-bio {
+            margin-top: 16px;
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.7);
+            max-width: 700px;
+            line-height: 1.65;
+        }
+
+        .gym-detail-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px 60px;
+        }
+        .boxers-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .boxers-section-header h2 {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            text-align: left;
+        }
+        .boxers-count {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--color-accent);
+            background: var(--color-accent-soft);
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+        }
+        .boxers-list { display: flex; flex-direction: column; gap: 12px; }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--color-text-light);
+        }
+        .empty-state i { font-size: 3rem; margin-bottom: 16px; display: block; opacity: 0.3; }
+        .empty-state p { font-size: 1.05rem; }
+
+        /* Responsive sparring cards inside gym detail */
+        @media (max-width: 900px) {
+            .sparring-card {
+                grid-template-columns: auto auto 1fr;
+                gap: 10px;
+                padding: 14px;
+            }
+            .card-division, .card-record, .card-residence { display: none; }
+        }
+        @media (max-width: 600px) {
+            .sparring-card {
+                grid-template-columns: 1fr;
+                text-align: center;
+                justify-items: center;
+                gap: 8px;
+            }
+            .card-action { width: 100%; flex-direction: column; }
+            .gym-detail-hero { padding: 40px 20px 30px; }
+        }
+    </style>
+</head>
+
+<body class="with-sidebar">
+    <script>
+        const _role = (localStorage.getItem('gloveup_user_role') || '').toLowerCase();
+        if (_role === 'entrenador') document.body.classList.add('theme-entrenador');
+        const _savedTheme = localStorage.getItem('gloveup_theme');
+        if (_savedTheme === 'dark') document.body.classList.add('theme-dark');
+    </script>
+
+    <!-- SIDEBAR -->
+    <aside class="main-sidebar">
+        <div class="sidebar-header">
+            <img src="../assets/images/unnamed-removebg-preview.png" alt="Logo GloveUp">
+            <span class="app-name">GloveUp</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                <li>
+                    <a href="../onboarding/index.html">
+                        <i class="fas fa-rocket"></i>
+                        <span>Primeros Pasos</span>
+                    </a>
+                </li>
+                <li id="nav-item-inicio">
+                    <a id="nav-home-link" href="../home/dashboard.html">
+                        <i class="fas fa-home"></i>
+                        <span>Inicio</span>
+                    </a>
+                </li>
+                <li id="nav-item-sparring">
+                    <a href="../sparring/index.html">
+                        <i class="fas fa-fist-raised"></i>
+                        <span>Buscar Sparring</span>
+                    </a>
+                </li>
+                <li class="active">
+                    <a href="../gyms/index.html">
+                        <i class="fas fa-building"></i>
+                        <span>Gimnasios</span>
+                    </a>
+                </li>
+                <li id="nav-profile-item">
+                    <a href="../profile/index.html">
+                        <i class="fas fa-user"></i>
+                        <span>Mi Perfil</span>
+                    </a>
+                </li>
+                <li id="nav-sparrings-item">
+                    <a href="../profile/index.html?tab=sparrings">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Mis Sparrings</span>
+                    </a>
+                </li>
+                <li id="coach-nav-item" style="display: none;">
+                    <a href="../dashboard/entrenador/dashboard.html#coach-management">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Gestión</span>
+                    </a>
+                </li>
+                <li id="coach-gym-nav-item" style="display: none;">
+                    <a href="../dashboard/entrenador/dashboard.html#coach-gym">
+                        <i class="fas fa-building"></i>
+                        <span>Mi Gimnasio</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-manuals">
+            <div class="manual-box">
+                <h4>Manual Boxeador</h4>
+                <a href="../onboarding/manual-boxeador.html" target="_blank" class="manual-btn"><i class="fas fa-file-pdf"></i> Ver Manual</a>
+            </div>
+            <div class="manual-box">
+                <h4>Manual Entrenador</h4>
+                <a href="../onboarding/manual-entrenador.html" target="_blank" class="manual-btn"><i class="fas fa-file-pdf"></i> Ver Manual</a>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <button id="theme-toggle" class="sidebar-btn">
+                <i class="fas fa-moon"></i>
+                <span>Tema Oscuro</span>
+            </button>
+            <button class="sidebar-btn">
+                <i class="fas fa-cog"></i>
+                <span>Ajustes</span>
+            </button>
+            <button id="logout-button" class="sidebar-btn" style="color: #ef4444;">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- HERO SECTION -->
+    <section class="gym-detail-hero" id="gym-hero">
+        <div class="hero-inner">
+            <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Volver a Gimnasios</a>
+            <h1 id="gym-name">Cargando gimnasio…</h1>
+            <div class="gym-meta">
+                <span id="gym-location"><i class="fas fa-map-marker-alt"></i> —</span>
+                <span id="gym-boxer-count"><i class="fas fa-users"></i> — boxeadores</span>
+            </div>
+            <p class="gym-bio" id="gym-bio"></p>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT: BOXERS -->
+    <div class="gym-detail-content">
+        <div class="boxers-section-header">
+            <h2>Boxeadores del gimnasio</h2>
+            <span class="boxers-count" id="boxers-count-badge">0 boxeadores</span>
+        </div>
+        <div class="boxers-list" id="boxers-list">
+            <div class="empty-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando boxeadores…</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // === Sidebar role logic ===
+            const role = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();
+            const homeLink = document.getElementById('nav-home-link');
+            const coachNavItem = document.getElementById('coach-nav-item');
+            const coachGymNavItem = document.getElementById('coach-gym-nav-item');
+            const sparringsNavItem = document.getElementById('nav-sparrings-item');
+            const buscarSparringNavItem = document.getElementById('nav-item-sparring');
+
+            if (homeLink) {
+                homeLink.href = role === 'entrenador' ? '../dashboard/entrenador/dashboard.html' : '../dashboard/boxeador/dashboard.html';
+            }
+            if (coachNavItem) coachNavItem.style.display = role === 'entrenador' ? '' : 'none';
+            if (coachGymNavItem) coachGymNavItem.style.display = role === 'entrenador' ? '' : 'none';
+            if (sparringsNavItem) sparringsNavItem.style.display = role === 'entrenador' ? 'none' : '';
+            if (buscarSparringNavItem) buscarSparringNavItem.style.display = '';
+
+            // === Session check ===
+            const sessionEmail = (localStorage.getItem('gloveup_user_email') || '').trim().toLowerCase();
+            const sessionOk =
+                sessionStorage.getItem('gloveup_session_maintained') === 'true' ||
+                localStorage.getItem('gloveup_session_maintained') === 'true';
+            if (!sessionEmail || !sessionOk) {
+                window.location.href = '../auth/index.html?from=gyms';
+                return;
+            }
+
+            // === Theme Toggle ===
+            const themeBtn = document.getElementById('theme-toggle');
+            const body = document.body;
+            const THEME_KEY = 'gloveup_theme';
+            const savedTheme = localStorage.getItem(THEME_KEY);
+            if (savedTheme === 'dark') updateThemeIcon(true);
+
+            if (themeBtn) {
+                themeBtn.addEventListener('click', () => {
+                    body.classList.toggle('theme-dark');
+                    const isDark = body.classList.contains('theme-dark');
+                    localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+                    updateThemeIcon(isDark);
+                });
+            }
+
+            function updateThemeIcon(isDark) {
+                const icon = themeBtn ? themeBtn.querySelector('i') : null;
+                const text = themeBtn ? themeBtn.querySelector('span') : null;
+                if (icon) icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                if (text) text.textContent = isDark ? 'Tema Claro' : 'Tema Oscuro';
+            }
+
+            // === Logout ===
+            const logoutBtn = document.getElementById('logout-button');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    localStorage.removeItem('gloveup_user_name');
+                    localStorage.removeItem('gloveup_user_email');
+                    localStorage.removeItem('gloveup_session_maintained');
+                    localStorage.removeItem('gloveup_is_registered');
+                    localStorage.removeItem('gloveup_user_role');
+                    localStorage.removeItem('gloveup_user_dni');
+                    sessionStorage.removeItem('gloveup_session_maintained');
+                    sessionStorage.removeItem('gloveup_user_id');
+                    window.location.href = '../auth/index.html';
+                });
+            }
+
+            // === Load Gym Detail ===
+            const API_BASE_URL = (localStorage.getItem('gloveup_api_base_url') || 'http://localhost:3000').replace(/\/+$/, '');
+            const params = new URLSearchParams(window.location.search);
+            const gymKey = params.get('key') || '';
+
+            if (!gymKey) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            function normalizeGymKey(text) {
+                return (text || '').toString().trim().toLowerCase()
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                    .replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+                    .replace(/-+/g, '-').replace(/^-|-$/g, '');
+            }
+
+            try {
+                const [gymsRes, boxersRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/api/gimnasios`).then(r => r.json()).catch(() => []),
+                    fetch(`${API_BASE_URL}/api/boxeadores`).then(r => r.json()).catch(() => [])
+                ]);
+
+                const allGyms = Array.isArray(gymsRes) ? gymsRes : [];
+                const allBoxers = Array.isArray(boxersRes) ? boxersRes : [];
+
+                // Find the gym
+                let gym = allGyms.find(g => {
+                    const k = g.key || normalizeGymKey(g.nombre || '');
+                    return k === gymKey;
+                });
+
+                // Fallback: hardcoded gyms
+                if (!gym) {
+                    const defaultGyms = [
+                        { nombre: 'Amado Family Boxeo', ubicacion: 'Extramurs, Valencia' },
+                        { nombre: 'Club Boxeo Sanapa', ubicacion: 'Patraix, Valencia' },
+                        { nombre: 'Club Boxeo Sedaví', ubicacion: 'Sedaví, Área Metropolitana de Valencia' },
+                        { nombre: 'Morales Box Valencia', ubicacion: "L'Eixample (Cánovas), Valencia" },
+                        { nombre: 'Escuela de Boxeo Tsubox', ubicacion: 'El Cabanyal, Valencia' },
+                        { nombre: 'Deportivo Shaolin', ubicacion: 'Xirivella, Área Metropolitana de Valencia' },
+                        { nombre: 'Brooklyn Fitboxing Mestalla', ubicacion: 'Mestalla, Valencia' },
+                        { nombre: 'Brooklyn Fitboxing Abastos', ubicacion: 'Arrancapins (Abastos), Valencia' },
+                        { nombre: 'Brooklyn Fitboxing Ruzafa', ubicacion: 'Russafa, Valencia' },
+                        { nombre: 'The Boxer Club Arena', ubicacion: 'Arena Multiespacio, Orriols (Valencia)' },
+                        { nombre: 'Club Boxeo Monteolivete', ubicacion: 'Montolivet, Valencia' },
+                        { nombre: 'Training Unit', ubicacion: 'Alboraya, Área Metropolitana de Valencia' },
+                        { nombre: 'Boxing Unitres', ubicacion: 'Picanya, Área Metropolitana de Valencia' },
+                        { nombre: 'Gimnasio Do Chang', ubicacion: 'Benimaclet, Valencia' },
+                        { nombre: 'Cosmobox', ubicacion: 'Campanar, Valencia' }
+                    ];
+                    gym = defaultGyms.find(g => normalizeGymKey(g.nombre) === gymKey);
+                }
+
+                if (!gym) {
+                    document.getElementById('gym-name').textContent = 'Gimnasio no encontrado';
+                    document.getElementById('boxers-list').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>No se encontró el gimnasio solicitado.</p></div>';
+                    return;
+                }
+
+                const gymName = gym.nombre || gym.name || '';
+                const gymCity = gym.ubicacion || gym.city || '';
+                const gymBio = typeof gym.bio === 'string' ? gym.bio.trim() : '';
+                const gymFoto = Array.isArray(gym.fotos) && gym.fotos.length ? gym.fotos[0] : '../assets/images/Sparring_Club_Collection-Link-Image.jpg';
+
+                // Set hero background
+                const heroEl = document.getElementById('gym-hero');
+                if (heroEl) heroEl.style.setProperty('--hero-bg-image', `url('${gymFoto}')`);
+
+                document.getElementById('gym-name').textContent = gymName;
+                document.getElementById('gym-location').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${gymCity || 'Ubicación no indicada'}`;
+                if (gymBio) document.getElementById('gym-bio').textContent = gymBio;
+                document.title = `GloveUp - ${gymName}`;
+
+                // Filter boxers for this gym
+                const gymKeyNorm = normalizeGymKey(gymName);
+                const gymBoxers = allBoxers.filter(b => {
+                    const bGym = b && b.gimnasio ? String(b.gimnasio) : '';
+                    return normalizeGymKey(bGym) === gymKeyNorm;
+                });
+
+                const countEl = document.getElementById('gym-boxer-count');
+                const badgeEl = document.getElementById('boxers-count-badge');
+                const listEl = document.getElementById('boxers-list');
+
+                if (countEl) countEl.innerHTML = `<i class="fas fa-users"></i> ${gymBoxers.length} boxeador(es)`;
+                if (badgeEl) badgeEl.textContent = `${gymBoxers.length} boxeador(es)`;
+
+                if (!gymBoxers.length) {
+                    listEl.innerHTML = '<div class="empty-state"><i class="fas fa-user-slash"></i><p>No hay boxeadores registrados en este gimnasio todavía.</p></div>';
+                    return;
+                }
+
+                // Render boxer cards
+                listEl.innerHTML = '';
+                gymBoxers.forEach((boxeador, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'sparring-card';
+
+                    let starsHtml = '';
+                    let starCount = 2;
+                    if (boxeador.nivel === 'Profesional') starCount = 5;
+                    else if (boxeador.nivel === 'Avanzado') starCount = 4;
+                    else if (boxeador.nivel === 'Intermedio') starCount = 3;
+                    else if (boxeador.nivel === 'Principiante') starCount = 1;
+
+                    for (let i = 0; i < 5; i++) {
+                        starsHtml += i < starCount
+                            ? '<i class="fas fa-star filled"></i>'
+                            : '<i class="far fa-star"></i>';
+                    }
+
+                    let imgHtml = '<i class="fas fa-user-circle" style="font-size: 2em; color: #ccc;"></i>';
+                    if (boxeador.foto) {
+                        const imgSrc = boxeador.foto.startsWith('/') ? '..' + boxeador.foto : boxeador.foto;
+                        imgHtml = `<img src="${imgSrc}" alt="${boxeador.nombre}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">`;
+                    }
+
+                    const globalIndex = index + 1;
+                    const identifierRaw = ((boxeador.email || boxeador.dniLicencia) || '').toString().trim();
+                    const identifierEnc = identifierRaw ? encodeURIComponent(identifierRaw) : '';
+                    const canViewProfile = Boolean(identifierRaw);
+                    const nameEnc = boxeador.nombre ? encodeURIComponent(String(boxeador.nombre)) : '';
+
+                    card.innerHTML = `
+                        <div class="card-rank"><span>#${globalIndex}</span>${globalIndex === 1 ? '<i class="fas fa-crown"></i>' : ''}</div>
+                        <div class="card-flag">${imgHtml}</div>
+                        <div class="card-name">
+                            <span class="main-name">${boxeador.nombre || 'Sin nombre'}</span>
+                            <span class="alias">${boxeador.alias ? '@' + boxeador.alias.replace(/\s+/g, '').toLowerCase() : ''}</span>
+                        </div>
+                        <div class="card-stars">${starsHtml}</div>
+                        <div class="card-division">${boxeador.peso || 'Peso no especificado'}</div>
+                        <div class="card-record">${boxeador.record || '0-0-0'}</div>
+                        <div class="card-residence">
+                            <i class="fas fa-map-marker-alt"></i> ${boxeador.ubicacion || 'Ubicación desconocida'}
+                        </div>
+                        <div class="card-action">
+                            <button class="view-profile-button" ${canViewProfile ? `data-identifier-enc="${identifierEnc}"` : 'disabled'}>${canViewProfile ? 'Ver Perfil' : 'Sin perfil'}</button>
+                            <button class="challenge-button" ${canViewProfile ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>Retar</button>
+                        </div>
+                    `;
+                    listEl.appendChild(card);
+                });
+
+                // Event delegation for buttons
+                listEl.addEventListener('click', (e) => {
+                    const viewBtn = e.target.closest('.view-profile-button');
+                    if (viewBtn && viewBtn.dataset.identifierEnc) {
+                        window.location.href = '../profile/index.html?view=' + viewBtn.dataset.identifierEnc + '&from=gym-detail';
+                        return;
+                    }
+                    const challengeBtn = e.target.closest('.challenge-button');
+                    if (challengeBtn && challengeBtn.dataset.identifierEnc) {
+                        window.location.href = '../sparring/index.html?action=challenge&id=' + challengeBtn.dataset.identifierEnc + '&name=' + (challengeBtn.dataset.nameEnc || '');
+                    }
+                });
+
+            } catch (err) {
+                console.error('Error cargando detalle del gimnasio:', err);
+                document.getElementById('boxers-list').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Error al cargar los datos. Asegúrate de que el servidor esté corriendo.</p></div>';
+            }
+        });
+    </script>
+
+    <!-- 🔔 Notificaciones -->
+    <div class="glv-notif-container">
+        <button id="glv-notif-btn" class="glv-notif-btn" aria-label="Notificaciones">
+            🔔<span id="glv-notif-badge" class="glv-notif-badge" style="display:none">0</span>
+        </button>
+        <div id="glv-notif-panel" class="glv-notif-panel hidden">
+            <div class="glv-notif-header">
+                <span>Notificaciones</span>
+                <div style="display:flex;gap:8px;align-items:center">
+                    <button id="glv-notif-mark-all" class="glv-notif-mark-all">Marcar todo</button>
+                    <i id="glv-notif-close" class="fas fa-times" style="cursor:pointer;opacity:.6"></i>
+                </div>
+            </div>
+            <ul id="glv-notif-list" class="glv-notif-list"></ul>
+        </div>
+    </div>
+
+    <!-- 💬 Chat -->
+    <div class="chat-fab-container">
+        <button id="chat-toggle-btn" class="chat-toggle-btn" aria-label="Chat">
+            <i class="fas fa-comment-dots"></i>
+            <span id="glv-chat-badge" class="glv-chat-badge" style="display:none">0</span>
+        </button>
+        <div id="chat-box" class="chat-box hidden">
+            <div id="glv-home-panel" class="glv-panel">
+                <div class="chat-header">
+                    <h3 style="flex:1">Mensajes</h3>
+                    <button id="glv-new-chat-btn" class="glv-new-chat-btn" title="Nueva conversación">＋</button>
+                    <i id="chat-close-btn" class="fas fa-times close-icon"></i>
+                </div>
+                <ul id="glv-conv-list" class="glv-conv-list"></ul>
+            </div>
+            <div id="glv-search-panel" class="glv-panel hidden">
+                <div class="chat-header">
+                    <i id="glv-search-back" class="fas fa-arrow-left close-icon"></i>
+                    <h3 style="flex:1;font-size:.9rem">Nueva conversación</h3>
+                    <i id="glv-search-close" class="fas fa-times close-icon"></i>
+                </div>
+                <div class="glv-search-bar">
+                    <input id="glv-search-input" class="glv-search-input" placeholder="🔍 Buscar por nombre o email…" autocomplete="off">
+                </div>
+                <ul id="glv-search-results" class="contact-list glv-search-results"></ul>
+            </div>
+            <div id="glv-conv-panel" class="glv-panel hidden">
+                <div class="chat-header">
+                    <i id="glv-back-btn" class="fas fa-arrow-left close-icon"></i>
+                    <h3 id="glv-conv-name" style="flex:1;text-align:center;font-size:.9rem"></h3>
+                    <i id="glv-conv-close-btn" class="fas fa-times close-icon"></i>
+                </div>
+                <div id="glv-messages" class="glv-messages"></div>
+                <div class="glv-input-row">
+                    <input id="glv-input" type="text" class="glv-input" placeholder="Escribe un mensaje…" maxlength="500" autocomplete="off">
+                    <button id="glv-send-btn" class="glv-send-btn" aria-label="Enviar">&#10148;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../home/chat.js"></script>
+    <script src="../home/notifications.js"></script>
+</body>
+
+</html>

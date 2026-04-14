@@ -982,6 +982,43 @@
                 applyFilters();
                 renderList(currentPage);
 
+                // Auto-trigger challenge modal if coming from gyms
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('action') === 'challenge') {
+                    const encId = urlParams.get('id');
+                    const encName = urlParams.get('name');
+                    if (encId && challengeModal && typeof ensureGymOptions === 'function') {
+                        const identifier = decodeURIComponent(encId);
+                        const name = encName ? decodeURIComponent(encName) : '';
+                        challengeTargetIdentifier = identifier;
+                        if (challengeTitle) {
+                            const r = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();
+                            if (r === 'entrenador') {
+                                challengeTitle.textContent = name ? 'Retar/Contactar al entrenador de ' + name : 'Retar entrenador de sparring';
+                            } else {
+                                challengeTitle.textContent = name ? 'Retar a ' + name : 'Retar a sparring';
+                            }
+                        }
+                        if (challengePreset) challengePreset.value = '';
+                        ensureGymOptions();
+                        if (challengeGym) challengeGym.value = '';
+                        if (challengeDatetime) challengeDatetime.value = '';
+                        if (challengeNote) challengeNote.value = '';
+                        if (challengeDatetime && challengeDatetime.dataset) {
+                            challengeDatetime.dataset.iso = '';
+                        }
+                        if (challengeCoaches) {
+                            Array.from(challengeCoaches.options || []).forEach((opt) => {
+                                opt.selected = false;
+                            });
+                        }
+                        challengeModal.showModal();
+                        
+                        // Clean the URL to avoid re-triggering on reload
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                }
+
             } catch (error) {
                 console.error('Error cargando boxeadores:', error);
                 listContainer.innerHTML = `
