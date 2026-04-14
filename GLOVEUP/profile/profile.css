@@ -191,3 +191,127 @@ body.theme-dark .link-danger:hover { background: var(--accent); color: #fff; bor
 @media (max-width: 768px) { .main-nav { display: none; } .menu-toggle { display: block; } .main-nav.open { display: block; position: absolute; top: 80px; left: 0; width: 100%; background: var(--card); box-shadow: 0 2px 10px rgba(0,0,0,.08); padding: 10px 20px; } .main-nav ul { flex-direction: column; gap: 8px; } }
 body.theme-dark .main-nav.open { background: #111; box-shadow: 0 2px 10px rgba(0,0,0,.5); }
 @media (max-width: 900px) { .profile { grid-template-columns: 1fr; } .profile-form { grid-template-columns: 1fr; } .field:nth-child(6) { grid-column: auto; } }
+
+/* ============================================== */
+/* TEMA ENTRENADOR — Paleta Azul (profile.css)    */
+/* ============================================== */
+
+body.theme-entrenador {
+    --accent:      #3b82f6;
+    --accent-soft: rgba(59, 130, 246, 0.1);
+    --accent-glow: rgba(59, 130, 246, 0.25);
+}
+
+/* Avatar border */
+body.theme-entrenador .avatar {
+    border-color: #3b82f6;
+    box-shadow: 0 8px 24px rgba(59,130,246,0.25);
+}
+
+/* Card top bar */
+body.theme-entrenador .card::before {
+    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+}
+
+/* Primary button */
+body.theme-entrenador .btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    box-shadow: 0 8px 20px rgba(59,130,246,0.25);
+}
+
+/* Focus ring inputs */
+body.theme-entrenador input:focus,
+body.theme-entrenador select:focus,
+body.theme-entrenador textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+}
+
+/* Pill activa */
+body.theme-entrenador .pill.ok {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    box-shadow: 0 4px 12px rgba(59,130,246,0.25);
+}
+
+/* Modal top bar */
+body.theme-entrenador .modal-card::before {
+    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+}
+
+/* Icon button hover */
+body.theme-entrenador .icon-btn:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+}
+
+/* Empty state icon */
+body.theme-entrenador .empty-icon {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    box-shadow: 0 8px 20px rgba(59,130,246,0.25);
+}
+body.theme-entrenador .empty:hover {
+    background: rgba(59,130,246,0.05);
+    border-color: rgba(59,130,246,0.25);
+}
+
+/* Star rating */
+body.theme-entrenador .star-rating input:checked ~ label,
+body.theme-entrenador .star-rating label:hover,
+body.theme-entrenador .star-rating label:hover ~ label {
+    color: #3b82f6;
+}
+
+/* Chip activo */
+body.theme-entrenador .chip.active {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59,130,246,0.25);
+}
+body.theme-entrenador .chip:hover {
+    background: rgba(59,130,246,0.08);
+}
+
+/* Danger link */
+body.theme-entrenador .link-danger {
+    color: #3b82f6;
+}
+body.theme-entrenador .link-danger:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59,130,246,0.25);
+}
+
+/* Table row hover */
+body.theme-entrenador .table tr:hover td {
+    background: rgba(59,130,246,0.06);
+}
+
+/* Stat box hover */
+body.theme-entrenador .stat-box:hover {
+    background: rgba(59,130,246,0.08);
+    box-shadow: 0 4px 12px rgba(59,130,246,0.15);
+}
+
+/* btn-ghost hover */
+body.theme-entrenador .btn-ghost:hover { color: #3b82f6; }
+
+/* Dark mode + entrenador */
+body.theme-dark.theme-entrenador {
+    --accent:      #60a5fa;
+    --accent-soft: rgba(96, 165, 250, 0.12);
+    --accent-glow: rgba(96, 165, 250, 0.25);
+}
+body.theme-dark.theme-entrenador .avatar { border-color: #60a5fa; box-shadow: 0 8px 24px rgba(96,165,250,0.22); }
+body.theme-dark.theme-entrenador .btn-primary { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+body.theme-dark.theme-entrenador .empty-icon { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+body.theme-dark.theme-entrenador .sidebar-header .app-name {
+    background: linear-gradient(135deg, #fff, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+body.theme-dark.theme-entrenador .sidebar-nav li.active a { color: #60a5fa; }
+body.theme-dark.theme-entrenador .pill.ok { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+body.theme-dark.theme-entrenador .chip.active { background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-color: #3b82f6; }
+body.theme-dark.theme-entrenador .icon-btn:hover { background: #3b82f6; border-color: #3b82f6; }
+

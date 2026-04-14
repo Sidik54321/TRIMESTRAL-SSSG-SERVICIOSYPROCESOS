@@ -138,13 +138,34 @@
         body.theme-dark .onboarding-help-card-body h4 {
             color: #f1f5f9;
         }
+
+        /* ── Tema Entrenador (azul) ── */
+        body.theme-entrenador .onboarding-hero {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #3b82f6 150%);
+        }
+        body.theme-entrenador .onboarding-hero-badge {
+            background: rgba(59,130,246,0.25);
+            border: 1px solid rgba(59,130,246,0.5);
+            color: #bfdbfe;
+        }
+        body.theme-entrenador .onboarding-help-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 8px 24px rgba(59,130,246,0.12);
+        }
+        body.theme-entrenador .onboarding-help-card-icon {
+            background: rgba(59,130,246,0.1);
+            color: #3b82f6;
+        }
     </style>
 </head>
 
 <body class="with-sidebar">
     <script>
-        const savedTheme = localStorage.getItem('gloveup_theme');
-        if (savedTheme === 'dark') document.body.classList.add('theme-dark');
+        // Aplicar tema según rol antes del primer paint
+        const _role = (localStorage.getItem('gloveup_user_role') || '').toLowerCase();
+        if (_role === 'entrenador') document.body.classList.add('theme-entrenador');
+        const _savedTheme = localStorage.getItem('gloveup_theme');
+        if (_savedTheme === 'dark') document.body.classList.add('theme-dark');
     </script>
 
     <!-- SIDEBAR VERTICAL -->

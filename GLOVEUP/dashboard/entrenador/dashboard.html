@@ -15,7 +15,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
-<body class="home-bw with-sidebar">
+<body class="home-bw with-sidebar theme-entrenador">
+    <script>
+        // Aplicar tema azul de entrenador inmediatamente (antes del paint)
+        document.body.classList.add('theme-entrenador');
+        const _savedTheme = localStorage.getItem('gloveup_theme');
+        if (_savedTheme === 'dark') document.body.classList.add('theme-dark');
+    </script>
     <aside class="main-sidebar">
         <div class="sidebar-header">
             <img src="../../assets/images/unnamed-removebg-preview.png" alt="Logo GloveUp">

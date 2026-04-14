@@ -19,6 +19,13 @@
 </head>
 
 <body class="bw with-sidebar">
+    <script>
+        // Aplicar tema según rol antes del primer paint
+        const _role = (localStorage.getItem('gloveup_user_role') || '').toLowerCase();
+        if (_role === 'entrenador') document.body.classList.add('theme-entrenador');
+        const _savedTheme = localStorage.getItem('gloveup_theme');
+        if (_savedTheme === 'dark') document.body.classList.add('theme-dark');
+    </script>
     <!-- SIDEBAR VERTICAL -->
     <aside class="main-sidebar">
         <div class="sidebar-header">

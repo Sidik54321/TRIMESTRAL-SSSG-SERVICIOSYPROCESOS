@@ -19,11 +19,11 @@
 
 <body class="with-sidebar">
     <script>
-        // Check for saved theme preference immediately to prevent flash
-        const savedTheme = localStorage.getItem('gloveup_theme');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('theme-dark');
-        }
+        // Aplicar tema según rol antes del primer paint
+        const _role = (localStorage.getItem('gloveup_user_role') || '').toLowerCase();
+        if (_role === 'entrenador') document.body.classList.add('theme-entrenador');
+        const _savedTheme = localStorage.getItem('gloveup_theme');
+        if (_savedTheme === 'dark') document.body.classList.add('theme-dark');
     </script>
     <!-- SIDEBAR VERTICAL -->
     <aside class="main-sidebar">

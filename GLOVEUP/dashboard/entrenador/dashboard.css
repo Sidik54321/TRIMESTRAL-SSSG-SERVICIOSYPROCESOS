@@ -98,21 +98,21 @@
 }
 
 .coach-calendar-pill--sparring {
-    background: #111;
-    border-color: #111;
+    background: #1d4ed8;
+    border-color: #1d4ed8;
     color: #fff;
 }
 
 .coach-calendar-pill--inscripcion {
-    background: rgba(17, 17, 17, 0.08);
-    border-color: rgba(17, 17, 17, 0.16);
-    color: #111;
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.2);
+    color: #1d4ed8;
 }
 
 .coach-calendar-pill--recordatorio {
-    background: #f3f4f6;
-    border-color: rgba(17, 24, 39, 0.14);
-    color: #111;
+    background: #eff6ff;
+    border-color: rgba(59, 130, 246, 0.18);
+    color: #1e3a8a;
 }
 
 .gloveup-calendar {
@@ -149,18 +149,18 @@
 }
 
 .gloveup-calendar .fc .fc-button-primary {
-    background: #000;
-    border-color: #000;
+    background: #3b82f6;
+    border-color: #3b82f6;
 }
 
 .gloveup-calendar .fc .fc-button-primary:hover {
-    background: #333;
-    border-color: #333;
+    background: #2563eb;
+    border-color: #2563eb;
 }
 
 .gloveup-calendar .fc .fc-button-primary:disabled {
-    background: #000;
-    border-color: #000;
+    background: #3b82f6;
+    border-color: #3b82f6;
     opacity: 0.45;
 }
 
@@ -186,7 +186,7 @@
 }
 
 .gloveup-calendar .fc .fc-day-today {
-    background: rgba(0, 0, 0, 0.04);
+    background: rgba(59, 130, 246, 0.06);
 }
 
 .gloveup-calendar .fc .fc-daygrid-day-frame {
@@ -195,7 +195,7 @@
 }
 
 .gloveup-calendar .fc .fc-daygrid-day-frame:hover {
-    background: rgba(0, 0, 0, 0.03);
+    background: rgba(59, 130, 246, 0.04);
 }
 
 .gloveup-calendar .fc .fc-daygrid-event {
@@ -218,19 +218,19 @@
 }
 
 .gloveup-calendar .fc .gloveup-event--sparring {
-    background: #000;
+    background: #1d4ed8;
     color: #fff;
 }
 
 .gloveup-calendar .fc .gloveup-event--inscripcion {
-    background: rgba(0, 0, 0, 0.12);
-    color: #111;
+    background: rgba(59, 130, 246, 0.15);
+    color: #1e3a8a;
 }
 
 .gloveup-calendar .fc .gloveup-event--recordatorio {
-    background: #f3f4f6;
-    color: #111;
-    border: 1px solid rgba(17, 24, 39, 0.14);
+    background: #eff6ff;
+    color: #1e3a8a;
+    border: 1px solid rgba(59, 130, 246, 0.18);
 }
 
 .coach-calendar-details {

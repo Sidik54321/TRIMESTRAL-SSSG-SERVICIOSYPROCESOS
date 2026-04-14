@@ -17,6 +17,11 @@
 </head>
 
 <body class="home-bw with-sidebar">
+    <script>
+        // Los boxeadores siempre usan la paleta naranja (por defecto)
+        const _savedTheme = localStorage.getItem('gloveup_theme');
+        if (_savedTheme === 'dark') document.body.classList.add('theme-dark');
+    </script>
     <aside class="main-sidebar">
         <div class="sidebar-header">
             <img src="../../assets/images/unnamed-removebg-preview.png" alt="Logo GloveUp">
