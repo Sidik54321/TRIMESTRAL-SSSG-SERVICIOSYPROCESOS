@@ -30,7 +30,7 @@ const requestJson = (path, options = {}) => {
         config.body = JSON.stringify(options.body);
     }
     return fetch(`${API_BASE_URL}${path}`, config)
-        .then(async (res) => {
+        .then(async(res) => {
             const payload = await res.json().catch(() => ({}));
             if (!res.ok) {
                 throw new Error(payload.error || `Error ${res.status} en ${path}`);
@@ -418,6 +418,12 @@ function MetricDoughnut({
         const safeValue = Number.isFinite(Number(value)) ? Number(value) : 0;
         const safeMax = Number.isFinite(Number(max)) && Number(max) > 0 ? Number(max) : 1;
         const remaining = Math.max(0, safeMax - safeValue);
+        let accentColor = color || '';
+        if (!accentColor || accentColor.trim().startsWith('var(')) {
+            const bodyStyles = window.getComputedStyle(document.body);
+            accentColor = bodyStyles.getPropertyValue('--color-accent').trim() || '#111827';
+        }
+        if (!accentColor) accentColor = '#111827';
 
         if (!chartRef.current) {
             chartRef.current = new ChartLib(canvas, {
@@ -426,7 +432,7 @@ function MetricDoughnut({
                     labels: [label, 'Restante'],
                     datasets: [{
                         data: [safeValue, remaining],
-                        backgroundColor: [color || '#111827', 'rgba(0, 0, 0, 0.05)'],
+                        backgroundColor: [accentColor, 'rgba(0, 0, 0, 0.05)'],
                         borderWidth: 0,
                         hoverOffset: 2
                     }]
@@ -511,7 +517,7 @@ function CoachStatsDashboard() {
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
 
     useEffect(() => {
-        const load = async () => {
+        const load = async() => {
             if (!email) {
                 setMessage({
                     kind: 'error',
@@ -601,7 +607,7 @@ function CoachStatsDashboard() {
                         label: 'Inscripciones',
                         value: metricas.inscripcionesMes || 0,
                         max: 30,
-                        color: '#f97316'
+                        color: 'var(--color-accent, #f97316)'
                     }
                 }),
                 h(MetricCard, {
@@ -612,7 +618,7 @@ function CoachStatsDashboard() {
                         label: 'Ingresos',
                         value: metricas.ingresosMes || 0,
                         max: revenueMax,
-                        color: '#f97316'
+                        color: 'var(--color-accent, #f97316)'
                     }
                 })
             )
@@ -665,7 +671,7 @@ function CoachManagement() {
 
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
 
-    const refreshAll = async () => {
+    const refreshAll = async() => {
         if (!email) {
             setMessage({
                 kind: 'error',
@@ -737,7 +743,7 @@ function CoachManagement() {
         text
     });
 
-    const saveGym = async () => {
+    const saveGym = async() => {
         try {
             await requestJson(`/api/entrenadores/me?email=${encodeURIComponent(email)}`, {
                 method: 'PUT',
@@ -764,7 +770,7 @@ function CoachManagement() {
         }
     };
 
-    const onPickFotos = async (e) => {
+    const onPickFotos = async(e) => {
         const input = e && e.target ? e.target : null;
         const fileList = input && input.files ? Array.from(input.files) : [];
         const files = fileList.filter(Boolean).slice(0, 6);
@@ -795,7 +801,7 @@ function CoachManagement() {
         });
     };
 
-    const savePrice = async () => {
+    const savePrice = async() => {
         const precioMensual = Number(priceInput);
         try {
             await requestJson(`/api/entrenadores/me?email=${encodeURIComponent(email)}`, {
@@ -811,7 +817,7 @@ function CoachManagement() {
         }
     };
 
-    const addBoxer = async () => {
+    const addBoxer = async() => {
         const boxerIdentifier = assignEmail.trim();
         if (!boxerIdentifier) {
             showMessage('Introduce el email o DNI/Licencia del boxeador.', 'error');
@@ -832,7 +838,7 @@ function CoachManagement() {
         }
     };
 
-    const removeBoxer = async () => {
+    const removeBoxer = async() => {
         const boxerIdentifier = assignEmail.trim();
         if (!boxerIdentifier) {
             showMessage('Introduce el email o DNI/Licencia del boxeador.', 'error');
@@ -860,7 +866,7 @@ function CoachManagement() {
         setEditLevel(b && b.nivel ? String(b.nivel) : 'Amateur');
     };
 
-    const saveEdit = async () => {
+    const saveEdit = async() => {
         if (!editId) {
             showMessage('Selecciona un boxeador para editar.', 'error');
             return;
@@ -881,7 +887,7 @@ function CoachManagement() {
         }
     };
 
-    const deleteEdit = async () => {
+    const deleteEdit = async() => {
         if (!editId) {
             showMessage('Selecciona un boxeador para eliminar.', 'error');
             return;
@@ -1747,18 +1753,17 @@ function CoachManagement() {
                     const renderStars = (v) => {
                         const filled = Math.max(0, Math.min(5, Number(v) || 0));
                         return Array.from({ length: 5 }, (_, i) =>
-                            h('i', { key: i, className: i < filled ? 'fas fa-star' : 'far fa-star', style: { color: i < filled ? '#f97316' : '#d1d5db', fontSize: '0.75rem' } })
+                            h('i', { key: i, className: i < filled ? 'fas fa-star' : 'far fa-star', style: { color: i < filled ? 'var(--color-accent, #f97316)' : '#d1d5db', fontSize: '0.75rem' } })
                         );
                     };
                     const isEditing = editId === (b._id || '');
                     return h(
-                        React.Fragment,
-                        { key: b._id || b.email },
+                        React.Fragment, { key: b._id || b.email },
                         // Tarjeta estilo sparring
                         h('div', {
-                            className: 'sparring-card',
-                            style: { cursor: 'default', position: 'relative' }
-                        },
+                                className: 'sparring-card',
+                                style: { cursor: 'default', position: 'relative' }
+                            },
                             h('div', { className: 'card-rank' },
                                 h('span', null, `#${index + 1}`),
                                 index === 0 ? h('i', { className: 'fas fa-crown' }) : null
@@ -1766,11 +1771,16 @@ function CoachManagement() {
                             h('div', { className: 'card-flag' },
                                 h('div', {
                                     style: {
-                                        width: 44, height: 44, borderRadius: '50%',
+                                        width: 44,
+                                        height: 44,
+                                        borderRadius: '50%',
                                         background: 'var(--color-accent, #f97316)',
-                                        color: '#fff', display: 'flex',
-                                        alignItems: 'center', justifyContent: 'center',
-                                        fontWeight: 800, fontSize: '1.1rem'
+                                        color: '#fff',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontWeight: 800,
+                                        fontSize: '1.1rem'
                                     }
                                 }, (b.nombre || 'B').charAt(0).toUpperCase())
                             ),
@@ -1791,13 +1801,16 @@ function CoachManagement() {
                                     className: 'view-profile-button',
                                     type: 'button',
                                     style: { background: 'var(--color-accent, #f97316)', color: '#fff' },
-                                    onClick: (e) => { e.stopPropagation(); selectForEdit(b); }
+                                    onClick: (e) => {
+                                        e.stopPropagation();
+                                        selectForEdit(b);
+                                    }
                                 }, 'Editar'),
                                 h('button', {
                                     className: 'view-profile-button',
                                     type: 'button',
                                     style: { background: '#fff', color: '#ef4444', border: '1.5px solid #ef4444' },
-                                    onClick: async (e) => {
+                                    onClick: async(e) => {
                                         e.stopPropagation();
                                         if (!b._id) return;
                                         await selectForEdit(b);
@@ -1808,22 +1821,22 @@ function CoachManagement() {
                         ),
                         // Formulario de edición inline (solo visible cuando esta tarjeta está seleccionada)
                         isEditing ? h('div', {
-                            style: {
-                                margin: '0 0 16px 0',
-                                padding: '16px',
-                                borderRadius: 14,
-                                border: '2px solid var(--color-accent, #f97316)',
-                                background: 'var(--color-bg-card, #fff)',
-                                display: 'grid',
-                                gap: 12
-                            }
-                        },
+                                style: {
+                                    margin: '0 0 16px 0',
+                                    padding: '16px',
+                                    borderRadius: 14,
+                                    border: '2px solid var(--color-accent, #f97316)',
+                                    background: 'var(--color-bg-card, #fff)',
+                                    display: 'grid',
+                                    gap: 12
+                                }
+                            },
                             h('div', { style: { fontWeight: 700, fontSize: '.9rem', color: 'var(--color-accent, #f97316)' } },
                                 `✏️ Editando: ${b.nombre || b.email}`
                             ),
                             h('div', {
-                                style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }
-                            },
+                                    style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }
+                                },
                                 h('input', {
                                     value: editName,
                                     onChange: (e) => setEditName(e.target.value),
@@ -1839,10 +1852,10 @@ function CoachManagement() {
                                     style: { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: '.88rem' }
                                 }),
                                 h('select', {
-                                    value: editLevel,
-                                    onChange: (e) => setEditLevel(e.target.value),
-                                    style: { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: '.88rem' }
-                                },
+                                        value: editLevel,
+                                        onChange: (e) => setEditLevel(e.target.value),
+                                        style: { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: '.88rem' }
+                                    },
                                     h('option', { value: 'Principiante' }, 'Principiante'),
                                     h('option', { value: 'Intermedio' }, 'Intermedio'),
                                     h('option', { value: 'Avanzado' }, 'Avanzado'),
@@ -1864,7 +1877,12 @@ function CoachManagement() {
                                 h('button', {
                                     type: 'button',
                                     style: { padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: 'none', color: '#6b7280', cursor: 'pointer' },
-                                    onClick: () => { setEditId(''); setEditName(''); setEditDni(''); setEditLevel('Amateur'); }
+                                    onClick: () => {
+                                        setEditId('');
+                                        setEditName('');
+                                        setEditDni('');
+                                        setEditLevel('Amateur');
+                                    }
                                 }, 'Cancelar')
                             )
                         ) : null
@@ -1902,7 +1920,7 @@ function CoachFinance() {
 
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
 
-    const load = async () => {
+    const load = async() => {
         if (!email) {
             setMessage({
                 kind: 'error',
@@ -1951,7 +1969,7 @@ function CoachFinance() {
         load();
     }, []);
 
-    const savePrice = async () => {
+    const savePrice = async() => {
         const precioMensual = Number(priceInput);
         try {
             await requestJson(`/api/entrenadores/me?email=${encodeURIComponent(email)}`, {

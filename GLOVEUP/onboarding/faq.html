@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ de GloveUp</title>
+    <link rel="icon" href="../assets/images/logo-fondo-blanco.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+         :root {
+            --accent: #f97316;
+            --accent-dark: #ea580c;
+            --text: #0f172a;
+            --muted: #475569;
+            --border: rgba(15, 23, 42, 0.12);
+            --bg: #f8fafc;
+            --card: #ffffff;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+        
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #0f172a;
+            color: #fff;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        
+        .topbar-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            object-fit: contain;
+            background: #fff;
+            padding: 4px;
+        }
+        
+        .topbar-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+        }
+        
+        .btn-back {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+        
+        .wrapper {
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
+        
+        .page-heading {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            line-height: 1.05;
+            margin-bottom: 14px;
+        }
+        
+        .page-subtitle {
+            color: var(--muted);
+            max-width: 680px;
+            margin-bottom: 32px;
+        }
+        
+        .faq-grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .faq-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 26px 28px;
+            box-shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
+        }
+        
+        .faq-card strong {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            color: #0f172a;
+        }
+        
+        .faq-card p {
+            color: var(--muted);
+            margin-bottom: 0;
+        }
+        
+        .faq-note {
+            margin-top: 36px;
+            padding: 20px 24px;
+            border-radius: 20px;
+            background: rgba(249, 115, 22, 0.08);
+            color: #0f172a;
+            border: 1px solid rgba(249, 115, 22, 0.2);
+        }
+        
+        .doc-footer {
+            margin-top: 48px;
+            padding-top: 22px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.94rem;
+        }
+        
+        .doc-footer strong {
+            color: var(--accent);
+        }
+        
+        @media (max-width: 720px) {
+            .wrapper {
+                padding: 32px 18px 60px;
+            }
+            .page-heading {
+                font-size: 2.4rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topbar no-print">
+        <div class="topbar-left">
+            <img class="topbar-logo" src="../assets/images/unnamed-removebg-preview.png" alt="Logo GloveUp">
+            <div>
+                <div class="topbar-title">FAQ de GloveUp</div>
+                <div style="font-size:.85rem; color:rgba(255,255,255,0.7); margin-top:4px;">Respuestas rápidas sobre el proyecto</div>
+            </div>
+        </div>
+        <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> Volver</a>
+    </div>
+    <main class="wrapper">
+        <section>
+            <h1 class="page-heading">Preguntas frecuentes</h1>
+            <p class="page-subtitle">Todo lo que necesitas saber sobre los roles, funciones y uso de GloveUp en un solo lugar.</p>
+        </section>
+        <section class="faq-grid">
+            <article class="faq-card">
+                <strong>¿Qué es GloveUp?</strong>
+                <p>GloveUp es una plataforma para encontrar sparrings, gestionar entrenamientos y conectar boxeadores con entrenadores y gimnasios.</p>
+            </article>
+            <article class="faq-card">
+                <strong>¿Qué roles existen en el proyecto?</strong>
+                <p>Actualmente hay dos roles principales: Boxeador y Entrenador. El boxeador busca sparrings, revisa su perfil y encuentra gimnasios. El entrenador gestiona sparrings, revisa su gimnasio y administra a sus deportistas.</p>
+            </article>
+            <article class="faq-card">
+                <strong>¿Cómo encuentro un sparring?</strong>
+                <p>En el panel principal, usa la opción "Buscar nuevo sparring" o el área de Sparring para explorar candidatos disponibles según tus preferencias.</p>
+            </article>
+            <article class="faq-card">
+                <strong>¿Dónde puedo ver el manual completo?</strong>
+                <p>En la misma barra lateral tienes accesos directos al Manual del Boxeador y al Manual del Entrenador. También puedes volver al inicio de Onboarding para ver ambos documentos.</p>
+            </article>
+            <article class="faq-card">
+                <strong>¿Puedo actualizar mi perfil y recibir notificaciones?</strong>
+                <p>Sí, desde la sección de perfil puedes editar tu información y activar notificaciones. El icono de campana te muestra mensajes pendientes y alertas en tiempo real.</p>
+            </article>
+            <article class="faq-card">
+                <strong>¿Cómo cierro sesión de forma segura?</strong>
+                <p>Usa el botón "Cerrar Sesión" en la parte inferior de la barra lateral para salir de tu cuenta en cualquier momento.</p>
+            </article>
+        </section>
+        <div class="faq-note">
+            <strong>Consejo:</strong> Si tienes dudas sobre una función específica, revisa el manual correspondiente o consulta esta FAQ desde tu panel.</p>
+        </div>
+        <div class="doc-footer">
+            <p><strong>GloveUp</strong> — FAQ del proyecto · Versión 1.0 · 2026</p>
+        </div>
+    </main>
+</body>
+
+</html>

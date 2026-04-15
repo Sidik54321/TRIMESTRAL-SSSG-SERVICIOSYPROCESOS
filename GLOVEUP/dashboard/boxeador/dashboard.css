@@ -1,10 +1,16 @@
 @import url("../../home/styles.css");
 
 /* ============================================== */
+
+
 /* DASHBOARD BOXER — CLEAN B&W STYLES             */
+
+
 /* ============================================== */
 
+
 /* Metric cards with charts — hide bar */
+
 .dashboard-metrics .metric-card.has-chart .metric-bar {
     display: none;
 }
@@ -27,14 +33,29 @@
 
 
 /* Staggered card entry */
-.dashboard-metrics .metric-card:nth-child(1) { animation-delay: 100ms; }
-.dashboard-metrics .metric-card:nth-child(2) { animation-delay: 200ms; }
-.dashboard-metrics .metric-card:nth-child(3) { animation-delay: 300ms; }
-.dashboard-metrics .metric-card:nth-child(4) { animation-delay: 400ms; }
+
+.dashboard-metrics .metric-card:nth-child(1) {
+    animation-delay: 100ms;
+}
+
+.dashboard-metrics .metric-card:nth-child(2) {
+    animation-delay: 200ms;
+}
+
+.dashboard-metrics .metric-card:nth-child(3) {
+    animation-delay: 300ms;
+}
+
+.dashboard-metrics .metric-card:nth-child(4) {
+    animation-delay: 400ms;
+}
+
 
 /* Removed nth-child gradient overrides to allow global orange tertiary accent */
 
+
 /* Dashboard panels stagger */
+
 .dashboard-grid .dashboard-panel:nth-child(1) {
     animation-delay: 350ms;
 }
@@ -43,4 +64,17 @@
     animation-delay: 450ms;
 }
 
+
 /* Removed nth-child gradient overrides for dark theme to allow global orange tertiary accent */
+
+.main-sidebar {
+    overflow: hidden;
+}
+
+.sidebar-nav {
+    overflow: visible;
+}
+
+.dashboard-main {
+    padding-bottom: 140px;
+}
