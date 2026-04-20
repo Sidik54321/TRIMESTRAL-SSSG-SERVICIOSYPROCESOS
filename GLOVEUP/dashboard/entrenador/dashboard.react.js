@@ -30,7 +30,7 @@ const requestJson = (path, options = {}) => {
         config.body = JSON.stringify(options.body);
     }
     return fetch(`${API_BASE_URL}${path}`, config)
-        .then(async(res) => {
+        .then(async (res) => {
             const payload = await res.json().catch(() => ({}));
             if (!res.ok) {
                 throw new Error(payload.error || `Error ${res.status} en ${path}`);
@@ -377,8 +377,8 @@ function CoachCalendar({
         null,
         h(
             'div', {
-                className: 'coach-calendar-legend'
-            },
+            className: 'coach-calendar-legend'
+        },
             h('span', {
                 className: 'coach-calendar-pill coach-calendar-pill--sparring'
             }, 'Sparring'),
@@ -482,12 +482,12 @@ function MetricCard({
 }) {
     return h(
         'div', {
-            className: 'metric-card has-chart'
-        },
+        className: 'metric-card has-chart'
+    },
         h(
             'div', {
-                className: 'metric-header'
-            },
+            className: 'metric-header'
+        },
             h('span', {
                 className: 'metric-label'
             }, label),
@@ -515,129 +515,91 @@ function CoachStatsDashboard() {
     const [boxers, setBoxers] = useState([]);
 
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
+    const coachName = (localStorage.getItem('gloveup_user_name') || '').trim();
+
+    const load = async () => {
+        if (!email) {
+            setMessage({
+                kind: 'error',
+                text: 'No se ha encontrado el email del entrenador en la sesión.'
+            });
+            setLoading(false);
+            return;
+        }
+        setLoading(true);
+        try {
+            const [metricsInfo, boxersInfo, coachInfo] = await Promise.all([
+                requestJson(`/api/entrenadores/me/metricas?email=${encodeURIComponent(email)}`),
+                requestJson(`/api/entrenadores/me/boxeadores?email=${encodeURIComponent(email)}`).catch(() => []),
+                requestJson(`/api/entrenadores/me?email=${encodeURIComponent(email)}`).catch(() => ({}))
+            ]);
+            
+            const precioMensual = metricsInfo && typeof metricsInfo.precioMensual === 'number' ?
+                metricsInfo.precioMensual :
+                (coachInfo && typeof coachInfo.precioMensual === 'number' ? coachInfo.precioMensual : 0);
+            const gimnasio = metricsInfo && metricsInfo.gimnasio ? String(metricsInfo.gimnasio) :
+                (coachInfo && coachInfo.gimnasio ? String(coachInfo.gimnasio) : '');
+            
+            setMetricas({
+                boxeadoresActivos: metricsInfo && typeof metricsInfo.boxeadoresActivos === 'number' ? metricsInfo.boxeadoresActivos : 0,
+                inscripcionesMes: metricsInfo && typeof metricsInfo.inscripcionesMes === 'number' ? metricsInfo.inscripcionesMes : 0,
+                ingresosMes: metricsInfo && typeof metricsInfo.ingresosMes === 'number' ? metricsInfo.ingresosMes : 0,
+                precioMensual,
+                gimnasio
+            });
+            setBoxers(Array.isArray(boxersInfo) ? boxersInfo : []);
+            setMessage(null);
+        } catch (err) {
+            setMessage({
+                kind: 'error',
+                text: err && err.message ? err.message : 'Error cargando las métricas del entrenador.'
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const load = async() => {
-            if (!email) {
-                setMessage({
-                    kind: 'error',
-                    text: 'No se ha encontrado el email del entrenador en la sesión.'
-                });
-                setLoading(false);
-                return;
-            }
-            setLoading(true);
-            try {
-                const [metricsInfo, boxersInfo, coachInfo] = await Promise.all([
-                    requestJson(`/api/entrenadores/me/metricas?email=${encodeURIComponent(email)}`),
-                    requestJson(`/api/entrenadores/me/boxeadores?email=${encodeURIComponent(email)}`).catch(() => []),
-                    requestJson(`/api/entrenadores/me?email=${encodeURIComponent(email)}`).catch(() => ({}))
-                ]);
-                const precioMensual = metricsInfo && typeof metricsInfo.precioMensual === 'number' ?
-                    metricsInfo.precioMensual :
-                    (coachInfo && typeof coachInfo.precioMensual === 'number' ? coachInfo.precioMensual : 0);
-                const gimnasio = metricsInfo && metricsInfo.gimnasio ? String(metricsInfo.gimnasio) :
-                    (coachInfo && coachInfo.gimnasio ? String(coachInfo.gimnasio) : '');
-                setMetricas({
-                    boxeadoresActivos: metricsInfo && typeof metricsInfo.boxeadoresActivos === 'number' ? metricsInfo.boxeadoresActivos : 0,
-                    inscripcionesMes: metricsInfo && typeof metricsInfo.inscripcionesMes === 'number' ? metricsInfo.inscripcionesMes : 0,
-                    ingresosMes: metricsInfo && typeof metricsInfo.ingresosMes === 'number' ? metricsInfo.ingresosMes : 0,
-                    precioMensual,
-                    gimnasio
-                });
-                setBoxers(Array.isArray(boxersInfo) ? boxersInfo : []);
-                setMessage(null);
-            } catch (err) {
-                setMessage({
-                    kind: 'error',
-                    text: err && err.message ? err.message : 'Error cargando las métricas del entrenador.'
-                });
-            } finally {
-                setLoading(false);
-            }
-        };
         load();
     }, []);
 
-    const revenueMax = Math.max(1, (Number.isFinite(Number(metricas.precioMensual)) ? Number(metricas.precioMensual) : 0) * 30);
+    const calendarEvents = useMemo(() => buildCoachCalendarEvents(boxers, metricas), [boxers, metricas]);
+
+    if (loading && boxers.length === 0) {
+        return h('div', { style: { padding: 40, textAlign: 'center', opacity: 0.5 } }, 'Cargando panel...');
+    }
 
     return h(
         React.Fragment,
         null,
-        h(
-            'div', {
-                className: 'dashboard-panel'
-            },
-            h('h2', null, 'Estadísticas'),
-            h(
-                'div', {
-                    className: 'dashboard-metrics',
-                    style: {
-                        marginTop: 20,
-                        marginBottom: 12
-                    }
-                },
-                h(MetricCard, {
-                    label: 'Tu gimnasio',
-                    pill: metricas.gimnasio || '-',
-                    sub: 'Resumen del gimnasio.',
-                    chartProps: {
-                        label: 'Gimnasio',
-                        value: 1,
-                        max: 1,
-                        color: '#111827'
-                    }
-                }),
-                h(MetricCard, {
-                    label: 'Boxeadores activos',
-                    pill: String(metricas.boxeadoresActivos || 0),
-                    sub: 'Boxeadores asignados actualmente.',
-                    chartProps: {
-                        label: 'Boxeadores',
-                        value: metricas.boxeadoresActivos || 0,
-                        max: 30,
-                        color: '#111827'
-                    }
-                }),
-                h(MetricCard, {
-                    label: 'Inscripciones este mes',
-                    pill: String(metricas.inscripcionesMes || 0),
-                    sub: 'Altas registradas este mes.',
-                    chartProps: {
-                        label: 'Inscripciones',
-                        value: metricas.inscripcionesMes || 0,
-                        max: 30,
-                        color: 'var(--color-accent, #f97316)'
-                    }
-                }),
-                h(MetricCard, {
-                    label: 'Ingresos estimados (mes)',
-                    pill: formatCurrency(metricas.ingresosMes || 0),
-                    sub: 'Precio mensual × inscripciones del mes.',
-                    chartProps: {
-                        label: 'Ingresos',
-                        value: metricas.ingresosMes || 0,
-                        max: revenueMax,
-                        color: 'var(--color-accent, #f97316)'
-                    }
-                })
+        h('header', { 
+            className: 'dashboard-header',
+            style: { marginBottom: 24 }
+        },
+            h('div', { className: 'dashboard-title-block' },
+                h('h1', { style: { fontSize: '2rem', fontWeight: 900 } }, coachName || 'Entrenador'),
+                h('p', { style: { opacity: 0.8 } }, 'Resumen de actividad y gestión de boxeadores.')
             )
         ),
+        
+        message ? h('div', {
+            style: {
+                fontWeight: 600,
+                marginBottom: 20,
+                padding: '12px 16px',
+                borderRadius: '12px',
+                backgroundColor: message.kind === 'error' ? '#fee2e2' : '#dcfce7',
+                color: message.kind === 'error' ? '#b91c1c' : '#166534'
+            }
+        }, message.text) : null,
+
         h(
             'div', {
-                className: 'dashboard-panel'
-            },
-            h('h2', null, 'Inscripciones (ingresos)'),
-            h('p', {
-                className: 'muted',
-                style: {
-                    marginTop: 8
-                }
-            }, 'Evolución acumulada (usa decimation para mejorar rendimiento con muchos puntos).'),
-            h(InscriptionRevenueLineChart, {
-                boxers,
-                precioMensual: metricas.precioMensual
-            })
+            className: 'dashboard-panel',
+            style: { marginBottom: 24 }
+        },
+            h('h2', { style: { marginBottom: 16 } }, 'Calendario de Actividades'),
+            h(CoachCalendar, { events: calendarEvents })
         )
     );
 }
@@ -645,15 +607,8 @@ function CoachStatsDashboard() {
 function CoachManagement() {
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState(null);
-    const [coach, setCoach] = useState({
-        gimnasio: '',
-        precioMensual: 0
-    });
-    const [metricas, setMetricas] = useState({
-        boxeadoresActivos: 0,
-        inscripcionesMes: 0,
-        ingresosMes: 0
-    });
+    const [coach, setCoach] = useState({ gimnasio: '', precioMensual: 0 });
+    const [metricas, setMetricas] = useState({ boxeadoresActivos: 0, inscripcionesMes: 0, ingresosMes: 0 });
     const [cobrosTotal, setCobrosTotal] = useState(0);
     const [boxers, setBoxers] = useState([]);
 
@@ -671,12 +626,9 @@ function CoachManagement() {
 
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
 
-    const refreshAll = async() => {
+    const refreshAll = async () => {
         if (!email) {
-            setMessage({
-                kind: 'error',
-                text: 'No se ha encontrado el email del entrenador en la sesión.'
-            });
+            setMessage({ kind: 'error', text: 'No se ha encontrado el email.' });
             setLoading(false);
             return;
         }
@@ -689,1217 +641,208 @@ function CoachManagement() {
                 requestJson(`/api/entrenadores/me/cobros?email=${encodeURIComponent(email)}`)
             ]);
             setCoach({
-                gimnasio: coachInfo && coachInfo.gimnasio ? String(coachInfo.gimnasio) : '',
-                precioMensual: coachInfo && typeof coachInfo.precioMensual === 'number' ? coachInfo.precioMensual : 0
+                gimnasio: coachInfo?.gimnasio || '',
+                precioMensual: coachInfo?.precioMensual || 0
             });
-            const gymName = coachInfo && coachInfo.gimnasio ? String(coachInfo.gimnasio) : '';
-            setGymInput(gymName);
-            setPriceInput(coachInfo && typeof coachInfo.precioMensual === 'number' ? String(coachInfo.precioMensual) : '');
+            setGymInput(coachInfo?.gimnasio || '');
+            setPriceInput(String(coachInfo?.precioMensual || ''));
             setMetricas({
-                boxeadoresActivos: metricsInfo && typeof metricsInfo.boxeadoresActivos === 'number' ? metricsInfo.boxeadoresActivos : 0,
-                inscripcionesMes: metricsInfo && typeof metricsInfo.inscripcionesMes === 'number' ? metricsInfo.inscripcionesMes : 0,
-                ingresosMes: metricsInfo && typeof metricsInfo.ingresosMes === 'number' ? metricsInfo.ingresosMes : 0
+                boxeadoresActivos: metricsInfo?.boxeadoresActivos || 0,
+                inscripcionesMes: metricsInfo?.inscripcionesMes || 0,
+                ingresosMes: metricsInfo?.ingresosMes || 0
             });
             setBoxers(Array.isArray(boxersInfo) ? boxersInfo : []);
-            setCobrosTotal(cobrosInfo && typeof cobrosInfo.total === 'number' ? cobrosInfo.total : 0);
-            if (gymName) {
-                const gymInfo = await requestJson(`/api/gimnasios/lookup?nombre=${encodeURIComponent(gymName)}`).catch(() => null);
-                setBioInput(gymInfo && typeof gymInfo.bio === 'string' ? gymInfo.bio : '');
-                setFotos(Array.isArray(gymInfo && gymInfo.fotos) ? gymInfo.fotos.filter((f) => typeof f === 'string' && f.trim()).slice(0, 12) : []);
-            } else {
-                setBioInput('');
-                setFotos([]);
+            setCobrosTotal(cobrosInfo?.total || 0);
+
+            if (coachInfo?.gimnasio) {
+                const gymInfo = await requestJson(`/api/gimnasios/lookup?nombre=${encodeURIComponent(coachInfo.gimnasio)}`).catch(() => null);
+                setBioInput(gymInfo?.bio || '');
+                setFotos(Array.isArray(gymInfo?.fotos) ? gymInfo.fotos.filter(f => f).slice(0, 12) : []);
             }
             setMessage(null);
         } catch (err) {
-            setMessage({
-                kind: 'error',
-                text: err && err.message ? err.message : 'Error cargando el panel del entrenador.'
-            });
+            setMessage({ kind: 'error', text: err.message || 'Error cargando datos.' });
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        refreshAll();
-    }, []);
+    useEffect(() => { refreshAll(); }, []);
 
     const filteredBoxers = useMemo(() => {
         const q = search.trim().toLowerCase();
         if (!q) return boxers;
-        return boxers.filter((b) => {
-            const nombre = (b && b.nombre ? String(b.nombre) : '').toLowerCase();
-            const emailB = (b && b.email ? String(b.email) : '').toLowerCase();
-            const dni = (b && b.dniLicencia ? String(b.dniLicencia) : '').toLowerCase();
-            return nombre.includes(q) || emailB.includes(q) || dni.includes(q);
-        });
+        return boxers.filter(b => 
+            (b.nombre || '').toLowerCase().includes(q) || 
+            (b.email || '').toLowerCase().includes(q) || 
+            (b.dniLicencia || '').toLowerCase().includes(q)
+        );
     }, [boxers, search]);
 
     const calendarEvents = useMemo(() => buildCoachCalendarEvents(boxers, metricas), [boxers, metricas]);
 
-    const showMessage = (text, kind = 'ok') => setMessage({
-        kind,
-        text
-    });
-
-    const saveGym = async() => {
+    const saveGym = async () => {
         try {
             await requestJson(`/api/entrenadores/me?email=${encodeURIComponent(email)}`, {
                 method: 'PUT',
-                body: {
-                    gimnasio: gymInput
-                }
+                body: { gimnasio: gymInput }
             });
-            const gymName = gymInput ? String(gymInput).trim() : '';
-            if (gymName) {
+            if (gymInput.trim()) {
                 await requestJson('/api/gimnasios', {
                     method: 'POST',
-                    body: {
-                        nombre: gymName,
-                        creadoPorEmail: email,
-                        bio: bioInput,
-                        fotos
-                    }
+                    body: { nombre: gymInput, creadoPorEmail: email, bio: bioInput, fotos }
                 });
             }
-            showMessage('Gimnasio actualizado correctamente.', 'ok');
+            setMessage({ kind: 'ok', text: 'Gimnasio actualizado.' });
             refreshAll();
         } catch (err) {
-            showMessage(err && err.message ? err.message : 'No se pudo guardar el gimnasio.', 'error');
+            setMessage({ kind: 'error', text: err.message });
         }
     };
 
-    const onPickFotos = async(e) => {
-        const input = e && e.target ? e.target : null;
-        const fileList = input && input.files ? Array.from(input.files) : [];
-        const files = fileList.filter(Boolean).slice(0, 6);
-        if (!files.length) return;
-
-        const readFile = (file) => new Promise((resolve) => {
+    const onPickFotos = async (e) => {
+        const files = Array.from(e.target.files || []).slice(0, 6);
+        const dataUrls = await Promise.all(files.map(file => new Promise(resolve => {
             const reader = new FileReader();
-            reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
-            reader.onerror = () => resolve('');
+            reader.onload = () => resolve(reader.result);
             reader.readAsDataURL(file);
-        });
-
-        const dataUrls = await Promise.all(files.map(readFile));
-        const cleaned = dataUrls.filter((u) => typeof u === 'string' && u.trim());
-        if (!cleaned.length) return;
-        setFotos((prev) => {
-            const current = Array.isArray(prev) ? prev : [];
-            return [...current, ...cleaned].slice(0, 12);
-        });
-
-        if (input) input.value = '';
+        })));
+        setFotos(prev => [...prev, ...dataUrls].slice(0, 12));
+        e.target.value = '';
     };
 
-    const removeFotoAt = (idx) => {
-        setFotos((prev) => {
-            const list = Array.isArray(prev) ? prev : [];
-            return list.filter((_, i) => i !== idx);
-        });
-    };
-
-    const savePrice = async() => {
-        const precioMensual = Number(priceInput);
-        try {
-            await requestJson(`/api/entrenadores/me?email=${encodeURIComponent(email)}`, {
-                method: 'PUT',
-                body: {
-                    precioMensual: Number.isFinite(precioMensual) ? precioMensual : 0
-                }
-            });
-            showMessage('Precio mensual actualizado correctamente.', 'ok');
-            refreshAll();
-        } catch (err) {
-            showMessage(err && err.message ? err.message : 'No se pudo guardar el precio.', 'error');
-        }
-    };
-
-    const addBoxer = async() => {
-        const boxerIdentifier = assignEmail.trim();
-        if (!boxerIdentifier) {
-            showMessage('Introduce el email o DNI/Licencia del boxeador.', 'error');
-            return;
-        }
+    const addBoxer = async () => {
+        if (!assignEmail.trim()) return;
         try {
             await requestJson(`/api/entrenadores/me/boxeadores?email=${encodeURIComponent(email)}`, {
                 method: 'POST',
-                body: {
-                    boxeadorIdentifier: boxerIdentifier
-                }
+                body: { boxeadorIdentifier: assignEmail.trim() }
             });
             setAssignEmail('');
-            showMessage('Boxeador añadido correctamente.', 'ok');
             refreshAll();
-        } catch (err) {
-            showMessage(err && err.message ? err.message : 'No se pudo añadir el boxeador.', 'error');
-        }
+        } catch (err) { setMessage({ kind: 'error', text: err.message }); }
     };
 
-    const removeBoxer = async() => {
-        const boxerIdentifier = assignEmail.trim();
-        if (!boxerIdentifier) {
-            showMessage('Introduce el email o DNI/Licencia del boxeador.', 'error');
-            return;
-        }
+    const removeBoxer = async () => {
+        if (!assignEmail.trim()) return;
         try {
             await requestJson(`/api/entrenadores/me/boxeadores?email=${encodeURIComponent(email)}`, {
                 method: 'DELETE',
-                body: {
-                    boxeadorIdentifier: boxerIdentifier
-                }
+                body: { boxeadorIdentifier: assignEmail.trim() }
             });
             setAssignEmail('');
-            showMessage('Boxeador eliminado de tu lista.', 'ok');
             refreshAll();
-        } catch (err) {
-            showMessage(err && err.message ? err.message : 'No se pudo quitar el boxeador.', 'error');
-        }
+        } catch (err) { setMessage({ kind: 'error', text: err.message }); }
     };
 
     const selectForEdit = (b) => {
-        setEditId(b && b._id ? String(b._id) : '');
-        setEditName(b && b.nombre ? String(b.nombre) : '');
-        setEditDni(b && b.dniLicencia ? String(b.dniLicencia) : '');
-        setEditLevel(b && b.nivel ? String(b.nivel) : 'Amateur');
+        setEditId(b._id || b.email || '');
+        setEditName(b.nombre || '');
+        setEditDni(b.dniLicencia || '');
+        setEditLevel(b.nivel || 'Amateur');
     };
 
-    const saveEdit = async() => {
-        if (!editId) {
-            showMessage('Selecciona un boxeador para editar.', 'error');
-            return;
-        }
+    const saveEdit = async () => {
         try {
             await requestJson(`/api/entrenadores/me/boxeadores/${encodeURIComponent(editId)}?email=${encodeURIComponent(email)}`, {
                 method: 'PUT',
-                body: {
-                    nombre: editName.trim(),
-                    dniLicencia: editDni.trim(),
-                    nivel: editLevel
-                }
+                body: { nombre: editName, dniLicencia: editDni, nivel: editLevel }
             });
-            showMessage('Boxeador actualizado correctamente.', 'ok');
+            setEditId('');
             refreshAll();
-        } catch (err) {
-            showMessage(err && err.message ? err.message : 'No se pudo actualizar el boxeador.', 'error');
-        }
+        } catch (err) { setMessage({ kind: 'error', text: err.message }); }
     };
 
-    const deleteEdit = async() => {
-        if (!editId) {
-            showMessage('Selecciona un boxeador para eliminar.', 'error');
-            return;
-        }
+    const deleteEdit = async () => {
         try {
             await requestJson(`/api/entrenadores/me/boxeadores/${encodeURIComponent(editId)}?email=${encodeURIComponent(email)}`, {
                 method: 'DELETE'
             });
             setEditId('');
-            setEditName('');
-            setEditDni('');
-            setEditLevel('Amateur');
-            showMessage('Boxeador eliminado correctamente.', 'ok');
             refreshAll();
-        } catch (err) {
-            showMessage(err && err.message ? err.message : 'No se pudo eliminar el boxeador.', 'error');
-        }
+        } catch (err) { setMessage({ kind: 'error', text: err.message }); }
     };
 
-    const precioMensual = coach && typeof coach.precioMensual === 'number' ? coach.precioMensual : 0;
-    const ingresosMes = metricas && typeof metricas.ingresosMes === 'number' ? metricas.ingresosMes : 0;
-    const revenueMax = Math.max(1, (Number.isFinite(Number(precioMensual)) ? Number(precioMensual) : 0) * 30);
+    const levelScore = (nivel = '') => {
+        const n = String(nivel).toLowerCase();
+        if (n.includes('principiante')) return 1;
+        if (n.includes('intermedio')) return 2;
+        if (n.includes('avanzado')) return 3;
+        if (n.includes('amateur')) return 4;
+        if (n.includes('profesional')) return 5;
+        return 3;
+    };
 
-    const boxerFill = metricas && typeof metricas.boxeadoresActivos === 'number' ? cap((metricas.boxeadoresActivos / 30) * 100) : 0;
-    const inscFill = metricas && typeof metricas.inscripcionesMes === 'number' ? cap((metricas.inscripcionesMes / 30) * 100) : 0;
-    const revenueFill = cap((ingresosMes / (revenueMax || 1)) * 100);
+    const renderStars = (v) => {
+        const filled = Math.max(0, Math.min(5, Number(v) || 0));
+        return Array.from({ length: 5 }, (_, i) =>
+            h('i', { key: i, className: i < filled ? 'fas fa-star' : 'far fa-star', style: { color: i < filled ? '#f97316' : '#d1d5db', fontSize: '0.75rem' } })
+        );
+    };
 
-    /* return ( <
-            >
-            <
-            div className = "dashboard-panel" >
-            <
-            h2 > Panel CRM(Entrenador) < /h2> <
-            div className = "dashboard-metrics"
-            style = {
-                {
-                    marginTop: 16,
-                    marginBottom: 0
-                }
-            } >
-            <
-            MetricCard label = "Tu gimnasio"
-            pill = {
-                coach && coach.gimnasio ? coach.gimnasio : '-'
-            }
-            sub = "Gestiona tu gimnasio y tus boxeadores."
-            chartProps = {
-                {
-                    label: 'Gimnasio',
-                    value: 1,
-                    max: 1,
-                    color: '#111827'
-                }
-            }
-            /> <
-            MetricCard label = "Boxeadores activos"
-            pill = {
-                String(metricas.boxeadoresActivos || 0)
-            }
-            sub = "Boxeadores asignados actualmente a tu gimnasio."
-            chartProps = {
-                {
-                    label: 'Boxeadores',
-                    value: metricas.boxeadoresActivos || 0,
-                    max: 30,
-                    color: '#111827'
-                }
-            }
-            /> <
-            MetricCard label = "Inscripciones este mes"
-            pill = {
-                String(metricas.inscripcionesMes || 0)
-            }
-            sub = "Altas registradas este mes."
-            chartProps = {
-                {
-                    label: 'Inscripciones',
-                    value: metricas.inscripcionesMes || 0,
-                    max: 30,
-                    color: '#6b7280'
-                }
-            }
-            /> <
-            MetricCard label = "Precio mensual"
-            pill = {
-                formatCurrency(precioMensual)
-            }
-            sub = "Define el precio que cobras en tu gimnasio."
-            chartProps = {
-                {
-                    label: 'Precio',
-                    value: boxerFill,
-                    max: 100,
-                    color: '#111827'
-                }
-            }
-            /> <
-            MetricCard label = "Ingresos estimados (mes)"
-            pill = {
-                formatCurrency(ingresosMes)
-            }
-            sub = "Precio mensual × inscripciones del mes."
-            chartProps = {
-                {
-                    label: 'Ingresos',
-                    value: ingresosMes,
-                    max: revenueMax,
-                    color: '#9ca3af'
-                }
-            }
-            /> < /
-            div > <
-            div style = {
-                {
-                    display: 'grid',
-                    gap: 12,
-                    marginTop: 18
-                }
-            } >
-            <
-            div style = {
-                {
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-                    gap: 16,
-                    alignItems: 'start'
-                }
-            } >
-            <
-            div style = {
-                {
-                    display: 'grid',
-                    gap: 10,
-                    padding: 14,
-                    borderRadius: 14,
-                    border: '1px solid #e5e7eb'
-                }
-            } >
-            <
-            div style = {
-                {
-                    display: 'grid',
-                    gap: 8
-                }
-            } >
-            <
-            label htmlFor = "coach-gym"
-            style = {
-                {
-                    fontWeight: 600
-                }
-            } > Gimnasio < /label> <
-            input id = "coach-gym"
-            value = {
-                gymInput
-            }
-            onChange = {
-                (e) => setGymInput(e.target.value)
-            }
-            type = "text"
-            style = {
-                {
-                    width: '100%',
-                    padding: 12,
-                    borderRadius: 12,
-                    border: '1px solid #e5e7eb'
-                }
-            }
-            /> < /
-            div > <
-            button className = "btn btn-secondary"
-            type = "button"
-            onClick = {
-                saveGym
-            } > Guardar gimnasio < /button> < /
-            div > <
-            div style = {
-                {
-                    display: 'grid',
-                    gap: 10,
-                    padding: 14,
-                    borderRadius: 14,
-                    border: '1px solid #e5e7eb'
-                }
-            } >
-            <
-            div style = {
-                {
-                    display: 'grid',
-                    gap: 8
-                }
-            } >
-            <
-            label htmlFor = "coach-price"
-            style = {
-                {
-                    fontWeight: 600
-                }
-            } > Precio mensual(€) < /label> <
-            input id = "coach-price"
-            value = {
-                priceInput
-            }
-            onChange = {
-                (e) => setPriceInput(e.target.value)
-            }
-            type = "number"
-            min = "0"
-            step = "0.01"
-            style = {
-                {
-                    width: '100%',
-                    padding: 12,
-                    borderRadius: 12,
-                    border: '1px solid #e5e7eb'
-                }
-            }
-            /> < /
-            div > <
-            button className = "btn btn-secondary"
-            type = "button"
-            onClick = {
-                savePrice
-            } > Guardar precio < /button> < /
-            div > <
-            /div> {
-            message ? ( <
-                div style = {
-                    {
-                        fontWeight: 600,
-                        color: message.kind === 'error' ? '#b91c1c' : '#065f46'
-                    }
-                } > {
-                    message.text
-                } <
-                /div>
-            ) : null
-        } <
-        /div> < /
-        div >
-
-        <
-        div className = "dashboard-panel" >
-        <
-        h2 > Tus boxeadores < /h2> <
-    div className = "sparring-search-filters"
-    style = {
-            {
-                marginTop: 12,
-                marginBottom: 0,
-                padding: 18
-            }
-        } >
-        <
-        div className = "filter-row"
-    style = {
-            {
-                marginBottom: 0
-            }
-        } >
-        <
-        input value = {
-            search
-        }
-    onChange = {
-        (e) => setSearch(e.target.value)
-    }
-    className = "coach-filter-input"
-    type = "text"
-    placeholder = "Buscar por nombre, email o DNI..." / >
-        <
-        input value = {
-            assignEmail
-        }
-    onChange = {
-        (e) => setAssignEmail(e.target.value)
-    }
-    className = "coach-filter-input"
-    type = "text"
-    placeholder = "Email o DNI/Licencia del boxeador" / >
-        <
-        button className = "submit-button"
-    type = "button"
-    onClick = {
-        addBoxer
-    } > Añadir < /button> <
-    button className = "submit-button coach-remove-button"
-    type = "button"
-    onClick = {
-            removeBoxer
-        } > Quitar < /button> < /
-        div > <
-        /div> <
-    div className = "results-header"
-    style = {
-            {
-                marginTop: 14,
-                marginBottom: 10,
-                padding: 0
-            }
-        } >
-        <
-        div className = "results-info" >
-        <
-        span className = "total-results" > {
-            filteredBoxers.length
-        }
-    Boxeadores < /span> < /
-        div > <
-        /div> <
-    div className = "sparring-list" > {
-            filteredBoxers.length === 0 ? ( <
-                div > Todavía no tienes boxeadores asignados. < /div>
-            ) : filteredBoxers.map((b) => ( <
-                div key = {
-                    b._id || b.email
-                }
-                className = "sparring-card"
-                style = {
-                    {
-                        cursor: 'pointer'
-                    }
-                }
-                onClick = {
-                    () => selectForEdit(b)
-                } >
-                <
-                div className = "sparring-avatar" >
-                <
-                img src = "../../assets/images/unnamed-removebg-preview.png"
-                alt = "Boxeador" / >
-                <
-                /div> <
-                div className = "sparring-details" >
-                <
-                div className = "sparring-meta" >
-                <
-                span className = "sparring-tag" > {
-                    b && b.nivel ? b.nivel : 'Amateur'
-                } < /span> <
-                span className = "sparring-date" > {
-                    b && b.dniLicencia ? b.dniLicencia : '-'
-                } < /span> < /
-                div > <
-                div className = "sparring-name" > {
-                    b && b.nombre ? b.nombre : 'Boxeador'
-                } < /div> <
-                div className = "sparring-gym" > {
-                    b && b.email ? b.email : ''
-                } < /div> < /
-                div > <
-                /div>
-            ))
-        } <
-        /div> <
-    div style = {
-            {
-                marginTop: 18,
-                display: 'grid',
-                gap: 16
-            }
-        } >
-        <
-        div style = {
-            {
-                display: 'grid',
-                gap: 10
-            }
-        } >
-        <
-        h3 style = {
-            {
-                margin: 0
-            }
-        } > Crear boxeador < /h3> <
-    div style = {
-            {
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: 10
-            }
-        } >
-        <
-        input value = {
-            createName
-        }
-    onChange = {
-        (e) => setCreateName(e.target.value)
-    }
-    type = "text"
-    placeholder = "Nombre"
-    style = {
-        {
-            width: '100%',
-            padding: 12,
-            borderRadius: 12,
-            border: '1px solid #e5e7eb'
-        }
-    }
-    /> <
-    input value = {
-        createEmail
-    }
-    onChange = {
-        (e) => setCreateEmail(e.target.value)
-    }
-    type = "email"
-    placeholder = "Email"
-    style = {
-        {
-            width: '100%',
-            padding: 12,
-            borderRadius: 12,
-            border: '1px solid #e5e7eb'
-        }
-    }
-    /> <
-    input value = {
-        createDni
-    }
-    onChange = {
-        (e) => setCreateDni(e.target.value)
-    }
-    type = "text"
-    placeholder = "DNI/Licencia"
-    style = {
-        {
-            width: '100%',
-            padding: 12,
-            borderRadius: 12,
-            border: '1px solid #e5e7eb'
-        }
-    }
-    /> <
-    input value = {
-        createPassword
-    }
-    onChange = {
-        (e) => setCreatePassword(e.target.value)
-    }
-    type = "password"
-    placeholder = "Password"
-    style = {
-        {
-            width: '100%',
-            padding: 12,
-            borderRadius: 12,
-            border: '1px solid #e5e7eb'
-        }
-    }
-    /> <
-    select value = {
-        createLevel
-    }
-    onChange = {
-        (e) => setCreateLevel(e.target.value)
-    }
-    style = {
-            {
-                width: '100%',
-                padding: 12,
-                borderRadius: 12,
-                border: '1px solid #e5e7eb'
-            }
-        } >
-        <
-        option value = "Principiante" > Principiante < /option> <
-    option value = "Intermedio" > Intermedio < /option> <
-    option value = "Avanzado" > Avanzado < /option> <
-    option value = "Amateur" > Amateur < /option> <
-    option value = "Profesional" > Profesional < /option> < /
-        select > <
-        /div> <
-    button className = "btn btn-primary"
-    type = "button"
-    onClick = {
-            createBoxer
-        } > Crear boxeador < /button> < /
-        div > <
-        div style = {
-            {
-                display: 'grid',
-                gap: 10
-            }
-        } >
-        <
-        h3 style = {
-            {
-                margin: 0
-            }
-        } > Editar boxeador < /h3> <
-    input value = {
-        editId
-    }
-    type = "hidden"
-    readOnly / >
-        <
-        div style = {
-            {
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: 10
-            }
-        } >
-        <
-        input value = {
-            editName
-        }
-    onChange = {
-        (e) => setEditName(e.target.value)
-    }
-    type = "text"
-    placeholder = "Nombre"
-    style = {
-        {
-            width: '100%',
-            padding: 12,
-            borderRadius: 12,
-            border: '1px solid #e5e7eb'
-        }
-    }
-    /> <
-    input value = {
-        editDni
-    }
-    onChange = {
-        (e) => setEditDni(e.target.value)
-    }
-    type = "text"
-    placeholder = "DNI/Licencia"
-    style = {
-        {
-            width: '100%',
-            padding: 12,
-            borderRadius: 12,
-            border: '1px solid #e5e7eb'
-        }
-    }
-    /> <
-    select value = {
-        editLevel
-    }
-    onChange = {
-        (e) => setEditLevel(e.target.value)
-    }
-    style = {
-            {
-                width: '100%',
-                padding: 12,
-                borderRadius: 12,
-                border: '1px solid #e5e7eb'
-            }
-        } >
-        <
-        option value = "Principiante" > Principiante < /option> <
-    option value = "Intermedio" > Intermedio < /option> <
-    option value = "Avanzado" > Avanzado < /option> <
-    option value = "Amateur" > Amateur < /option> <
-    option value = "Profesional" > Profesional < /option> < /
-        select > <
-        /div> <
-    div style = {
-            {
-                display: 'flex',
-                gap: 10,
-                flexWrap: 'wrap'
-            }
-        } >
-        <
-        button className = "btn btn-secondary"
-    type = "button"
-    onClick = {
-        saveEdit
-    } > Guardar cambios < /button> <
-    button className = "btn btn-secondary"
-    type = "button"
-    onClick = {
-        deleteEdit
-    }
-    style = {
-            {
-                color: '#4b5563',
-                borderColor: '#ef4444'
-            }
-        } > Eliminar boxeador < /button> < /
-        div > <
-        /div> < /
-        div > <
-        /div>
-
-        <
-        div className = "dashboard-panel" >
-        <
-        h2 > Resumen < /h2> <
-    p style = {
-        {
-            marginTop: 10
-        }
-    } > Cobros: < strong > {
-        formatCurrency(cobrosTotal)
-    } < /strong></p > {
-        loading ? < p > Cargando... < /p> : null} < /
-        div > <
-        />
-        ); */
-
-    return h(
-        React.Fragment,
-        null,
-        h(
-            'div', {
-                className: 'dashboard-panel'
-            },
+    return h(React.Fragment, null,
+        h('div', { className: 'dashboard-panel' },
             h('h2', null, 'Mi gimnasio'),
-            h(
-                'div', {
-                    style: {
-                        display: 'grid',
-                        gap: 12,
-                        marginTop: 18
-                    }
-                },
-                h(
-                    'div', {
-                        style: {
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-                            gap: 16,
-                            alignItems: 'start'
-                        }
-                    },
-                    h(
-                        'div', {
-                            style: {
-                                display: 'grid',
-                                gap: 10,
-                                padding: 14,
-                                borderRadius: 14,
-                                border: '1px solid #e5e7eb'
-                            }
-                        },
-                        h(
-                            'div', {
-                                style: {
-                                    display: 'grid',
-                                    gap: 8
-                                }
-                            },
-                            h('label', {
-                                htmlFor: 'coach-gym',
-                                style: {
-                                    fontWeight: 600
-                                }
-                            }, 'Gimnasio'),
-                            h('input', {
-                                id: 'coach-gym',
-                                value: gymInput,
-                                onChange: (e) => setGymInput(e.target.value),
-                                type: 'text',
-                                style: {
-                                    width: '100%',
-                                    padding: 12,
-                                    borderRadius: 12,
-                                    border: '1px solid #e5e7eb'
-                                }
-                            })
-                        ),
-                        h('button', {
-                            className: 'btn btn-secondary',
-                            type: 'button',
-                            onClick: saveGym
-                        }, 'Guardar cambios')
+            h('div', { style: { display: 'grid', gap: 12, marginTop: 18 } },
+                h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 } },
+                    h('div', { style: { padding: 14, borderRadius: 14, border: '1px solid #e5e7eb' } },
+                        h('label', null, 'Gimnasio'),
+                        h('input', { value: gymInput, onChange: (e) => setGymInput(e.target.value), style: { width: '100%', padding: 12, borderRadius: 12, border: '1px solid #e5e7eb' } }),
+                        h('button', { className: 'btn btn-secondary', onClick: saveGym, style: { marginTop: 10 } }, 'Guardar')
                     ),
-                    h(
-                        'div', {
-                            style: {
-                                display: 'grid',
-                                gap: 10,
-                                padding: 14,
-                                borderRadius: 14,
-                                border: '1px solid #e5e7eb'
-                            }
-                        },
-                        h(
-                            'div', {
-                                style: {
-                                    display: 'grid',
-                                    gap: 8
-                                }
-                            },
-                            h('label', {
-                                htmlFor: 'coach-bio',
-                                style: {
-                                    fontWeight: 600
-                                }
-                            }, 'Bio'),
-                            h('textarea', {
-                                id: 'coach-bio',
-                                value: bioInput,
-                                onChange: (e) => setBioInput(e.target.value),
-                                rows: 4,
-                                style: {
-                                    width: '100%',
-                                    padding: 12,
-                                    borderRadius: 12,
-                                    border: '1px solid #e5e7eb',
-                                    resize: 'vertical'
-                                }
-                            }),
-                            h('label', {
-                                htmlFor: 'coach-fotos',
-                                style: {
-                                    fontWeight: 600,
-                                    marginTop: 6
-                                }
-                            }, 'Fotos (máx 12)'),
-                            h('input', {
-                                id: 'coach-fotos',
-                                type: 'file',
-                                accept: 'image/*',
-                                multiple: true,
-                                onChange: onPickFotos
-                            }),
-                            fotos && fotos.length ? h(
-                                'div', {
-                                    style: {
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                                        gap: 10,
-                                        marginTop: 6
-                                    }
-                                },
-                                ...fotos.map((src, idx) => h(
-                                    'div', {
-                                        key: `${idx}-${src}`,
-                                        style: {
-                                            display: 'grid',
-                                            gap: 6
-                                        }
-                                    },
-                                    h('img', {
-                                        src,
-                                        alt: `Foto ${idx + 1}`,
-                                        style: {
-                                            width: '100%',
-                                            height: 90,
-                                            objectFit: 'cover',
-                                            borderRadius: 10,
-                                            border: '1px solid #e5e7eb'
-                                        }
-                                    }),
-                                    h('button', {
-                                        className: 'btn btn-secondary',
-                                        type: 'button',
-                                        onClick: () => removeFotoAt(idx),
-                                        style: {
-                                            padding: '8px 10px',
-                                            color: '#4b5563',
-                                            borderColor: '#ef4444'
-                                        }
-                                    }, 'Quitar')
-                                ))
-                            ) : null
+                    h('div', { style: { padding: 14, borderRadius: 14, border: '1px solid #e5e7eb' } },
+                        h('label', null, 'Bio'),
+                        h('textarea', { value: bioInput, onChange: (e) => setBioInput(e.target.value), rows: 4, style: { width: '100%', padding: 12, borderRadius: 12, border: '1px solid #e5e7eb' } }),
+                        h('input', { type: 'file', multiple: true, onChange: onPickFotos, style: { marginTop: 10 } }),
+                        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 8, marginTop: 10 } },
+                            fotos.map((src, idx) => h('div', { key: idx, style: { position: 'relative' } },
+                                h('img', { src, style: { width: '100%', height: 60, objectFit: 'cover', borderRadius: 8 } }),
+                                h('button', { onClick: () => setFotos(prev => prev.filter((_, i) => i !== idx)), style: { position: 'absolute', top: 0, right: 0, background: 'red', color: 'white', border: 'none', borderRadius: '50%', cursor: 'pointer' } }, '×')
+                            ))
                         )
                     )
                 ),
-                message ? h('div', {
-                    style: {
-                        fontWeight: 600,
-                        color: message.kind === 'error' ? '#b91c1c' : '#065f46'
-                    }
-                }, message.text) : null
+                message && h('div', { style: { color: message.kind === 'error' ? 'red' : 'green' } }, message.text)
             )
         ),
-        h(
-            'div', {
-                className: 'dashboard-panel'
-            },
-            h('h2', null, 'Calendario'),
-            h(CoachCalendar, {
-                events: calendarEvents
-            })
-        ),
-        h(
-            'div', {
-                className: 'dashboard-panel'
-            },
+        h('div', { className: 'dashboard-panel' }, h('h2', null, 'Calendario'), h(CoachCalendar, { events: calendarEvents })),
+        h('div', { className: 'dashboard-panel' },
             h('h2', null, 'Tus boxeadores'),
-            h(
-                'div', {
-                    className: 'coach-boxers-toolbar'
-                },
-                h(
-                    React.Fragment,
-                    null,
-                    h('input', {
-                        value: search,
-                        onChange: (e) => setSearch(e.target.value),
-                        className: 'coach-boxers-search',
-                        type: 'text',
-                        placeholder: 'Buscar por nombre, email o DNI...'
-                    }),
-                    h(
-                        'div', {
-                            className: 'coach-boxers-assign'
-                        },
-                        h('input', {
-                            value: assignEmail,
-                            onChange: (e) => setAssignEmail(e.target.value),
-                            className: 'coach-boxers-email',
-                            type: 'text',
-                            placeholder: 'Email o DNI/Licencia del boxeador'
-                        }),
-                        h(
-                            'div', {
-                                className: 'coach-boxers-assign-actions'
-                            },
-                            h(
-                                'button', {
-                                    className: 'submit-button',
-                                    type: 'button',
-                                    onClick: addBoxer
-                                },
-                                'Añadir'
-                            ),
-                            h(
-                                'button', {
-                                    className: 'submit-button coach-remove-button',
-                                    type: 'button',
-                                    onClick: removeBoxer
-                                },
-                                'Quitar'
-                            )
+            h('div', { className: 'coach-boxers-toolbar' },
+                h('input', { value: search, onChange: (e) => setSearch(e.target.value), placeholder: 'Buscar...' }),
+                h('div', { className: 'coach-boxers-assign' },
+                    h('input', { value: assignEmail, onChange: (e) => setAssignEmail(e.target.value), placeholder: 'Email o DNI' }),
+                    h('button', { className: 'submit-button', onClick: addBoxer }, 'Añadir'),
+                    h('button', { className: 'submit-button coach-remove-button', onClick: removeBoxer }, 'Quitar')
+                )
+            ),
+            h('div', { className: 'sparring-list', style: { marginTop: 15 } },
+                filteredBoxers.length === 0 ? h('p', null, 'No hay boxeadores.') :
+                filteredBoxers.map((b, i) => h(React.Fragment, { key: b._id || b.email },
+                    h('div', { className: 'sparring-card' },
+                        h('div', { className: 'card-rank' }, h('span', null, `#${i + 1}`)),
+                        h('div', { className: 'card-name' }, h('span', { className: 'main-name' }, b.nombre), h('span', null, b.email)),
+                        h('div', { className: 'card-stars' }, ...renderStars(levelScore(b.nivel))),
+                        h('div', { className: 'card-action' }, h('button', { className: 'view-profile-button', onClick: () => selectForEdit(b) }, 'Editar'))
+                    ),
+                    editId === (b._id || b.email) && h('div', { style: { padding: 15, border: '1px solid #f97316', borderRadius: 10, marginTop: 10 } },
+                        h('input', { value: editName, onChange: (e) => setEditName(e.target.value), placeholder: 'Nombre' }),
+                        h('input', { value: editDni, onChange: (e) => setEditDni(e.target.value), placeholder: 'DNI' }),
+                        h('select', { value: editLevel, onChange: (e) => setEditLevel(e.target.value) },
+                            h('option', { value: 'Principiante' }, 'Principiante'), h('option', { value: 'Intermedio' }, 'Intermedio'), h('option', { value: 'Avanzado' }, 'Avanzado'), h('option', { value: 'Amateur' }, 'Amateur'), h('option', { value: 'Profesional' }, 'Profesional')
+                        ),
+                        h('div', { style: { marginTop: 10, display: 'flex', gap: 10 } },
+                            h('button', { className: 'submit-button', onClick: saveEdit }, 'Guardar'),
+                            h('button', { className: 'submit-button', style: { background: 'red' }, onClick: deleteEdit }, 'Eliminar'),
+                            h('button', { onClick: () => setEditId('') }, 'Cancelar')
                         )
                     )
-                )
-            ),
-            h(
-                'div', {
-                    className: 'results-header',
-                    style: { marginTop: 14, marginBottom: 10, padding: 0 }
-                },
-                h('div', { className: 'results-info' },
-                    h('span', { className: 'total-results' }, `${filteredBoxers.length} Boxeadores`)
-                )
-            ),
-
-            // Lista de boxeadores en formato sparring-card
-            h(
-                'div', { className: 'sparring-list' },
-                filteredBoxers.length === 0 ?
-                h('div', { style: { padding: '20px', opacity: .5, textAlign: 'center' } }, 'Todavía no tienes boxeadores asignados.') :
-                filteredBoxers.map((b, index) => {
-                    const levelScore = (nivel = '') => {
-                        const n = String(nivel).toLowerCase();
-                        if (n.includes('principiante')) return 1;
-                        if (n.includes('intermedio')) return 2;
-                        if (n.includes('avanzado')) return 3;
-                        if (n.includes('amateur')) return 4;
-                        if (n.includes('profesional')) return 5;
-                        return 3;
-                    };
-                    const renderStars = (v) => {
-                        const filled = Math.max(0, Math.min(5, Number(v) || 0));
-                        return Array.from({ length: 5 }, (_, i) =>
-                            h('i', { key: i, className: i < filled ? 'fas fa-star' : 'far fa-star', style: { color: i < filled ? 'var(--color-accent, #f97316)' : '#d1d5db', fontSize: '0.75rem' } })
-                        );
-                    };
-                    const isEditing = editId === (b._id || '');
-                    return h(
-                        React.Fragment, { key: b._id || b.email },
-                        // Tarjeta estilo sparring
-                        h('div', {
-                                className: 'sparring-card',
-                                style: { cursor: 'default', position: 'relative' }
-                            },
-                            h('div', { className: 'card-rank' },
-                                h('span', null, `#${index + 1}`),
-                                index === 0 ? h('i', { className: 'fas fa-crown' }) : null
-                            ),
-                            h('div', { className: 'card-flag' },
-                                h('div', {
-                                    style: {
-                                        width: 44,
-                                        height: 44,
-                                        borderRadius: '50%',
-                                        background: 'var(--color-accent, #f97316)',
-                                        color: '#fff',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontWeight: 800,
-                                        fontSize: '1.1rem'
-                                    }
-                                }, (b.nombre || 'B').charAt(0).toUpperCase())
-                            ),
-                            h('div', { className: 'card-name' },
-                                h('span', { className: 'main-name' }, b.nombre || 'Boxeador'),
-                                h('span', { className: 'alias' }, b.email || '')
-                            ),
-                            h('div', { className: 'card-stars' }, ...renderStars(levelScore(b.nivel))),
-                            h('div', { className: 'card-division' }, b.dniLicencia || 'Sin DNI'),
-                            h('div', { className: 'card-record' }, b.nivel || 'Amateur'),
-                            h('div', { className: 'card-residence' },
-                                h('i', { className: 'fas fa-map-marker-alt' }),
-                                ` ${b.gimnasio || 'Sin gimnasio'}`
-                            ),
-                            // Acciones directas en la tarjeta
-                            h('div', { className: 'card-action', style: { display: 'flex', gap: 8 } },
-                                h('button', {
-                                    className: 'view-profile-button',
-                                    type: 'button',
-                                    style: { background: 'var(--color-accent, #f97316)', color: '#fff' },
-                                    onClick: (e) => {
-                                        e.stopPropagation();
-                                        selectForEdit(b);
-                                    }
-                                }, 'Editar'),
-                                h('button', {
-                                    className: 'view-profile-button',
-                                    type: 'button',
-                                    style: { background: '#fff', color: '#ef4444', border: '1.5px solid #ef4444' },
-                                    onClick: async(e) => {
-                                        e.stopPropagation();
-                                        if (!b._id) return;
-                                        await selectForEdit(b);
-                                        deleteEdit();
-                                    }
-                                }, 'Eliminar')
-                            )
-                        ),
-                        // Formulario de edición inline (solo visible cuando esta tarjeta está seleccionada)
-                        isEditing ? h('div', {
-                                style: {
-                                    margin: '0 0 16px 0',
-                                    padding: '16px',
-                                    borderRadius: 14,
-                                    border: '2px solid var(--color-accent, #f97316)',
-                                    background: 'var(--color-bg-card, #fff)',
-                                    display: 'grid',
-                                    gap: 12
-                                }
-                            },
-                            h('div', { style: { fontWeight: 700, fontSize: '.9rem', color: 'var(--color-accent, #f97316)' } },
-                                `✏️ Editando: ${b.nombre || b.email}`
-                            ),
-                            h('div', {
-                                    style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }
-                                },
-                                h('input', {
-                                    value: editName,
-                                    onChange: (e) => setEditName(e.target.value),
-                                    type: 'text',
-                                    placeholder: 'Nombre',
-                                    style: { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: '.88rem' }
-                                }),
-                                h('input', {
-                                    value: editDni,
-                                    onChange: (e) => setEditDni(e.target.value),
-                                    type: 'text',
-                                    placeholder: 'DNI/Licencia',
-                                    style: { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: '.88rem' }
-                                }),
-                                h('select', {
-                                        value: editLevel,
-                                        onChange: (e) => setEditLevel(e.target.value),
-                                        style: { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: '.88rem' }
-                                    },
-                                    h('option', { value: 'Principiante' }, 'Principiante'),
-                                    h('option', { value: 'Intermedio' }, 'Intermedio'),
-                                    h('option', { value: 'Avanzado' }, 'Avanzado'),
-                                    h('option', { value: 'Amateur' }, 'Amateur'),
-                                    h('option', { value: 'Profesional' }, 'Profesional')
-                                )
-                            ),
-                            h('div', { style: { display: 'flex', gap: 10 } },
-                                h('button', {
-                                    className: 'submit-button',
-                                    type: 'button',
-                                    onClick: saveEdit
-                                }, 'Guardar cambios'),
-                                h('button', {
-                                    type: 'button',
-                                    style: { padding: '10px 18px', borderRadius: 10, border: '1.5px solid #ef4444', background: 'none', color: '#ef4444', fontWeight: 700, cursor: 'pointer' },
-                                    onClick: deleteEdit
-                                }, 'Eliminar boxeador'),
-                                h('button', {
-                                    type: 'button',
-                                    style: { padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: 'none', color: '#6b7280', cursor: 'pointer' },
-                                    onClick: () => {
-                                        setEditId('');
-                                        setEditName('');
-                                        setEditDni('');
-                                        setEditLevel('Amateur');
-                                    }
-                                }, 'Cancelar')
-                            )
-                        ) : null
-                    );
-                })
+                ))
             )
         ),
-        h(
-            'div', {
-                className: 'dashboard-panel'
-            },
+        h('div', { className: 'dashboard-panel' },
             h('h2', null, 'Resumen'),
-            h('p', {
-                style: {
-                    marginTop: 10
-                }
-            }, 'Cobros: ', h('strong', null, formatCurrency(cobrosTotal)))
+            h('p', null, 'Cobros registrados: ', h('strong', null, formatCurrency(cobrosTotal)))
         )
     );
 }
@@ -1920,7 +863,7 @@ function CoachFinance() {
 
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
 
-    const load = async() => {
+    const load = async () => {
         if (!email) {
             setMessage({
                 kind: 'error',
@@ -1969,7 +912,7 @@ function CoachFinance() {
         load();
     }, []);
 
-    const savePrice = async() => {
+    const savePrice = async () => {
         const precioMensual = Number(priceInput);
         try {
             await requestJson(`/api/entrenadores/me?email=${encodeURIComponent(email)}`, {
@@ -1999,8 +942,8 @@ function CoachFinance() {
         null,
         h(
             'div', {
-                className: 'dashboard-panel'
-            },
+            className: 'dashboard-panel'
+        },
             h('h2', null, 'Gestión'),
             message ? h('div', {
                 style: {
@@ -2017,12 +960,12 @@ function CoachFinance() {
             }, 'Cargando...') : null,
             h(
                 'div', {
-                    className: 'dashboard-metrics',
-                    style: {
-                        marginTop: 16,
-                        marginBottom: 0
-                    }
-                },
+                className: 'dashboard-metrics',
+                style: {
+                    marginTop: 16,
+                    marginBottom: 0
+                }
+            },
                 h(MetricCard, {
                     label: 'Tu gimnasio',
                     pill: metricas.gimnasio || '-',
@@ -2082,18 +1025,18 @@ function CoachFinance() {
         ),
         h(
             'div', {
-                className: 'dashboard-panel'
-            },
+            className: 'dashboard-panel'
+        },
             h('h2', null, 'Precio mensual'),
             h(
                 'div', {
-                    style: {
-                        display: 'grid',
-                        gap: 10,
-                        marginTop: 12,
-                        maxWidth: 420
-                    }
-                },
+                style: {
+                    display: 'grid',
+                    gap: 10,
+                    marginTop: 12,
+                    maxWidth: 420
+                }
+            },
                 h('input', {
                     value: priceInput,
                     onChange: (e) => setPriceInput(e.target.value),
@@ -2116,8 +1059,8 @@ function CoachFinance() {
         ),
         h(
             'div', {
-                className: 'dashboard-panel'
-            },
+            className: 'dashboard-panel'
+        },
             h('h2', null, 'Inscripciones (ingresos)'),
             h(InscriptionRevenueLineChart, {
                 boxers,
@@ -2135,7 +1078,7 @@ function CoachChallenges() {
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
     const coachName = (localStorage.getItem('gloveup_user_name') || '').trim();
 
-    const load = async() => {
+    const load = async () => {
         if (!email) {
             setMessage({
                 kind: 'error',
@@ -2163,7 +1106,7 @@ function CoachChallenges() {
         load();
     }, []);
 
-    const respond = async(challengeId, action, boxerEmail) => {
+    const respond = async (challengeId, action, boxerEmail) => {
         try {
             await requestJson('/api/boxeadores/challenges/respond', {
                 method: 'POST',
@@ -2191,10 +1134,10 @@ function CoachChallenges() {
         null,
         h(
             'div', {
-                style: {
-                    padding: '20px 0'
-                }
-            },
+            style: {
+                padding: '20px 0'
+            }
+        },
             h('h2', {
                 style: {
                     fontSize: '1.8rem',
@@ -2222,209 +1165,209 @@ function CoachChallenges() {
                     marginTop: 20
                 }
             }, 'Cargando retos...') :
-            challenges.length === 0 ? h('p', {
-                style: {
-                    padding: '40px 20px',
-                    textAlign: 'center',
-                    opacity: 0.5
-                }
-            }, 'No hay retos recibidos para tus boxeadores.') :
-            h(
-                'div', {
+                challenges.length === 0 ? h('p', {
                     style: {
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 12,
-                        marginTop: 20
+                        padding: '40px 20px',
+                        textAlign: 'center',
+                        opacity: 0.5
                     }
-                },
-                ...challenges.map((c) => {
-                    const avatarPlaceholder = '../../assets/images/unnamed-removebg-preview.png';
-                    
-                    return h(
-                    'div', {
-                        key: c.id,
+                }, 'No hay retos recibidos para tus boxeadores.') :
+                    h(
+                        'div', {
                         style: {
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: 16,
-                            padding: '24px',
-                            backgroundColor: '#fff',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '16px',
-                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                            marginBottom: 12
-                        }
-                    },
-                    // Header: Status Badge
-                    h('div', {
-                        style: {
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            borderBottom: '1px solid #f3f4f6',
-                            paddingBottom: 12
-                        }
-                    }, 
-                        h('div', {
-                            style: {
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 8,
-                                fontSize: '.75rem',
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                color: '#6b7280'
-                            }
-                        }, 
-                            h('i', { className: 'fas fa-shield-alt' }),
-                            'Propuesta de Sparring'
-                        ),
-                        h('div', {
-                            style: {
-                                padding: '4px 12px',
-                                borderRadius: 20,
-                                fontSize: '.7rem',
-                                fontWeight: 800,
-                                textTransform: 'uppercase',
-                                backgroundColor: c.status === 'accepted' ? '#dcfce7' : c.status === 'declined' ? '#fee2e2' : '#f3f4f6',
-                                color: c.status === 'accepted' ? '#166534' : c.status === 'declined' ? '#991b1b' : '#374151'
-                            }
-                        }, c.status === 'pending' ? 'Pendiente' : c.status === 'accepted' ? 'Aceptada' : 'Declinada')
-                    ),
-
-                    // Main Matchup Area
-                    h('div', {
-                        style: {
-                            display: 'grid',
-                            gridTemplateColumns: '1fr auto 1fr',
-                            alignItems: 'center',
-                            gap: 20
-                        }
-                    },
-                        // Boxer A (Challenger)
-                        h('div', { style: { textAlign: 'center' } },
-                            h('img', { 
-                                src: c.fromFoto || avatarPlaceholder, 
-                                style: { width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '3px solid #f3f4f6', marginBottom: 10 } 
-                            }),
-                            h('div', { style: { fontWeight: 800, fontSize: '.95rem', color: '#111827' } }, c.fromNombre),
-                            h('div', { style: { fontSize: '.75rem', color: '#6b7280', marginTop: 4 } }, 
-                                h('span', { className: 'badge', style: { backgroundColor: '#f3f4f6', color: '#374151', padding: '2px 8px', borderRadius: 4 } }, c.fromNivel || 'Amateur')
-                            ),
-                            c.fromPeso ? h('div', { style: { fontSize: '.7rem', color: '#9ca3af', marginTop: 4 } }, `Peso: ${c.fromPeso}`) : null
-                        ),
-
-                        // Middle: VS & Details
-                        h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } },
-                            h('div', {
-                                style: {
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: '50%',
-                                    backgroundColor: '#111827',
-                                    color: '#fff',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontWeight: 900,
-                                    fontSize: '.8rem',
-                                    boxShadow: '0 0 0 4px #fff, 0 0 0 5px #f3f4f6'
-                                }
-                            }, 'VS'),
-                            h('div', { style: { textAlign: 'center', marginTop: 10 } },
-                                h('div', { style: { fontWeight: 700, fontSize: '.75rem', color: '#111827' } }, c.preset),
-                                h('div', { style: { fontSize: '.7rem', color: '#6b7280', marginTop: 2 } }, 
-                                    h('i', { className: 'fas fa-calendar-alt', style: { marginRight: 4 } }),
-                                    `${formatDateEs(c.scheduledAt.slice(0, 10))} • ${c.scheduledAt.slice(11, 16)}`
-                                )
-                            )
-                        ),
-
-                        // Boxer B (My Boxer)
-                        h('div', { style: { textAlign: 'center' } },
-                            h('img', { 
-                                src: c.boxerFoto || avatarPlaceholder, 
-                                style: { width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '3px solid #f3f4f6', marginBottom: 10 } 
-                            }),
-                            h('div', { style: { fontWeight: 800, fontSize: '.95rem', color: 'var(--color-accent, #f97316)' } }, c.boxerName),
-                            h('div', { style: { fontSize: '.75rem', color: '#6b7280', marginTop: 4 } }, 
-                                h('span', { className: 'badge', style: { backgroundColor: '#fff7ed', color: '#9a3412', padding: '2px 8px', borderRadius: 4 } }, c.boxerNivel || 'Amateur')
-                            ),
-                            c.boxerPeso ? h('div', { style: { fontSize: '.7rem', color: '#9ca3af', marginTop: 4 } }, `Peso: ${c.boxerPeso}`) : null
-                        )
-                    ),
-
-                    // Info Row: Gym and Coaches
-                    h('div', {
-                        style: {
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                             gap: 12,
-                            padding: '12px 16px',
-                            backgroundColor: '#f9fafb',
-                            borderRadius: '12px',
-                            border: '1px solid #f3f4f6'
+                            marginTop: 20
                         }
                     },
-                        h('div', { style: { fontSize: '.8rem', color: '#4b5563', display: 'flex', alignItems: 'center', gap: 8 } },
-                            h('i', { className: 'fas fa-building', style: { color: '#9ca3af' } }),
-                            h('span', { style: { fontWeight: 600 } }, 'Ubicación:'),
-                            c.gymName
-                        ),
-                        Array.isArray(c.coachNombres) && c.coachNombres.length > 0 ? h('div', { style: { fontSize: '.8rem', color: '#4b5563', display: 'flex', alignItems: 'center', gap: 8 } },
-                            h('i', { className: 'fas fa-user-tie', style: { color: '#9ca3af' } }),
-                            h('span', { style: { fontWeight: 600 } }, 'Supervisión:'),
-                            c.coachNombres.join(', ')
-                        ) : null
-                    ),
+                        ...challenges.map((c) => {
+                            const avatarPlaceholder = '../../assets/images/unnamed-removebg-preview.png';
 
-                    // Note Section
-                    c.note ? h('div', {
-                        style: {
-                            fontSize: '.85rem',
-                            color: '#6b7280',
-                            fontStyle: 'italic',
-                            padding: '0 8px'
-                        }
-                    }, `"${c.note}"`) : null,
+                            return h(
+                                'div', {
+                                key: c.id,
+                                style: {
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: 16,
+                                    padding: '24px',
+                                    backgroundColor: '#fff',
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: '16px',
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                    marginBottom: 12
+                                }
+                            },
+                                // Header: Status Badge
+                                h('div', {
+                                    style: {
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        borderBottom: '1px solid #f3f4f6',
+                                        paddingBottom: 12
+                                    }
+                                },
+                                    h('div', {
+                                        style: {
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 8,
+                                            fontSize: '.75rem',
+                                            fontWeight: 700,
+                                            textTransform: 'uppercase',
+                                            color: '#6b7280'
+                                        }
+                                    },
+                                        h('i', { className: 'fas fa-shield-alt' }),
+                                        'Propuesta de Sparring'
+                                    ),
+                                    h('div', {
+                                        style: {
+                                            padding: '4px 12px',
+                                            borderRadius: 20,
+                                            fontSize: '.7rem',
+                                            fontWeight: 800,
+                                            textTransform: 'uppercase',
+                                            backgroundColor: c.status === 'accepted' ? '#dcfce7' : c.status === 'declined' ? '#fee2e2' : '#f3f4f6',
+                                            color: c.status === 'accepted' ? '#166534' : c.status === 'declined' ? '#991b1b' : '#374151'
+                                        }
+                                    }, c.status === 'pending' ? 'Pendiente' : c.status === 'accepted' ? 'Aceptada' : 'Declinada')
+                                ),
 
-                    // Action Buttons
-                    c.status === 'pending' ? h(
-                        'div', {
-                            style: {
-                                display: 'flex',
-                                gap: 12,
-                                marginTop: 8
-                            }
-                        },
-                        h('button', {
-                            className: 'btn btn-primary',
-                            style: {
-                                flex: 2,
-                                padding: '12px',
-                                fontSize: '.9rem',
-                                fontWeight: 700
-                            },
-                            onClick: () => respond(c.id, 'accept', c.boxerEmail)
-                        }, 'Confirmar Sparring'),
-                        h('button', {
-                            className: 'btn btn-secondary',
-                            style: {
-                                flex: 1,
-                                padding: '12px',
-                                fontSize: '.9rem',
-                                color: '#ef4444',
-                                borderColor: '#ef4444'
-                            },
-                            onClick: () => respond(c.id, 'decline', c.boxerEmail)
-                        }, 'Declinar')
-                    ) : null
-                );
-            })
+                                // Main Matchup Area
+                                h('div', {
+                                    style: {
+                                        display: 'grid',
+                                        gridTemplateColumns: '1fr auto 1fr',
+                                        alignItems: 'center',
+                                        gap: 20
+                                    }
+                                },
+                                    // Boxer A (Challenger)
+                                    h('div', { style: { textAlign: 'center' } },
+                                        h('img', {
+                                            src: c.fromFoto || avatarPlaceholder,
+                                            style: { width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '3px solid #f3f4f6', marginBottom: 10 }
+                                        }),
+                                        h('div', { style: { fontWeight: 800, fontSize: '.95rem', color: '#111827' } }, c.fromNombre),
+                                        h('div', { style: { fontSize: '.75rem', color: '#6b7280', marginTop: 4 } },
+                                            h('span', { className: 'badge', style: { backgroundColor: '#f3f4f6', color: '#374151', padding: '2px 8px', borderRadius: 4 } }, c.fromNivel || 'Amateur')
+                                        ),
+                                        c.fromPeso ? h('div', { style: { fontSize: '.7rem', color: '#9ca3af', marginTop: 4 } }, `Peso: ${c.fromPeso}`) : null
+                                    ),
+
+                                    // Middle: VS & Details
+                                    h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } },
+                                        h('div', {
+                                            style: {
+                                                width: 40,
+                                                height: 40,
+                                                borderRadius: '50%',
+                                                backgroundColor: '#111827',
+                                                color: '#fff',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontWeight: 900,
+                                                fontSize: '.8rem',
+                                                boxShadow: '0 0 0 4px #fff, 0 0 0 5px #f3f4f6'
+                                            }
+                                        }, 'VS'),
+                                        h('div', { style: { textAlign: 'center', marginTop: 10 } },
+                                            h('div', { style: { fontWeight: 700, fontSize: '.75rem', color: '#111827' } }, c.preset),
+                                            h('div', { style: { fontSize: '.7rem', color: '#6b7280', marginTop: 2 } },
+                                                h('i', { className: 'fas fa-calendar-alt', style: { marginRight: 4 } }),
+                                                `${formatDateEs(c.scheduledAt.slice(0, 10))} • ${c.scheduledAt.slice(11, 16)}`
+                                            )
+                                        )
+                                    ),
+
+                                    // Boxer B (My Boxer)
+                                    h('div', { style: { textAlign: 'center' } },
+                                        h('img', {
+                                            src: c.boxerFoto || avatarPlaceholder,
+                                            style: { width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '3px solid #f3f4f6', marginBottom: 10 }
+                                        }),
+                                        h('div', { style: { fontWeight: 800, fontSize: '.95rem', color: 'var(--color-accent, #f97316)' } }, c.boxerName),
+                                        h('div', { style: { fontSize: '.75rem', color: '#6b7280', marginTop: 4 } },
+                                            h('span', { className: 'badge', style: { backgroundColor: '#fff7ed', color: '#9a3412', padding: '2px 8px', borderRadius: 4 } }, c.boxerNivel || 'Amateur')
+                                        ),
+                                        c.boxerPeso ? h('div', { style: { fontSize: '.7rem', color: '#9ca3af', marginTop: 4 } }, `Peso: ${c.boxerPeso}`) : null
+                                    )
+                                ),
+
+                                // Info Row: Gym and Coaches
+                                h('div', {
+                                    style: {
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                        gap: 12,
+                                        padding: '12px 16px',
+                                        backgroundColor: '#f9fafb',
+                                        borderRadius: '12px',
+                                        border: '1px solid #f3f4f6'
+                                    }
+                                },
+                                    h('div', { style: { fontSize: '.8rem', color: '#4b5563', display: 'flex', alignItems: 'center', gap: 8 } },
+                                        h('i', { className: 'fas fa-building', style: { color: '#9ca3af' } }),
+                                        h('span', { style: { fontWeight: 600 } }, 'Ubicación:'),
+                                        c.gymName
+                                    ),
+                                    Array.isArray(c.coachNombres) && c.coachNombres.length > 0 ? h('div', { style: { fontSize: '.8rem', color: '#4b5563', display: 'flex', alignItems: 'center', gap: 8 } },
+                                        h('i', { className: 'fas fa-user-tie', style: { color: '#9ca3af' } }),
+                                        h('span', { style: { fontWeight: 600 } }, 'Supervisión:'),
+                                        c.coachNombres.join(', ')
+                                    ) : null
+                                ),
+
+                                // Note Section
+                                c.note ? h('div', {
+                                    style: {
+                                        fontSize: '.85rem',
+                                        color: '#6b7280',
+                                        fontStyle: 'italic',
+                                        padding: '0 8px'
+                                    }
+                                }, `"${c.note}"`) : null,
+
+                                // Action Buttons
+                                c.status === 'pending' ? h(
+                                    'div', {
+                                    style: {
+                                        display: 'flex',
+                                        gap: 12,
+                                        marginTop: 8
+                                    }
+                                },
+                                    h('button', {
+                                        className: 'btn btn-primary',
+                                        style: {
+                                            flex: 2,
+                                            padding: '12px',
+                                            fontSize: '.9rem',
+                                            fontWeight: 700
+                                        },
+                                        onClick: () => respond(c.id, 'accept', c.boxerEmail)
+                                    }, 'Confirmar Sparring'),
+                                    h('button', {
+                                        className: 'btn btn-secondary',
+                                        style: {
+                                            flex: 1,
+                                            padding: '12px',
+                                            fontSize: '.9rem',
+                                            color: '#ef4444',
+                                            borderColor: '#ef4444'
+                                        },
+                                        onClick: () => respond(c.id, 'decline', c.boxerEmail)
+                                    }, 'Declinar')
+                                ) : null
+                            );
+                        })
+                    )
         )
-    )
-);
+    );
 }
 
 const dashboardRoot = document.getElementById('coach-dashboard-root');
@@ -2500,8 +1443,8 @@ if (role !== 'entrenador' || !email || !isSessionMaintained) {
         ReactDOM.createRoot(dashboardRoot).render(
             h(
                 'div', {
-                    className: 'dashboard-panel'
-                },
+                className: 'dashboard-panel'
+            },
                 h('h2', null, 'Necesitas iniciar sesión'),
                 h('p', null, 'Inicia sesión como entrenador para acceder al panel.'),
                 h('a', {

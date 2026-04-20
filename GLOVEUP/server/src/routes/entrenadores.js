@@ -49,33 +49,93 @@ router.get('/me/challenges-for-boxers', async (req, res) => {
         const coach = await requireCoachByEmail(req.query.email);
         const boxers = await Boxeador.find({
             entrenadorId: coach._id
-        }).select('nombre email sparringChallengesReceived').lean();
+        }).select('nombre email sparringChallengesReceived sparringChallengesSent sparringSessions').lean();
 
-        let challenges = [];
+        let activity = [];
         for (const b of boxers) {
+            // 1. Recibidos
             const received = Array.isArray(b.sparringChallengesReceived) ? b.sparringChallengesReceived : [];
             for (const c of received) {
-                // Buscar datos adicionales del retador (fromEmail)
-                const challenger = await Boxeador.findOne({ email: c.fromEmail })
-                    .select('nivel peso foto').lean();
-                
-                challenges.push({
+                const challenger = await Boxeador.findOne({ email: c.fromEmail }).select('nombre nivel peso foto').lean();
+                activity.push({
                     ...c,
+                    direction: 'inbound',
+                    type: 'challenge',
                     boxerName: b.nombre || '',
                     boxerEmail: b.email || '',
                     boxerNivel: b.nivel || 'Amateur',
                     boxerPeso: b.peso || '',
                     boxerFoto: b.foto || '',
-                    fromNivel: challenger ? challenger.nivel : 'Amateur',
-                    fromPeso: challenger ? challenger.peso : '',
-                    fromFoto: challenger ? challenger.foto : ''
+                    otherName: challenger ? challenger.nombre : (c.fromNombre || 'Boxeador'),
+                    otherNivel: challenger ? challenger.nivel : 'Amateur',
+                    otherPeso: challenger ? challenger.peso : '',
+                    otherFoto: challenger ? challenger.foto : ''
+                });
+            }
+
+            // 2. Enviados
+            const sent = Array.isArray(b.sparringChallengesSent) ? b.sparringChallengesSent : [];
+            for (const c of sent) {
+                const recipient = await Boxeador.findOne({ email: c.toEmail }).select('nombre nivel peso foto').lean();
+                activity.push({
+                    ...c,
+                    direction: 'outbound',
+                    type: 'challenge',
+                    boxerName: b.nombre || '',
+                    boxerEmail: b.email || '',
+                    boxerNivel: b.nivel || 'Amateur',
+                    boxerPeso: b.peso || '',
+                    boxerFoto: b.foto || '',
+                    otherName: recipient ? recipient.nombre : (c.toNombre || 'Boxeador'),
+                    otherEmail: c.toEmail,
+                    otherNivel: recipient ? recipient.nivel : 'Amateur',
+                    otherPeso: recipient ? recipient.peso : '',
+                    otherFoto: recipient ? recipient.foto : ''
+                });
+            }
+
+            // 3. Confirmados (Sesiones)
+            const sessions = Array.isArray(b.sparringSessions) ? b.sparringSessions : [];
+            for (const s of sessions) {
+                const otherEmail = s.boxerA_email === b.email ? s.boxerB_email : s.boxerA_email;
+                const other = await Boxeador.findOne({ email: otherEmail }).select('nombre nivel peso foto').lean();
+                activity.push({
+                    id: s.id || s._id,
+                    status: 'accepted',
+                    direction: s.boxerA_email === b.email ? 'outbound' : 'inbound',
+                    type: 'session',
+                    preset: s.preset,
+                    scheduledAt: s.scheduledAt,
+                    gymName: s.gymName,
+                    note: s.note,
+                    boxerName: b.nombre || '',
+                    boxerEmail: b.email || '',
+                    boxerNivel: b.nivel || 'Amateur',
+                    boxerPeso: b.peso || '',
+                    boxerFoto: b.foto || '',
+                    otherName: other ? other.nombre : 'Boxeador',
+                    otherEmail: otherEmail,
+                    otherNivel: other ? other.nivel : 'Amateur',
+                    otherPeso: other ? other.peso : '',
+                    otherFoto: other ? other.foto : ''
                 });
             }
         }
 
-        challenges.sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+        // Eliminar duplicados si una sesión aparece en ambos boxeadores (aunque aquí buscamos por boxeadores del entrenador)
+        const uniqueActivity = [];
+        const seenIds = new Set();
+        for (const item of activity) {
+            const uid = `${item.type}-${item.id}`;
+            if (!seenIds.has(uid)) {
+                seenIds.add(uid);
+                uniqueActivity.push(item);
+            }
+        }
 
-        return res.json(challenges);
+        uniqueActivity.sort((a, b) => String(b.scheduledAt || b.createdAt || '').localeCompare(String(a.scheduledAt || a.createdAt || '')));
+
+        return res.json(uniqueActivity);
     } catch (err) {
         return res.status(err.status || 400).json({
             error: err.message
