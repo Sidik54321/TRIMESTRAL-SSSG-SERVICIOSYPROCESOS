@@ -77,6 +77,12 @@
                         <span>Gestión</span>
                     </a>
                 </li>
+                <li id="coach-challenges-nav-item" style="display: none;">
+                    <a href="../dashboard/entrenador/dashboard.html#coach-challenges">
+                        <i class="fas fa-fist-raised"></i>
+                        <span>Retos</span>
+                    </a>
+                </li>
                 <li id="coach-gym-nav-item" style="display: none;">
                     <a href="../dashboard/entrenador/dashboard.html#coach-gym">
                         <i class="fas fa-building"></i>
@@ -118,6 +124,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const role = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();
             const coachNavItem = document.getElementById('coach-nav-item');
+            const coachChallengesNavItem = document.getElementById('coach-challenges-nav-item');
             const coachGymNavItem = document.getElementById('coach-gym-nav-item');
             const sparringsNavItem = document.getElementById('nav-sparrings-item');
             const buscarSparringNavItem = document.getElementById('nav-item-sparring');
@@ -127,6 +134,7 @@
                 homeLink.href = role === 'entrenador' ? '../dashboard/entrenador/dashboard.html' : '../dashboard/boxeador/dashboard.html';
             }
             if (coachNavItem) coachNavItem.style.display = role === 'entrenador' ? '' : 'none';
+            if (coachChallengesNavItem) coachChallengesNavItem.style.display = role === 'entrenador' ? '' : 'none';
             if (coachGymNavItem) coachGymNavItem.style.display = role === 'entrenador' ? '' : 'none';
             if (sparringsNavItem) sparringsNavItem.style.display = role === 'entrenador' ? 'none' : '';
             if (buscarSparringNavItem) buscarSparringNavItem.style.display = '';

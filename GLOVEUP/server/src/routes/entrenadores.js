@@ -44,6 +44,45 @@ router.get('/', async (req, res) => {
     res.json(items);
 });
 
+router.get('/me/challenges-for-boxers', async (req, res) => {
+    try {
+        const coach = await requireCoachByEmail(req.query.email);
+        const boxers = await Boxeador.find({
+            entrenadorId: coach._id
+        }).select('nombre email sparringChallengesReceived').lean();
+
+        let challenges = [];
+        for (const b of boxers) {
+            const received = Array.isArray(b.sparringChallengesReceived) ? b.sparringChallengesReceived : [];
+            for (const c of received) {
+                // Buscar datos adicionales del retador (fromEmail)
+                const challenger = await Boxeador.findOne({ email: c.fromEmail })
+                    .select('nivel peso foto').lean();
+                
+                challenges.push({
+                    ...c,
+                    boxerName: b.nombre || '',
+                    boxerEmail: b.email || '',
+                    boxerNivel: b.nivel || 'Amateur',
+                    boxerPeso: b.peso || '',
+                    boxerFoto: b.foto || '',
+                    fromNivel: challenger ? challenger.nivel : 'Amateur',
+                    fromPeso: challenger ? challenger.peso : '',
+                    fromFoto: challenger ? challenger.foto : ''
+                });
+            }
+        }
+
+        challenges.sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+
+        return res.json(challenges);
+    } catch (err) {
+        return res.status(err.status || 400).json({
+            error: err.message
+        });
+    }
+});
+
 router.get('/me', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -484,35 +523,6 @@ router.delete('/me/boxeadores/:id', async (req, res) => {
         });
 
         return res.json({ ok: true });
-    } catch (err) {
-        return res.status(err.status || 400).json({
-            error: err.message
-        });
-    }
-});
-
-router.get('/me/challenges-for-boxers', async (req, res) => {
-    try {
-        const coach = await requireCoachByEmail(req.query.email);
-        const boxers = await Boxeador.find({
-            entrenadorId: coach._id
-        }).select('nombre email sparringChallengesReceived').lean();
-
-        let challenges = [];
-        boxers.forEach(b => {
-            const received = Array.isArray(b.sparringChallengesReceived) ? b.sparringChallengesReceived : [];
-            received.forEach(c => {
-                challenges.push({
-                    ...c,
-                    boxerName: b.nombre || '',
-                    boxerEmail: b.email || ''
-                });
-            });
-        });
-
-        challenges.sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
-
-        return res.json(challenges);
     } catch (err) {
         return res.status(err.status || 400).json({
             error: err.message

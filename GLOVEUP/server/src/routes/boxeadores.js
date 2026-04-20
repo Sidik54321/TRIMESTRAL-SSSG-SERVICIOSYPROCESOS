@@ -288,6 +288,31 @@ router.post('/challenges', async (req, res) => {
             de: fromEmail
         });
 
+        // Notificar a los entrenadores
+        // 1. Entrenador del retado (si existe)
+        const recipientBoxer = await Boxeador.findOne({ email: record.toEmail }).populate('entrenadorId');
+        if (recipientBoxer && recipientBoxer.entrenadorId && recipientBoxer.entrenadorId.email) {
+            await crearNotificacion({
+                para: recipientBoxer.entrenadorId.email,
+                tipo: 'sparring',
+                titulo: '🔔 Reto para tu boxeador',
+                cuerpo: `${record.fromNombre} ha retado a tu boxeador ${recipientBoxer.nombre}.`,
+                de: fromEmail
+            });
+        }
+
+        // 2. Entrenador del retador (si existe)
+        const senderBoxer = await Boxeador.findOne({ email: fromEmail }).populate('entrenadorId');
+        if (senderBoxer && senderBoxer.entrenadorId && senderBoxer.entrenadorId.email) {
+            await crearNotificacion({
+                para: senderBoxer.entrenadorId.email,
+                tipo: 'sparring',
+                titulo: '🥊 Reto enviado por tu boxeador',
+                cuerpo: `Tu boxeador ${senderBoxer.nombre} ha enviado un reto a ${record.toNombre}.`,
+                de: fromEmail
+            });
+        }
+
         return res.status(201).json(record);
     } catch (err) {
         return res.status(400).json({
@@ -425,9 +450,18 @@ router.post('/challenges/respond', async (req, res) => {
         });
 
         if (newStatus === 'accepted') {
-            // Notificar a los entrenadores supervisores implicados
+            // Notificar a los entrenadores supervisores implicados en el reto
             const coachEmails = Array.isArray(challenge.coachEmails) ? challenge.coachEmails : [];
-            for (const cEmail of coachEmails) {
+            
+            // También buscamos a los entrenadores actuales de ambos boxeadores por si no estaban en el reto
+            const boxerA = await Boxeador.findOne({ email: fromEmail }).populate('entrenadorId');
+            const boxerB = await Boxeador.findOne({ email: email }).populate('entrenadorId');
+            
+            const allCoaches = new Set(coachEmails);
+            if (boxerA?.entrenadorId?.email) allCoaches.add(boxerA.entrenadorId.email);
+            if (boxerB?.entrenadorId?.email) allCoaches.add(boxerB.entrenadorId.email);
+
+            for (const cEmail of allCoaches) {
                 await crearNotificacion({
                     para: cEmail,
                     tipo: 'sparring',

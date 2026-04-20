@@ -2133,6 +2133,7 @@ function CoachChallenges() {
     const [challenges, setChallenges] = useState([]);
 
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
+    const coachName = (localStorage.getItem('gloveup_user_name') || '').trim();
 
     const load = async() => {
         if (!email) {
@@ -2190,15 +2191,25 @@ function CoachChallenges() {
         null,
         h(
             'div', {
-                className: 'dashboard-panel'
+                style: {
+                    padding: '20px 0'
+                }
             },
-            h('h2', null, 'Retos de tus boxeadores'),
+            h('h2', {
+                style: {
+                    fontSize: '1.8rem',
+                    fontWeight: 900,
+                    marginBottom: 4,
+                    color: '#111827'
+                }
+            }, coachName || 'Entrenador'),
             h('p', {
                 className: 'muted',
                 style: {
-                    marginTop: 8
+                    marginBottom: 24,
+                    fontSize: '1rem'
                 }
-            }, 'Aquí aparecen los retos de sparring que han recibido tus boxeadores asignados.'),
+            }, 'Peticiones de sparring externas para tus boxeadores.'),
             message ? h('div', {
                 style: {
                     fontWeight: 600,
@@ -2221,106 +2232,199 @@ function CoachChallenges() {
             h(
                 'div', {
                     style: {
-                        display: 'grid',
-                        gap: 16,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 12,
                         marginTop: 20
                     }
                 },
-                ...challenges.map((c) => h(
+                ...challenges.map((c) => {
+                    const avatarPlaceholder = '../../assets/images/unnamed-removebg-preview.png';
+                    
+                    return h(
                     'div', {
                         key: c.id,
-                        className: 'sparring-card',
                         style: {
-                            display: 'grid',
-                            gridTemplateColumns: '1fr auto',
-                            gap: 12,
-                            alignItems: 'center',
-                            cursor: 'default',
-                            padding: '16px 20px'
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 16,
+                            padding: '24px',
+                            backgroundColor: '#fff',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '16px',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                            marginBottom: 12
                         }
                     },
-                    h(
-                        'div', {
-                            style: {
-                                display: 'grid',
-                                gap: 4
-                            }
-                        },
+                    // Header: Status Badge
+                    h('div', {
+                        style: {
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            borderBottom: '1px solid #f3f4f6',
+                            paddingBottom: 12
+                        }
+                    }, 
                         h('div', {
                             style: {
-                                fontWeight: 800,
-                                fontSize: '1.05rem',
-                                color: 'var(--color-accent, #f97316)'
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                fontSize: '.75rem',
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                color: '#6b7280'
                             }
-                        }, `${c.fromNombre} rerta a ${c.boxerName}`),
+                        }, 
+                            h('i', { className: 'fas fa-shield-alt' }),
+                            'Propuesta de Sparring'
+                        ),
                         h('div', {
                             style: {
-                                fontSize: '.85rem',
-                                opacity: 0.8
-                            }
-                        }, h('i', {
-                            className: 'fas fa-calendar-alt'
-                        }), ` ${formatDateEs(c.scheduledAt.slice(0, 10))} a las ${c.scheduledAt.slice(11, 16)}`),
-                        h('div', {
-                            style: {
-                                fontSize: '.85rem',
-                                opacity: 0.8
-                            }
-                        }, h('i', {
-                            className: 'fas fa-building'
-                        }), ` ${c.gymName}`),
-                        c.note ? h('p', {
-                            style: {
-                                fontSize: '.8rem',
-                                marginTop: 6,
-                                opacity: 0.6,
-                                fontStyle: 'italic'
-                            }
-                        }, `"${c.note}"`) : null,
-                        h('div', {
-                            style: {
-                                marginTop: 8,
-                                display: 'inline-block',
-                                padding: '4px 10px',
+                                padding: '4px 12px',
                                 borderRadius: 20,
                                 fontSize: '.7rem',
-                                fontWeight: 700,
+                                fontWeight: 800,
                                 textTransform: 'uppercase',
                                 backgroundColor: c.status === 'accepted' ? '#dcfce7' : c.status === 'declined' ? '#fee2e2' : '#f3f4f6',
                                 color: c.status === 'accepted' ? '#166534' : c.status === 'declined' ? '#991b1b' : '#374151'
                             }
-                        }, c.status === 'pending' ? 'Pendiente' : c.status === 'accepted' ? 'Aceptado' : 'Declinado')
+                        }, c.status === 'pending' ? 'Pendiente' : c.status === 'accepted' ? 'Aceptada' : 'Declinada')
                     ),
+
+                    // Main Matchup Area
+                    h('div', {
+                        style: {
+                            display: 'grid',
+                            gridTemplateColumns: '1fr auto 1fr',
+                            alignItems: 'center',
+                            gap: 20
+                        }
+                    },
+                        // Boxer A (Challenger)
+                        h('div', { style: { textAlign: 'center' } },
+                            h('img', { 
+                                src: c.fromFoto || avatarPlaceholder, 
+                                style: { width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '3px solid #f3f4f6', marginBottom: 10 } 
+                            }),
+                            h('div', { style: { fontWeight: 800, fontSize: '.95rem', color: '#111827' } }, c.fromNombre),
+                            h('div', { style: { fontSize: '.75rem', color: '#6b7280', marginTop: 4 } }, 
+                                h('span', { className: 'badge', style: { backgroundColor: '#f3f4f6', color: '#374151', padding: '2px 8px', borderRadius: 4 } }, c.fromNivel || 'Amateur')
+                            ),
+                            c.fromPeso ? h('div', { style: { fontSize: '.7rem', color: '#9ca3af', marginTop: 4 } }, `Peso: ${c.fromPeso}`) : null
+                        ),
+
+                        // Middle: VS & Details
+                        h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } },
+                            h('div', {
+                                style: {
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: '50%',
+                                    backgroundColor: '#111827',
+                                    color: '#fff',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontWeight: 900,
+                                    fontSize: '.8rem',
+                                    boxShadow: '0 0 0 4px #fff, 0 0 0 5px #f3f4f6'
+                                }
+                            }, 'VS'),
+                            h('div', { style: { textAlign: 'center', marginTop: 10 } },
+                                h('div', { style: { fontWeight: 700, fontSize: '.75rem', color: '#111827' } }, c.preset),
+                                h('div', { style: { fontSize: '.7rem', color: '#6b7280', marginTop: 2 } }, 
+                                    h('i', { className: 'fas fa-calendar-alt', style: { marginRight: 4 } }),
+                                    `${formatDateEs(c.scheduledAt.slice(0, 10))} • ${c.scheduledAt.slice(11, 16)}`
+                                )
+                            )
+                        ),
+
+                        // Boxer B (My Boxer)
+                        h('div', { style: { textAlign: 'center' } },
+                            h('img', { 
+                                src: c.boxerFoto || avatarPlaceholder, 
+                                style: { width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '3px solid #f3f4f6', marginBottom: 10 } 
+                            }),
+                            h('div', { style: { fontWeight: 800, fontSize: '.95rem', color: 'var(--color-accent, #f97316)' } }, c.boxerName),
+                            h('div', { style: { fontSize: '.75rem', color: '#6b7280', marginTop: 4 } }, 
+                                h('span', { className: 'badge', style: { backgroundColor: '#fff7ed', color: '#9a3412', padding: '2px 8px', borderRadius: 4 } }, c.boxerNivel || 'Amateur')
+                            ),
+                            c.boxerPeso ? h('div', { style: { fontSize: '.7rem', color: '#9ca3af', marginTop: 4 } }, `Peso: ${c.boxerPeso}`) : null
+                        )
+                    ),
+
+                    // Info Row: Gym and Coaches
+                    h('div', {
+                        style: {
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                            gap: 12,
+                            padding: '12px 16px',
+                            backgroundColor: '#f9fafb',
+                            borderRadius: '12px',
+                            border: '1px solid #f3f4f6'
+                        }
+                    },
+                        h('div', { style: { fontSize: '.8rem', color: '#4b5563', display: 'flex', alignItems: 'center', gap: 8 } },
+                            h('i', { className: 'fas fa-building', style: { color: '#9ca3af' } }),
+                            h('span', { style: { fontWeight: 600 } }, 'Ubicación:'),
+                            c.gymName
+                        ),
+                        Array.isArray(c.coachNombres) && c.coachNombres.length > 0 ? h('div', { style: { fontSize: '.8rem', color: '#4b5563', display: 'flex', alignItems: 'center', gap: 8 } },
+                            h('i', { className: 'fas fa-user-tie', style: { color: '#9ca3af' } }),
+                            h('span', { style: { fontWeight: 600 } }, 'Supervisión:'),
+                            c.coachNombres.join(', ')
+                        ) : null
+                    ),
+
+                    // Note Section
+                    c.note ? h('div', {
+                        style: {
+                            fontSize: '.85rem',
+                            color: '#6b7280',
+                            fontStyle: 'italic',
+                            padding: '0 8px'
+                        }
+                    }, `"${c.note}"`) : null,
+
+                    // Action Buttons
                     c.status === 'pending' ? h(
                         'div', {
                             style: {
-                                display: 'grid',
-                                gap: 8
+                                display: 'flex',
+                                gap: 12,
+                                marginTop: 8
                             }
                         },
                         h('button', {
                             className: 'btn btn-primary',
                             style: {
-                                padding: '8px 16px',
-                                fontSize: '.8rem'
+                                flex: 2,
+                                padding: '12px',
+                                fontSize: '.9rem',
+                                fontWeight: 700
                             },
                             onClick: () => respond(c.id, 'accept', c.boxerEmail)
-                        }, 'Aceptar'),
+                        }, 'Confirmar Sparring'),
                         h('button', {
                             className: 'btn btn-secondary',
                             style: {
-                                padding: '8px 16px',
-                                fontSize: '.8rem',
-                                borderColor: '#ef4444',
-                                color: '#ef4444'
+                                flex: 1,
+                                padding: '12px',
+                                fontSize: '.9rem',
+                                color: '#ef4444',
+                                borderColor: '#ef4444'
                             },
                             onClick: () => respond(c.id, 'decline', c.boxerEmail)
                         }, 'Declinar')
                     ) : null
-                ))
-            )
+                );
+            })
         )
-    );
+    )
+);
 }
 
 const dashboardRoot = document.getElementById('coach-dashboard-root');
@@ -2362,15 +2466,23 @@ const isSessionMaintained =
 const showCoachSection = () => {
     if (!coachDashboardSection || !coachManagementSection || !coachChallengesSection || !coachGymSection) return;
     const hash = String(window.location.hash || '').toLowerCase();
+    const isHome = !hash || hash === '#';
     const inManagement = hash === '#coach-management';
     const inChallenges = hash === '#coach-challenges';
     const inGym = hash === '#coach-gym';
-    coachDashboardSection.style.display = inManagement || inChallenges || inGym ? 'none' : 'grid';
+
+    // Ocultar el header estático del dashboard si no estamos en 'Inicio'
+    const staticHeader = document.querySelector('.dashboard-header');
+    if (staticHeader) {
+        staticHeader.style.display = isHome ? 'block' : 'none';
+    }
+
+    coachDashboardSection.style.display = isHome ? 'grid' : 'none';
     coachManagementSection.style.display = inManagement ? 'grid' : 'none';
     coachChallengesSection.style.display = inChallenges ? 'grid' : 'none';
     coachGymSection.style.display = inGym ? 'grid' : 'none';
 
-    if (navHomeItem) navHomeItem.classList.toggle('active', !inManagement && !inChallenges && !inGym);
+    if (navHomeItem) navHomeItem.classList.toggle('active', isHome);
     if (coachNavItem) coachNavItem.classList.toggle('active', inManagement);
     if (coachChallengesNavItem) coachChallengesNavItem.classList.toggle('active', inChallenges);
     if (coachGymNavItem) coachGymNavItem.classList.toggle('active', inGym);
