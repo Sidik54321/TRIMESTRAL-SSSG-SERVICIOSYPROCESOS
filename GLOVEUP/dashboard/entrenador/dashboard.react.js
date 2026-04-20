@@ -51,8 +51,8 @@ const requestJson = (path, options = {}) => {
 
 const formatCurrency = (value) => {
     const num = Number(value);
-    if (!Number.isFinite(num) || num <= 0) return '0€';
-    return `${num.toFixed(2)}€`;
+    if (!Number.isFinite(num) || num <= 0) return '0â‚¬';
+    return `${num.toFixed(2)}â‚¬`;
 };
 
 const cap = (n) => Math.max(0, Math.min(100, n));
@@ -248,7 +248,7 @@ const buildCoachCalendarEvents = (boxers, metricas) => {
         if (insc) {
             events.push({
                 id: `inscripcion-${b && b._id ? b._id : boxerName}-${insc}`,
-                title: `Inscripción: ${boxerName}`,
+                title: `InscripciÃ³n: ${boxerName}`,
                 start: insc,
                 allDay: true,
                 classNames: ['gloveup-event--inscripcion'],
@@ -326,7 +326,7 @@ function CoachCalendar({
         const el = elRef.current;
         const FullCalendarLib = window.FullCalendar;
         if (!el || !FullCalendarLib || !FullCalendarLib.Calendar) {
-            setDetails('No se pudo cargar el calendario. Revisa tu conexión o bloqueadores de contenido.');
+            setDetails('No se pudo cargar el calendario. Revisa tu conexiÃ³n o bloqueadores de contenido.');
             return;
         }
 
@@ -353,7 +353,7 @@ function CoachCalendar({
                     if (partner) parts.push(`Partner: ${partner}`);
                     if (place) parts.push(`Lugar: ${place}`);
                     if (kind) parts.push(kind);
-                    setDetails(parts.filter(Boolean).join(' · '));
+                    setDetails(parts.filter(Boolean).join(' Â· '));
                 }
             });
             calendarRef.current.render();
@@ -384,7 +384,7 @@ function CoachCalendar({
             }, 'Sparring'),
             h('span', {
                 className: 'coach-calendar-pill coach-calendar-pill--inscripcion'
-            }, 'Inscripción'),
+            }, 'InscripciÃ³n'),
             h('span', {
                 className: 'coach-calendar-pill coach-calendar-pill--recordatorio'
             }, 'Recordatorio')
@@ -393,7 +393,7 @@ function CoachCalendar({
             className: 'gloveup-calendar',
             ref: elRef,
             role: 'application',
-            'aria-label': 'Calendario de gestión'
+            'aria-label': 'Calendario de gestiÃ³n'
         }),
         h('div', {
             className: 'coach-calendar-details'
@@ -521,7 +521,7 @@ function CoachStatsDashboard() {
         if (!email) {
             setMessage({
                 kind: 'error',
-                text: 'No se ha encontrado el email del entrenador en la sesión.'
+                text: 'No se ha encontrado el email del entrenador en la sesiÃ³n.'
             });
             setLoading(false);
             return;
@@ -552,7 +552,7 @@ function CoachStatsDashboard() {
         } catch (err) {
             setMessage({
                 kind: 'error',
-                text: err && err.message ? err.message : 'Error cargando las métricas del entrenador.'
+                text: err && err.message ? err.message : 'Error cargando las mÃ©tricas del entrenador.'
             });
         } finally {
             setLoading(false);
@@ -578,7 +578,7 @@ function CoachStatsDashboard() {
         },
             h('div', { className: 'dashboard-title-block' },
                 h('h1', { style: { fontSize: '2rem', fontWeight: 900 } }, coachName || 'Entrenador'),
-                h('p', { style: { opacity: 0.8 } }, 'Resumen de actividad y gestión de boxeadores.')
+                h('p', { style: { opacity: 0.8 } }, 'Resumen de actividad y gestiÃ³n de boxeadores.')
             )
         ),
         
@@ -797,7 +797,7 @@ function CoachManagement() {
                         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 8, marginTop: 10 } },
                             fotos.map((src, idx) => h('div', { key: idx, style: { position: 'relative' } },
                                 h('img', { src, style: { width: '100%', height: 60, objectFit: 'cover', borderRadius: 8 } }),
-                                h('button', { onClick: () => setFotos(prev => prev.filter((_, i) => i !== idx)), style: { position: 'absolute', top: 0, right: 0, background: 'red', color: 'white', border: 'none', borderRadius: '50%', cursor: 'pointer' } }, '×')
+                                h('button', { onClick: () => setFotos(prev => prev.filter((_, i) => i !== idx)), style: { position: 'absolute', top: 0, right: 0, background: 'red', color: 'white', border: 'none', borderRadius: '50%', cursor: 'pointer' } }, 'Ã—')
                             ))
                         )
                     )
@@ -812,7 +812,7 @@ function CoachManagement() {
                 h('input', { value: search, onChange: (e) => setSearch(e.target.value), placeholder: 'Buscar...' }),
                 h('div', { className: 'coach-boxers-assign' },
                     h('input', { value: assignEmail, onChange: (e) => setAssignEmail(e.target.value), placeholder: 'Email o DNI' }),
-                    h('button', { className: 'submit-button', onClick: addBoxer }, 'Añadir'),
+                    h('button', { className: 'submit-button', onClick: addBoxer }, 'AÃ±adir'),
                     h('button', { className: 'submit-button coach-remove-button', onClick: removeBoxer }, 'Quitar')
                 )
             ),
@@ -867,7 +867,7 @@ function CoachFinance() {
         if (!email) {
             setMessage({
                 kind: 'error',
-                text: 'No se ha encontrado el email del entrenador en la sesión.'
+                text: 'No se ha encontrado el email del entrenador en la sesiÃ³n.'
             });
             setLoading(false);
             return;
@@ -901,7 +901,7 @@ function CoachFinance() {
         } catch (err) {
             setMessage({
                 kind: 'error',
-                text: err && err.message ? err.message : 'Error cargando la gestión económica.'
+                text: err && err.message ? err.message : 'Error cargando la gestiÃ³n econÃ³mica.'
             });
         } finally {
             setLoading(false);
@@ -944,7 +944,7 @@ function CoachFinance() {
             'div', {
             className: 'dashboard-panel'
         },
-            h('h2', null, 'Gestión'),
+            h('h2', null, 'GestiÃ³n'),
             message ? h('div', {
                 style: {
                     fontWeight: 600,
@@ -1002,7 +1002,7 @@ function CoachFinance() {
                 h(MetricCard, {
                     label: 'Ingresos estimados (mes)',
                     pill: formatCurrency(metricas.ingresosMes || 0),
-                    sub: 'Precio mensual × inscripciones del mes.',
+                    sub: 'Precio mensual Ã— inscripciones del mes.',
                     chartProps: {
                         label: 'Ingresos',
                         value: metricas.ingresosMes || 0,
@@ -1074,6 +1074,18 @@ function CoachChallenges() {
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState(null);
     const [challenges, setChallenges] = useState([]);
+    const [filter, setFilter] = useState('all');
+
+    const isPendingStatus = (s) => !s || s === 'pending' || s === 'pending_coach_to' || s === 'pending_coach_from';
+
+    const filteredChallenges = useMemo(() => {
+        if (filter === 'all') return challenges;
+        if (filter === 'pending') return challenges.filter(c => isPendingStatus(c.status));
+        if (filter === 'accepted') return challenges.filter(c => c.status === 'accepted');
+        if (filter === 'declined') return challenges.filter(c => c.status === 'declined');
+        return challenges;
+    }, [challenges, filter]);
+
 
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
     const coachName = (localStorage.getItem('gloveup_user_name') || '').trim();
@@ -1082,7 +1094,7 @@ function CoachChallenges() {
         if (!email) {
             setMessage({
                 kind: 'error',
-                text: 'No se ha encontrado el email del entrenador en la sesión.'
+                text: 'No se ha encontrado el email del entrenador en la sesiÃ³n.'
             });
             setLoading(false);
             return;
@@ -1114,7 +1126,7 @@ function CoachChallenges() {
             });
             setMessage({
                 kind: 'ok',
-                text: `Reto ${action === 'accept' ? 'aprobado ✅' : 'rechazado ❌'} correctamente.`
+                text: `Reto ${action === 'accept' ? 'aprobado âœ…' : 'rechazado âŒ'} correctamente.`
             });
             load();
         } catch (err) {
@@ -1144,40 +1156,85 @@ function CoachChallenges() {
             }, coachName || 'Entrenador'),
             h('p', {
                 className: 'muted',
-                style: {
-                    marginBottom: 24,
-                    fontSize: '1rem'
-                }
+                style: { marginBottom: 16, fontSize: '1rem' }
             }, 'Peticiones de sparring externas para tus boxeadores.'),
+
+            // Barra de filtros
+            h('div', {
+                style: {
+                    display: 'flex',
+                    gap: 8,
+                    flexWrap: 'wrap',
+                    marginBottom: 20,
+                    padding: '14px 16px',
+                    backgroundColor: 'var(--color-secondary, #f9fafb)',
+                    borderRadius: '16px',
+                    border: '1px solid var(--color-border, #e5e7eb)'
+                }
+            },
+                [
+                    { key: 'all', label: 'Todos', emoji: '📋' },
+                    { key: 'pending', label: 'Pendientes', emoji: '⏳' },
+                    { key: 'accepted', label: 'Aceptados', emoji: '✅' },
+                    { key: 'declined', label: 'Rechazados', emoji: '❌' }
+                ].map(tab => {
+                    const count = tab.key === 'all' ? challenges.length
+                        : tab.key === 'pending' ? challenges.filter(c => isPendingStatus(c.status)).length
+                        : challenges.filter(c => c.status === tab.key).length;
+                    const isActive = filter === tab.key;
+                    return h('button', {
+                        key: tab.key,
+                        onClick: () => setFilter(tab.key),
+                        style: {
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '8px 16px',
+                            borderRadius: '999px',
+                            border: isActive ? '2px solid var(--color-accent, #f97316)' : '1px solid var(--color-border, #e5e7eb)',
+                            backgroundColor: isActive ? 'var(--color-accent, #f97316)' : '#fff',
+                            color: isActive ? '#fff' : 'var(--color-text, #374151)',
+                            fontWeight: 700,
+                            fontSize: '.8rem',
+                            cursor: 'pointer',
+                            transition: 'all .18s'
+                        }
+                    },
+                        tab.emoji, ' ', tab.label,
+                        h('span', {
+                            style: {
+                                marginLeft: 4,
+                                padding: '1px 7px',
+                                borderRadius: '999px',
+                                backgroundColor: isActive ? 'rgba(255,255,255,0.25)' : 'var(--color-secondary, #f3f4f6)',
+                                color: isActive ? '#fff' : '#6b7280',
+                                fontSize: '.75rem',
+                                fontWeight: 800
+                            }
+                        }, count)
+                    );
+                })
+            ),
+
             message ? h('div', {
                 style: {
                     fontWeight: 600,
                     marginTop: 10,
+                    marginBottom: 12,
+                    padding: '10px 16px',
+                    borderRadius: '12px',
+                    backgroundColor: message.kind === 'error' ? '#fee2e2' : '#dcfce7',
                     color: message.kind === 'error' ? '#b91c1c' : '#065f46'
                 }
             }, message.text) : null,
-            loading ? h('p', {
-                style: {
-                    marginTop: 20
-                }
-            }, 'Cargando retos...') :
-                challenges.length === 0 ? h('p', {
-                    style: {
-                        padding: '40px 20px',
-                        textAlign: 'center',
-                        opacity: 0.5
-                    }
-                }, 'No hay retos recibidos para tus boxeadores.') :
-                    h(
-                        'div', {
-                        style: {
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 12,
-                            marginTop: 20
-                        }
+            loading ? h('p', { style: { marginTop: 20, textAlign: 'center', opacity: 0.6 } }, 'Cargando retos...') :
+                filteredChallenges.length === 0 ? h('p', {
+                    style: { padding: '40px 20px', textAlign: 'center', opacity: 0.5 }
+                }, challenges.length === 0 ? 'No hay retos para tus boxeadores.' : 'No hay retos en esta categoría.') :
+                    h('div', {
+                        style: { display: 'flex', flexDirection: 'column', gap: 12, marginTop: 4 }
                     },
-                        ...challenges.map((c) => {
+                        ...filteredChallenges.map((c) => {
                             const avatarPlaceholder = '../../assets/images/unnamed-removebg-preview.png';
 
                             return h(
@@ -1223,13 +1280,13 @@ function CoachChallenges() {
                                         const s = c.status || 'pending';
                                         const dir = c.direction || 'inbound';
                                         let label, bg, color;
-                                        if (s === 'accepted') { label = '✅ Confirmado'; bg = '#dcfce7'; color = '#166534'; }
-                                        else if (s === 'declined') { label = '❌ Rechazado'; bg = '#fee2e2'; color = '#991b1b'; }
+                                        if (s === 'accepted') { label = 'âœ… Confirmado'; bg = '#dcfce7'; color = '#166534'; }
+                                        else if (s === 'declined') { label = 'âŒ Rechazado'; bg = '#fee2e2'; color = '#991b1b'; }
                                         else if (s === 'pending_coach_to') {
-                                            label = dir === 'inbound' ? '⏳ Tu aprobación necesaria' : '⏳ Esperando al entrenador rival';
+                                            label = dir === 'inbound' ? 'â³ Tu aprobaciÃ³n necesaria' : 'â³ Esperando al entrenador rival';
                                             bg = '#fef3c7'; color = '#92400e';
                                         } else if (s === 'pending_coach_from') {
-                                            label = dir === 'outbound' ? '⏳ Tu aprobación necesaria' : '⏳ Esperando al entrenador rival';
+                                            label = dir === 'outbound' ? 'â³ Tu aprobaciÃ³n necesaria' : 'â³ Esperando al entrenador rival';
                                             bg = '#fef3c7'; color = '#92400e';
                                         } else { label = 'Pendiente'; bg = '#f3f4f6'; color = '#374151'; }
                                         return h('div', { style: { padding: '4px 12px', borderRadius: 20, fontSize: '.7rem', fontWeight: 800, textTransform: 'uppercase', backgroundColor: bg, color } }, label);
@@ -1279,7 +1336,7 @@ function CoachChallenges() {
                                             h('div', { style: { fontWeight: 700, fontSize: '.75rem', color: '#111827' } }, c.preset),
                                             h('div', { style: { fontSize: '.7rem', color: '#6b7280', marginTop: 2 } },
                                                 h('i', { className: 'fas fa-calendar-alt', style: { marginRight: 4 } }),
-                                                `${formatDateEs(c.scheduledAt.slice(0, 10))} • ${c.scheduledAt.slice(11, 16)}`
+                                                `${formatDateEs(c.scheduledAt.slice(0, 10))} â€¢ ${c.scheduledAt.slice(11, 16)}`
                                             )
                                         )
                                     ),
@@ -1312,12 +1369,12 @@ function CoachChallenges() {
                                 },
                                     h('div', { style: { fontSize: '.8rem', color: '#4b5563', display: 'flex', alignItems: 'center', gap: 8 } },
                                         h('i', { className: 'fas fa-building', style: { color: '#9ca3af' } }),
-                                        h('span', { style: { fontWeight: 600 } }, 'Ubicación:'),
+                                        h('span', { style: { fontWeight: 600 } }, 'UbicaciÃ³n:'),
                                         c.gymName
                                     ),
                                     Array.isArray(c.coachNombres) && c.coachNombres.length > 0 ? h('div', { style: { fontSize: '.8rem', color: '#4b5563', display: 'flex', alignItems: 'center', gap: 8 } },
                                         h('i', { className: 'fas fa-user-tie', style: { color: '#9ca3af' } }),
-                                        h('span', { style: { fontWeight: 600 } }, 'Supervisión:'),
+                                        h('span', { style: { fontWeight: 600 } }, 'SupervisiÃ³n:'),
                                         c.coachNombres.join(', ')
                                     ) : null
                                 ),
@@ -1346,12 +1403,12 @@ function CoachChallenges() {
                                             className: 'btn btn-primary',
                                             style: { flex: 2, padding: '12px', fontSize: '.9rem', fontWeight: 700 },
                                             onClick: () => respond(c.id, 'accept')
-                                        }, '✅ Aprobar Sparring'),
+                                        }, 'âœ… Aprobar Sparring'),
                                         h('button', {
                                             className: 'btn btn-secondary',
                                             style: { flex: 1, padding: '12px', fontSize: '.9rem', color: '#ef4444', borderColor: '#ef4444' },
                                             onClick: () => respond(c.id, 'decline')
-                                        }, '❌ Rechazar')
+                                        }, 'âŒ Rechazar')
                                     );
                                 })()
                             );
@@ -1405,7 +1462,7 @@ const showCoachSection = () => {
     const inChallenges = hash === '#coach-challenges';
     const inGym = hash === '#coach-gym';
 
-    // Ocultar el header estático del dashboard si no estamos en 'Inicio'
+    // Ocultar el header estÃ¡tico del dashboard si no estamos en 'Inicio'
     const staticHeader = document.querySelector('.dashboard-header');
     if (staticHeader) {
         staticHeader.style.display = isHome ? 'block' : 'none';
@@ -1446,8 +1503,8 @@ if (role !== 'entrenador' || !email || !isSessionMaintained) {
                 'div', {
                 className: 'dashboard-panel'
             },
-                h('h2', null, 'Necesitas iniciar sesión'),
-                h('p', null, 'Inicia sesión como entrenador para acceder al panel.'),
+                h('h2', null, 'Necesitas iniciar sesiÃ³n'),
+                h('p', null, 'Inicia sesiÃ³n como entrenador para acceder al panel.'),
                 h('a', {
                     className: 'btn btn-primary',
                     href: '../../auth/index.html'

@@ -654,12 +654,20 @@ router.post('/me/challenges/respond', async (req, res) => {
 
         const curStatus = String(foundChallenge.status || 'pending');
 
-        // Validate that this coach is the one expected to respond in this phase
-        if (isToCoach && curStatus !== 'pending_coach_to') {
-            if (curStatus === 'pending_coach_from') return res.status(400).json({ error: 'Ya aprobaste este reto. Esperando al entrenador del retador.' });
+        // Compatibilidad con retos antiguos: 'pending' se trata como 'pending_coach_to'
+        const effectiveStatus = curStatus === 'pending' ? 'pending_coach_to' : curStatus;
+
+        // Validar que este entrenador debe responder en esta fase
+        if (isToCoach && effectiveStatus !== 'pending_coach_to') {
+            if (effectiveStatus === 'pending_coach_from') return res.status(400).json({ error: 'Ya aprobaste este reto. Esperando al entrenador del retador.' });
+            if (effectiveStatus === 'accepted') return res.status(400).json({ error: 'Este sparring ya fue confirmado.' });
+            if (effectiveStatus === 'declined') return res.status(400).json({ error: 'Este reto ya fue rechazado.' });
             return res.status(400).json({ error: `Este reto no está pendiente de tu aprobación (estado: ${curStatus})` });
         }
-        if (!isToCoach && curStatus !== 'pending_coach_from') {
+        if (!isToCoach && effectiveStatus !== 'pending_coach_from') {
+            if (effectiveStatus === 'pending_coach_to') return res.status(400).json({ error: 'El entrenador del retado aún no ha respondido.' });
+            if (effectiveStatus === 'accepted') return res.status(400).json({ error: 'Este sparring ya fue confirmado.' });
+            if (effectiveStatus === 'declined') return res.status(400).json({ error: 'Este reto ya fue rechazado.' });
             return res.status(400).json({ error: `Este reto no está pendiente de tu aprobación (estado: ${curStatus})` });
         }
 
@@ -669,16 +677,16 @@ router.post('/me/challenges/respond', async (req, res) => {
         const coachApprovalField = isToCoach ? 'coachToApproval' : 'coachFromApproval';
         const approvalValue = action === 'accept';
 
-        // Determine next status
+        // Determinar el siguiente estado
         let newStatus;
         if (action === 'decline') {
             newStatus = 'declined';
-        } else if (isToCoach) {
-            // Coach of recipient accepted → check if challenger's coach also needs to approve
+        } else if (effectiveStatus === 'pending_coach_to') {
+            // Entrenador del retado aceptó → comprobar si el entrenador del retador también debe aprobar
             const coachFromEmail = (foundChallenge.coachFromEmail || '');
             newStatus = coachFromEmail ? 'pending_coach_from' : 'accepted';
         } else {
-            // Coach of challenger accepted → fully confirmed
+            // Entrenador del retador aceptó → sparring completamente confirmado
             newStatus = 'accepted';
         }
 
