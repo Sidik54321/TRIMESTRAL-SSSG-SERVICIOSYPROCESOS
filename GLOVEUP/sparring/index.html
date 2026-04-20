@@ -344,7 +344,15 @@
                 </div>
                 <div class="field field-full">
                     <label>Gimnasio</label>
-                    <select id="challenge-gym" required></select>
+                    <div class="coach-selector-container">
+                        <div class="coach-search-wrapper">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="gym-search" class="coach-search-input" placeholder="Buscar gimnasio por nombre...">
+                        </div>
+                        <div class="coach-checklist" id="gym-checklist">
+                            <p style="padding:10px;font-size:0.8rem;opacity:0.6;">Cargando...</p>
+                        </div>
+                    </div>
                 </div>
                 <div class="field field-full">
                     <label>Fecha y hora</label>
@@ -559,14 +567,39 @@
                 }).join('');
             };
 
+            const renderGymChecklist = (gyms) => {
+                const checklist = document.getElementById('gym-checklist');
+                if (!checklist) return;
+                checklist.innerHTML = gyms.length ? '' : '<p style="padding:10px;font-size:0.8rem;opacity:0.6;">No se encontraron gimnasios</p>';
+                gyms.forEach(name => {
+                    const id = name.replace(/\s+/g, '-').toLowerCase();
+                    const item = document.createElement('div');
+                    item.className = 'coach-item';
+                    item.innerHTML = `
+                        <input type="radio" name="selected-gym" value="${encodeURIComponent(name)}" class="gym-cb" id="gym-${id}">
+                        <div class="coach-info">
+                            <span class="coach-name">${name}</span>
+                        </div>
+                    `;
+                    item.addEventListener('click', (e) => {
+                        const rb = item.querySelector('input');
+                        if (e.target.tagName !== 'INPUT') {
+                            rb.checked = true;
+                        }
+                        // Manual toggle classes for single select
+                        checklist.querySelectorAll('.coach-item').forEach(i => i.classList.remove('selected'));
+                        item.classList.add('selected');
+                    });
+                    checklist.appendChild(item);
+                });
+            };
+
             const ensureGymOptions = () => {
-                if (!challengeGym) return;
-                if (challengeGym.dataset && challengeGym.dataset.ready === '1') return;
-                challengeGym.innerHTML = [
-                    '<option value="">Selecciona</option>',
-                    ...gymsList.map((name) => `<option value="${encodeURIComponent(name)}">${name}</option>`)
-                ].join('');
-                if (challengeGym.dataset) challengeGym.dataset.ready = '1';
+                const checklist = document.getElementById('gym-checklist');
+                if (!checklist) return;
+                if (checklist.dataset && checklist.dataset.ready === '1') return;
+                renderGymChecklist(gymsList);
+                if (checklist.dataset) checklist.dataset.ready = '1';
             };
 
             const loadCoaches = async () => {
@@ -816,19 +849,26 @@
                     if (presetGrid) {
                         presetGrid.querySelectorAll('.glv-selection-card').forEach(c => c.classList.remove('active'));
                     }
-                    ensureGymOptions();
-                    if (challengeGym) challengeGym.value = '';
-                    if (challengeDatetime) challengeDatetime.value = '';
-                    if (challengeNote) challengeNote.value = '';
-                    if (challengeDatetime && challengeDatetime.dataset) {
-                        challengeDatetime.dataset.iso = '';
+                    const gymSearch = document.getElementById('gym-search');
+                    if (gymSearch) gymSearch.value = '';
+                    const gymChecklist = document.getElementById('gym-checklist');
+                    if (gymChecklist) {
+                        gymChecklist.querySelectorAll('.coach-item').forEach(i => i.classList.remove('selected'));
+                        const rbs = gymChecklist.querySelectorAll('input[type="radio"]');
+                        rbs.forEach(rb => { rb.checked = false; });
                     }
-                    const coachSearch = document.getElementById('coach-search');
-                    if (coachSearch) coachSearch.value = '';
-                    const coachChecklist = document.getElementById('coach-checklist');
-                    if (coachChecklist) coachChecklist.innerHTML = '';
-                    await ensureCoachOptions();
+                    ensureGymOptions();
                     challengeModal.showModal();
+                });
+            }
+
+            // Gym search filter
+            const gymSearch = document.getElementById('gym-search');
+            if (gymSearch) {
+                gymSearch.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const filtered = gymsList.filter(name => name.toLowerCase().includes(term));
+                    renderGymChecklist(filtered);
                 });
             }
 
@@ -953,8 +993,8 @@
                     }
                     const preset = (challengePreset && challengePreset.value ? String(challengePreset.value) : '').trim();
                     const note = (challengeNote && challengeNote.value ? String(challengeNote.value) : '').trim();
-                    const gymNameEnc = challengeGym && challengeGym.value ? String(challengeGym.value) : '';
-                    const gymName = gymNameEnc ? decodeURIComponent(gymNameEnc) : '';
+                    const gymRb = document.querySelector('.gym-cb:checked');
+                    const gymName = gymRb ? decodeURIComponent(String(gymRb.value)) : '';
                     const scheduledAt = challengeDatetime && challengeDatetime.dataset && challengeDatetime.dataset.iso ? String(challengeDatetime.dataset.iso) : '';
                     const coachIds = Array.from(document.querySelectorAll('.coach-cb:checked')).map(cb => decodeURIComponent(String(cb.value))).filter(Boolean);
                     if (!preset) {
