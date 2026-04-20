@@ -286,6 +286,7 @@ function initGymsMap() {
 }
 
 function buildGymCard(gym, boxers) {
+    const isCoach = (localStorage.getItem('gloveup_user_role') || '').toLowerCase() === 'entrenador';
     const card = document.createElement('div');
     card.className = 'gym-card';
     card.dataset.name = gym.name;
@@ -403,7 +404,7 @@ function buildGymCard(gym, boxers) {
                 <div class="card-action">
                     <button class="view-profile-button" ${canViewProfile ? `data-identifier-enc="${identifierEnc}"` : 'disabled'}>${canViewProfile ? 'Ver Perfil' : 'Sin perfil'}</button>
                     <!-- Al pulsar Retar, enviamos al usuario a la vista de sparring para que use el modal completo, pre-configurado -->
-                    <button class="challenge-button gyms-challenge-btn" ${canViewProfile ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>Retar</button>
+                    <button class="challenge-button gyms-challenge-btn" ${canViewProfile && !isCoach ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>Retar</button>
                 </div>
             `;
             

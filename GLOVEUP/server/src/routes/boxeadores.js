@@ -187,6 +187,15 @@ router.post('/challenges', async (req, res) => {
             });
         }
 
+        // Bloquear si un entrenador intenta retar a un boxeador
+        const fromTrainer = await Entrenador.findOne({ email: fromEmail }).lean();
+        const toBoxer = await findBoxeadorByIdentifier(toIdentifier);
+        if (fromTrainer && toBoxer) {
+            return res.status(403).json({
+                error: 'Como entrenador, no puedes retar directamente a un boxeador. Los retos deben dirigirse al entrenador del boxeador.'
+            });
+        }
+
         if ((to.email || '').toString().trim().toLowerCase() === fromEmail) {
             return res.status(400).json({
                 error: 'No puedes retarte a ti mismo'

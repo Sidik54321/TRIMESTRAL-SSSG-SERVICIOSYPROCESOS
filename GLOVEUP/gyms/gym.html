@@ -459,7 +459,7 @@
                         </div>
                         <div class="card-action">
                             <button class="view-profile-button" ${canViewProfile ? `data-identifier-enc="${identifierEnc}"` : 'disabled'}>${canViewProfile ? 'Ver Perfil' : 'Sin perfil'}</button>
-                            <button class="challenge-button" ${canViewProfile ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>Retar</button>
+                            <button class="challenge-button" ${canViewProfile && role !== 'entrenador' ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>Retar</button>
                         </div>
                     `;
                     listEl.appendChild(card);

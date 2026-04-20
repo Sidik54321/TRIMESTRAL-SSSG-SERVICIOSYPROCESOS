@@ -301,20 +301,46 @@
             </div>
             <div class="modal-body">
                 <div class="field">
-                    <label>Descripción</label>
-                    <select id="challenge-preset" required>
-                        <option value="">Selecciona</option>
-                        <option value="Sparring técnico (ligero)">Sparring técnico (ligero)</option>
-                        <option value="Sparring medio (ritmo constante)">Sparring medio (ritmo constante)</option>
-                        <option value="Sparring duro (intenso)">Sparring duro (intenso)</option>
-                        <option value="Trabajo de distancia y jab">Trabajo de distancia y jab</option>
-                        <option value="Trabajo de defensa y contra">Trabajo de defensa y contra</option>
-                        <option value="Preparación para combate">Preparación para combate</option>
-                    </select>
+                    <label>Tipo de Sparring</label>
+                    <div class="glv-selection-grid" id="preset-grid">
+                        <div class="glv-selection-card" data-value="Sparring técnico (ligero)">
+                            <i class="fas fa-feather-alt"></i>
+                            <span>Técnico (ligero)</span>
+                        </div>
+                        <div class="glv-selection-card" data-value="Sparring medio (ritmo constante)">
+                            <i class="fas fa-walking"></i>
+                            <span>Medio (ritmo)</span>
+                        </div>
+                        <div class="glv-selection-card" data-value="Sparring duro (intenso)">
+                            <i class="fas fa-fire"></i>
+                            <span>Duro (intenso)</span>
+                        </div>
+                        <div class="glv-selection-card" data-value="Trabajo de distancia y jab">
+                            <i class="fas fa-arrows-alt-h"></i>
+                            <span>Distancia y Jab</span>
+                        </div>
+                        <div class="glv-selection-card" data-value="Trabajo de defensa y contra">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Defensa y Contra</span>
+                        </div>
+                        <div class="glv-selection-card" data-value="Preparación para combate">
+                            <i class="fas fa-trophy"></i>
+                            <span>Combate</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="challenge-preset" required>
                 </div>
                 <div class="field field-full">
                     <label>Entrenador(es) supervisor(es)</label>
-                    <select id="challenge-coaches" multiple required></select>
+                    <div class="coach-selector-container">
+                        <div class="coach-search-wrapper">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="coach-search" class="coach-search-input" placeholder="Buscar por nombre o gimnasio...">
+                        </div>
+                        <div class="coach-checklist" id="coach-checklist">
+                            <p style="padding:10px;font-size:0.8rem;opacity:0.6;">Cargando...</p>
+                        </div>
+                    </div>
                 </div>
                 <div class="field field-full">
                     <label>Gimnasio</label>
@@ -553,20 +579,48 @@
                 return coachesCache;
             };
 
+            let currentModalCoaches = [];
+
+            const renderCoachChecklist = (coaches) => {
+                const checklist = document.getElementById('coach-checklist');
+                if (!checklist) return;
+                checklist.innerHTML = coaches.length ? '' : '<p style="padding:10px;font-size:0.8rem;opacity:0.6;">No se encontraron entrenadores</p>';
+                coaches.forEach(c => {
+                    const id = c && c._id ? String(c._id) : '';
+                    const name = c && c.nombre ? String(c.nombre) : 'Entrenador';
+                    const gym = c && c.gimnasio ? String(c.gimnasio) : 'Sin gym';
+                    
+                    const item = document.createElement('div');
+                    item.className = 'coach-item';
+                    item.innerHTML = `
+                        <input type="checkbox" value="${encodeURIComponent(id)}" class="coach-cb">
+                        <div class="coach-info">
+                            <span class="coach-name">${name}</span>
+                            <span class="coach-gym">${gym}</span>
+                        </div>
+                    `;
+                    item.addEventListener('click', (e) => {
+                        if (e.target.tagName !== 'INPUT') {
+                            const cb = item.querySelector('input');
+                            cb.checked = !cb.checked;
+                            item.classList.toggle('selected', cb.checked);
+                        } else {
+                            item.classList.toggle('selected', e.target.checked);
+                        }
+                    });
+                    checklist.appendChild(item);
+                });
+            };
+
             const ensureCoachOptions = async () => {
-                if (!challengeCoaches) return;
+                const checklist = document.getElementById('coach-checklist');
+                if (!checklist) return;
                 try {
                     const coaches = await loadCoaches();
-                    const options = ['<option value="" disabled>Selecciona (puedes elegir varios)</option>']
-                        .concat(coaches.map((c) => {
-                            const id = c && c._id ? String(c._id) : '';
-                            const name = c && c.nombre ? String(c.nombre) : 'Entrenador';
-                            const gym = c && c.gimnasio ? ` · ${String(c.gimnasio)}` : '';
-                            return `<option value="${encodeURIComponent(id)}">${name}${gym}</option>`;
-                        }));
-                    challengeCoaches.innerHTML = options.join('');
+                    currentModalCoaches = coaches;
+                    renderCoachChecklist(coaches);
                 } catch (err) {
-                    challengeCoaches.innerHTML = '<option value="" disabled>No se pudieron cargar entrenadores</option>';
+                    checklist.innerHTML = '<p style="padding:10px;font-size:0.8rem;color:red;">Error al cargar</p>';
                 }
             };
 
@@ -713,7 +767,7 @@
                         </div>
                         <div class="card-action">
                             <button class="view-profile-button" ${canViewProfile ? `data-identifier-enc="${identifierEnc}"` : 'disabled'}>${canViewProfile ? 'Ver Perfil' : 'Sin perfil'}</button>
-                            <button class="challenge-button" ${canChallenge ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>Retar</button>
+                            <button class="challenge-button" ${canChallenge && !isCoachRole ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>Retar</button>
                         </div>
                     `;
 
@@ -756,7 +810,12 @@
                             challengeTitle.textContent = name ? `Retar a ${name}` : 'Retar a sparring';
                         }
                     }
+                    const challengePreset = document.getElementById('challenge-preset');
                     if (challengePreset) challengePreset.value = '';
+                    const presetGrid = document.getElementById('preset-grid');
+                    if (presetGrid) {
+                        presetGrid.querySelectorAll('.glv-selection-card').forEach(c => c.classList.remove('active'));
+                    }
                     ensureGymOptions();
                     if (challengeGym) challengeGym.value = '';
                     if (challengeDatetime) challengeDatetime.value = '';
@@ -764,13 +823,38 @@
                     if (challengeDatetime && challengeDatetime.dataset) {
                         challengeDatetime.dataset.iso = '';
                     }
-                    if (challengeCoaches) {
-                        Array.from(challengeCoaches.options || []).forEach((opt) => {
-                            opt.selected = false;
-                        });
-                        await ensureCoachOptions();
-                    }
+                    const coachSearch = document.getElementById('coach-search');
+                    if (coachSearch) coachSearch.value = '';
+                    const coachChecklist = document.getElementById('coach-checklist');
+                    if (coachChecklist) coachChecklist.innerHTML = '';
+                    await ensureCoachOptions();
                     challengeModal.showModal();
+                });
+            }
+
+            // Coach search filter
+            const coachSearch = document.getElementById('coach-search');
+            if (coachSearch) {
+                coachSearch.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const filtered = currentModalCoaches.filter(c => 
+                        (c.nombre || '').toLowerCase().includes(term) || 
+                        (c.gimnasio || '').toLowerCase().includes(term)
+                    );
+                    renderCoachChecklist(filtered);
+                });
+            }
+
+            // Logic for the new selection grid
+            const presetGrid = document.getElementById('preset-grid');
+            const hiddenPreset = document.getElementById('challenge-preset');
+            if (presetGrid && hiddenPreset) {
+                presetGrid.addEventListener('click', (e) => {
+                    const card = e.target.closest('.glv-selection-card');
+                    if (!card) return;
+                    presetGrid.querySelectorAll('.glv-selection-card').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                    hiddenPreset.value = card.dataset.value;
                 });
             }
 
@@ -872,7 +956,7 @@
                     const gymNameEnc = challengeGym && challengeGym.value ? String(challengeGym.value) : '';
                     const gymName = gymNameEnc ? decodeURIComponent(gymNameEnc) : '';
                     const scheduledAt = challengeDatetime && challengeDatetime.dataset && challengeDatetime.dataset.iso ? String(challengeDatetime.dataset.iso) : '';
-                    const coachIds = challengeCoaches ? Array.from(challengeCoaches.selectedOptions || []).map((o) => decodeURIComponent(String(o.value || ''))).filter(Boolean) : [];
+                    const coachIds = Array.from(document.querySelectorAll('.coach-cb:checked')).map(cb => decodeURIComponent(String(cb.value))).filter(Boolean);
                     if (!preset) {
                         alert('Selecciona una descripción');
                         return;
