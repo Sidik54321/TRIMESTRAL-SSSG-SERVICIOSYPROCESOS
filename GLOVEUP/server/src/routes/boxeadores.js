@@ -217,11 +217,35 @@ router.post('/challenges', async (req, res) => {
         const id = crypto.randomUUID();
         const now = new Date().toISOString();
 
+        // Look up coaches of both boxers for dual-approval flow
+        let coachFromEmail = null;
+        let coachToEmail = null;
+        const toEmailNorm = (to.email || '').toString().trim().toLowerCase();
+
+        const fromBoxerForCoach = await Boxeador.findOne({ email: fromEmail }).select('entrenadorId').lean();
+        if (fromBoxerForCoach && fromBoxerForCoach.entrenadorId) {
+            const fromCoach = await Entrenador.findById(fromBoxerForCoach.entrenadorId).select('email').lean();
+            if (fromCoach) coachFromEmail = (fromCoach.email || '').toLowerCase();
+        }
+        const toBoxerForCoach = await Boxeador.findOne({ email: toEmailNorm }).select('entrenadorId').lean();
+        if (toBoxerForCoach && toBoxerForCoach.entrenadorId) {
+            const toCoach = await Entrenador.findById(toBoxerForCoach.entrenadorId).select('email').lean();
+            if (toCoach) coachToEmail = (toCoach.email || '').toLowerCase();
+        }
+
+        // Determine initial status based on which coaches exist
+        let initialStatus = 'pending';
+        if (coachToEmail) {
+            initialStatus = 'pending_coach_to';
+        } else if (coachFromEmail) {
+            initialStatus = 'pending_coach_from';
+        }
+
         const record = {
             id,
             fromEmail,
             fromNombre: from.nombre || '',
-            toEmail: (to.email || '').toString().trim().toLowerCase(),
+            toEmail: toEmailNorm,
             toNombre: to.nombre || '',
             preset,
             rating,
@@ -229,9 +253,13 @@ router.post('/challenges', async (req, res) => {
             coachIds: coaches.map((c) => String(c._id)),
             coachNombres: coaches.map((c) => c.nombre || ''),
             coachEmails: coaches.map((c) => (c.email || '').toString().trim().toLowerCase()),
+            coachFromEmail: coachFromEmail || '',
+            coachToEmail: coachToEmail || '',
+            coachFromApproval: null,
+            coachToApproval: null,
             gymName,
             scheduledAt: parsedDate.toISOString(),
-            status: 'pending',
+            status: initialStatus,
             createdAt: now,
             respondedAt: ''
         };
@@ -288,27 +316,21 @@ router.post('/challenges', async (req, res) => {
             de: fromEmail
         });
 
-        // Notificar a los entrenadores
-        // 1. Entrenador del retado (si existe)
-        const recipientBoxer = await Boxeador.findOne({ email: record.toEmail }).populate('entrenadorId');
-        if (recipientBoxer && recipientBoxer.entrenadorId && recipientBoxer.entrenadorId.email) {
+        // Notify the first coach who should approve (coachTo first, then coachFrom)
+        if (coachToEmail) {
             await crearNotificacion({
-                para: recipientBoxer.entrenadorId.email,
+                para: coachToEmail,
                 tipo: 'sparring',
                 titulo: '🔔 Reto para tu boxeador',
-                cuerpo: `${record.fromNombre} ha retado a tu boxeador ${recipientBoxer.nombre}.`,
+                cuerpo: `${record.fromNombre} ha retado a tu boxeador ${record.toNombre}. Tu aprobación es necesaria.`,
                 de: fromEmail
             });
-        }
-
-        // 2. Entrenador del retador (si existe)
-        const senderBoxer = await Boxeador.findOne({ email: fromEmail }).populate('entrenadorId');
-        if (senderBoxer && senderBoxer.entrenadorId && senderBoxer.entrenadorId.email) {
+        } else if (coachFromEmail) {
             await crearNotificacion({
-                para: senderBoxer.entrenadorId.email,
+                para: coachFromEmail,
                 tipo: 'sparring',
                 titulo: '🥊 Reto enviado por tu boxeador',
-                cuerpo: `Tu boxeador ${senderBoxer.nombre} ha enviado un reto a ${record.toNombre}.`,
+                cuerpo: `Tu boxeador ${record.fromNombre} ha enviado un reto a ${record.toNombre}. Tu aprobación es necesaria.`,
                 de: fromEmail
             });
         }
@@ -322,165 +344,8 @@ router.post('/challenges', async (req, res) => {
 });
 
 router.post('/challenges/respond', async (req, res) => {
-    try {
-        const payload = req.body || {};
-        const email = (payload.email || '').toString().trim().toLowerCase();
-        const challengeId = (payload.challengeId || '').toString().trim();
-        const action = (payload.action || '').toString().trim().toLowerCase();
-
-        if (!email) {
-            return res.status(400).json({
-                error: 'Email requerido'
-            });
-        }
-        if (!challengeId) {
-            return res.status(400).json({
-                error: 'challengeId requerido'
-            });
-        }
-        if (action !== 'accept' && action !== 'decline') {
-            return res.status(400).json({
-                error: 'Acción inválida'
-            });
-        }
-
-        const recipient = await Boxeador.findOne({
-            email
-        }).lean();
-        if (!recipient) {
-            return res.status(404).json({
-                error: 'Perfil no encontrado'
-            });
-        }
-
-        const received = Array.isArray(recipient.sparringChallengesReceived) ? recipient.sparringChallengesReceived : [];
-        const item = received.find((x) => x && String(x.id) === challengeId);
-        if (!item) {
-            return res.status(404).json({
-                error: 'Reto no encontrado'
-            });
-        }
-
-        const newStatus = action === 'accept' ? 'accepted' : 'declined';
-        const respondedAt = new Date().toISOString();
-
-        await Boxeador.updateOne({
-            email
-        }, {
-            $set: {
-                'sparringChallengesReceived.$[elem].status': newStatus,
-                'sparringChallengesReceived.$[elem].respondedAt': respondedAt
-            }
-        }, {
-            arrayFilters: [{
-                'elem.id': challengeId
-            }]
-        });
-
-        const fromEmail = (item.fromEmail || '').toString().trim().toLowerCase();
-        if (fromEmail) {
-            await Boxeador.updateOne({
-                email: fromEmail
-            }, {
-                $set: {
-                    'sparringChallengesSent.$[elem].status': newStatus,
-                    'sparringChallengesSent.$[elem].respondedAt': respondedAt
-                }
-            }, {
-                arrayFilters: [{
-                    'elem.id': challengeId
-                }]
-            });
-        }
-
-        if (action === 'accept') {
-            const existingSessions = Array.isArray(recipient.sparringSessions) ? recipient.sparringSessions : [];
-            const already = existingSessions.some((s) => s && String(s.challengeId) === challengeId);
-            if (!already) {
-                const sessionId = crypto.randomUUID();
-                const now = new Date().toISOString();
-                const session = {
-                    id: sessionId,
-                    challengeId,
-                    boxerAEmail: (item.fromEmail || '').toString().trim().toLowerCase(),
-                    boxerANombre: item.fromNombre || '',
-                    boxerBEmail: (item.toEmail || '').toString().trim().toLowerCase(),
-                    boxerBNombre: item.toNombre || '',
-                    coachIds: Array.isArray(item.coachIds) ? item.coachIds : [],
-                    coachNombres: Array.isArray(item.coachNombres) ? item.coachNombres : [],
-                    coachEmails: Array.isArray(item.coachEmails) ? item.coachEmails : [],
-                    gymName: item.gymName || '',
-                    scheduledAt: item.scheduledAt || '',
-                    status: 'scheduled',
-                    createdAt: now,
-                    completedAt: '',
-                    reviews: []
-                };
-
-                await Boxeador.updateOne({
-                    email
-                }, {
-                    $push: {
-                        sparringSessions: session
-                    }
-                });
-
-                if (fromEmail) {
-                    await Boxeador.updateOne({
-                        email: fromEmail
-                    }, {
-                        $push: {
-                            sparringSessions: session
-                        }
-                    });
-                }
-            }
-        }
-
-        // Notificaciones al responder reto
-        const statusText = newStatus === 'accepted' ? 'aceptado' : 'declinado';
-        const emoji = newStatus === 'accepted' ? '✅' : '❌';
-        
-        await crearNotificacion({
-            para: fromEmail,
-            tipo: 'sparring',
-            titulo: `${emoji} Reto ${statusText}`,
-            cuerpo: `${to.nombre || 'Un usuario'} ha ${statusText} tu reto de sparring.`,
-            de: to.email
-        });
-
-        if (newStatus === 'accepted') {
-            // Notificar a los entrenadores supervisores implicados en el reto
-            const coachEmails = Array.isArray(challenge.coachEmails) ? challenge.coachEmails : [];
-            
-            // También buscamos a los entrenadores actuales de ambos boxeadores por si no estaban en el reto
-            const boxerA = await Boxeador.findOne({ email: fromEmail }).populate('entrenadorId');
-            const boxerB = await Boxeador.findOne({ email: email }).populate('entrenadorId');
-            
-            const allCoaches = new Set(coachEmails);
-            if (boxerA?.entrenadorId?.email) allCoaches.add(boxerA.entrenadorId.email);
-            if (boxerB?.entrenadorId?.email) allCoaches.add(boxerB.entrenadorId.email);
-
-            for (const cEmail of allCoaches) {
-                await crearNotificacion({
-                    para: cEmail,
-                    tipo: 'sparring',
-                    titulo: '📢 Supervisión de Sparring',
-                    cuerpo: `Se ha aceptado un sparring bajo tu supervisión entre ${challenge.fromNombre} y ${challenge.toNombre}.`,
-                    de: challenge.fromEmail
-                });
-            }
-        }
-
-        return res.json({
-            ok: true,
-            status: newStatus
-        });
-    } catch (err) {
-        return res.status(400).json({
-            error: err.message
-        });
-    }
+    // Deprecated: use POST /api/entrenadores/me/challenges/respond
+    return res.status(410).json({ error: 'Este endpoint está obsoleto. Usa POST /api/entrenadores/me/challenges/respond' });
 });
 
 router.get('/sessions', async (req, res) => {

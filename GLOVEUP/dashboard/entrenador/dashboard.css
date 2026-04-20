@@ -11,6 +11,17 @@
     gap: 28px;
 }
 
+/* Ensure FullCalendar popups and tooltips cannot escape hidden sections */
+#coach-dashboard[style*="display: none"],
+#coach-management[style*="display: none"],
+#coach-challenges[style*="display: none"],
+#coach-gym[style*="display: none"] {
+    overflow: hidden !important;
+    height: 0 !important;
+    position: absolute !important;
+    pointer-events: none !important;
+}
+
 #coach-management .dashboard-panel {
     width: 100%;
     max-width: 1200px;
@@ -121,6 +132,8 @@
     padding: 14px;
     background: var(--color-secondary);
     box-shadow: var(--shadow-sm);
+    contain: layout paint;
+    overflow: hidden;
 }
 
 .gloveup-calendar .fc {

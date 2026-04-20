@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import crypto from 'crypto';
 import Entrenador from '../models/Entrenador.js';
 import Boxeador from '../models/Boxeador.js';
 import Usuario from '../models/Usuario.js';
@@ -619,6 +620,142 @@ router.post('/', async (req, res) => {
         res.status(400).json({
             error: err.message
         });
+    }
+});
+
+router.post('/me/challenges/respond', async (req, res) => {
+    try {
+        const coach = await requireCoachByEmail(req.query.email);
+        const { challengeId, action } = req.body || {};
+
+        if (!challengeId) return res.status(400).json({ error: 'challengeId requerido' });
+        if (action !== 'accept' && action !== 'decline') return res.status(400).json({ error: 'Acción inválida: usa "accept" o "decline"' });
+
+        const coachEmail = coach.email.toLowerCase();
+
+        // Search all of this coach's boxers for the challenge
+        const myBoxers = await Boxeador.find({ entrenadorId: coach._id }).lean();
+        let foundChallenge = null;
+        let isToCoach = false; // True if this is the coach of the challenged (recipient) boxer
+
+        for (const boxer of myBoxers) {
+            const received = Array.isArray(boxer.sparringChallengesReceived) ? boxer.sparringChallengesReceived : [];
+            const c = received.find(x => x && String(x.id) === challengeId);
+            if (c) { foundChallenge = c; isToCoach = true; break; }
+
+            const sent = Array.isArray(boxer.sparringChallengesSent) ? boxer.sparringChallengesSent : [];
+            const s = sent.find(x => x && String(x.id) === challengeId);
+            if (s) { foundChallenge = s; isToCoach = false; break; }
+        }
+
+        if (!foundChallenge) {
+            return res.status(404).json({ error: 'Reto no encontrado en los boxeadores bajo tu supervisión' });
+        }
+
+        const curStatus = String(foundChallenge.status || 'pending');
+
+        // Validate that this coach is the one expected to respond in this phase
+        if (isToCoach && curStatus !== 'pending_coach_to') {
+            if (curStatus === 'pending_coach_from') return res.status(400).json({ error: 'Ya aprobaste este reto. Esperando al entrenador del retador.' });
+            return res.status(400).json({ error: `Este reto no está pendiente de tu aprobación (estado: ${curStatus})` });
+        }
+        if (!isToCoach && curStatus !== 'pending_coach_from') {
+            return res.status(400).json({ error: `Este reto no está pendiente de tu aprobación (estado: ${curStatus})` });
+        }
+
+        const fromEmail = (foundChallenge.fromEmail || '').toLowerCase();
+        const toEmail = (foundChallenge.toEmail || '').toLowerCase();
+        const respondedAt = new Date().toISOString();
+        const coachApprovalField = isToCoach ? 'coachToApproval' : 'coachFromApproval';
+        const approvalValue = action === 'accept';
+
+        // Determine next status
+        let newStatus;
+        if (action === 'decline') {
+            newStatus = 'declined';
+        } else if (isToCoach) {
+            // Coach of recipient accepted → check if challenger's coach also needs to approve
+            const coachFromEmail = (foundChallenge.coachFromEmail || '');
+            newStatus = coachFromEmail ? 'pending_coach_from' : 'accepted';
+        } else {
+            // Coach of challenger accepted → fully confirmed
+            newStatus = 'accepted';
+        }
+
+        // Update the challenge in ALL boxer documents (both received and sent arrays)
+        await Boxeador.updateMany(
+            { 'sparringChallengesReceived.id': challengeId },
+            { $set: {
+                [`sparringChallengesReceived.$[elem].${coachApprovalField}`]: approvalValue,
+                'sparringChallengesReceived.$[elem].status': newStatus,
+                'sparringChallengesReceived.$[elem].respondedAt': respondedAt
+            }},
+            { arrayFilters: [{ 'elem.id': challengeId }] }
+        );
+        await Boxeador.updateMany(
+            { 'sparringChallengesSent.id': challengeId },
+            { $set: {
+                [`sparringChallengesSent.$[elem].${coachApprovalField}`]: approvalValue,
+                'sparringChallengesSent.$[elem].status': newStatus,
+                'sparringChallengesSent.$[elem].respondedAt': respondedAt
+            }},
+            { arrayFilters: [{ 'elem.id': challengeId }] }
+        );
+
+        // Handle outcomes
+        if (newStatus === 'accepted') {
+            // Both coaches approved → create sparring session
+            const sessionId = crypto.randomUUID();
+            const now = new Date().toISOString();
+            const session = {
+                id: sessionId,
+                challengeId,
+                boxerAEmail: fromEmail,
+                boxerANombre: foundChallenge.fromNombre || '',
+                boxerBEmail: toEmail,
+                boxerBNombre: foundChallenge.toNombre || '',
+                coachIds: Array.isArray(foundChallenge.coachIds) ? foundChallenge.coachIds : [],
+                coachNombres: Array.isArray(foundChallenge.coachNombres) ? foundChallenge.coachNombres : [],
+                coachEmails: Array.isArray(foundChallenge.coachEmails) ? foundChallenge.coachEmails : [],
+                gymName: foundChallenge.gymName || '',
+                scheduledAt: foundChallenge.scheduledAt || '',
+                preset: foundChallenge.preset || '',
+                note: foundChallenge.note || '',
+                status: 'scheduled',
+                createdAt: now,
+                completedAt: '',
+                reviews: []
+            };
+
+            for (const bEmail of [fromEmail, toEmail]) {
+                if (!bEmail) continue;
+                const bx = await Boxeador.findOne({ email: bEmail }).lean();
+                if (!bx) continue;
+                const alreadyHas = (Array.isArray(bx.sparringSessions) ? bx.sparringSessions : []).some(s => String(s.challengeId) === challengeId);
+                if (!alreadyHas) {
+                    await Boxeador.updateOne({ email: bEmail }, { $push: { sparringSessions: session } });
+                }
+            }
+
+            // Notify both boxers
+            await crearNotificacion({ para: fromEmail, tipo: 'sparring', titulo: '🥊 ¡Sparring Confirmado!', cuerpo: `Tu sparring con ${foundChallenge.toNombre} ha sido aprobado por ambos entrenadores. ¡Prepárate!`, de: toEmail });
+            await crearNotificacion({ para: toEmail, tipo: 'sparring', titulo: '🥊 ¡Sparring Confirmado!', cuerpo: `Tu sparring con ${foundChallenge.fromNombre} ha sido aprobado por ambos entrenadores. ¡Prepárate!`, de: fromEmail });
+
+        } else if (newStatus === 'pending_coach_from') {
+            // Notify the challenger's coach that it's their turn
+            const coachFromEmail = (foundChallenge.coachFromEmail || '');
+            if (coachFromEmail) {
+                await crearNotificacion({ para: coachFromEmail, tipo: 'sparring', titulo: '🔔 Confirma el sparring de tu boxeador', cuerpo: `El entrenador rival ha aprobado. Necesitas confirmar el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}.`, de: coachEmail });
+            }
+        } else if (newStatus === 'declined') {
+            // Notify both boxers of the rejection
+            await crearNotificacion({ para: fromEmail, tipo: 'sparring', titulo: '❌ Sparring Rechazado', cuerpo: `Un entrenador ha rechazado el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}.`, de: coachEmail });
+            await crearNotificacion({ para: toEmail, tipo: 'sparring', titulo: '❌ Sparring Rechazado', cuerpo: `Un entrenador ha rechazado el sparring.`, de: coachEmail });
+        }
+
+        return res.json({ ok: true, status: newStatus });
+    } catch (err) {
+        return res.status(err.status || 400).json({ error: err.message });
     }
 });
 

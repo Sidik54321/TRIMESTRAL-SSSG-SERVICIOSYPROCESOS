@@ -679,7 +679,7 @@ function CoachManagement() {
         );
     }, [boxers, search]);
 
-    const calendarEvents = useMemo(() => buildCoachCalendarEvents(boxers, metricas), [boxers, metricas]);
+
 
     const saveGym = async () => {
         try {
@@ -805,7 +805,7 @@ function CoachManagement() {
                 message && h('div', { style: { color: message.kind === 'error' ? 'red' : 'green' } }, message.text)
             )
         ),
-        h('div', { className: 'dashboard-panel' }, h('h2', null, 'Calendario'), h(CoachCalendar, { events: calendarEvents })),
+
         h('div', { className: 'dashboard-panel' },
             h('h2', null, 'Tus boxeadores'),
             h('div', { className: 'coach-boxers-toolbar' },
@@ -1106,19 +1106,15 @@ function CoachChallenges() {
         load();
     }, []);
 
-    const respond = async (challengeId, action, boxerEmail) => {
+    const respond = async (challengeId, action) => {
         try {
-            await requestJson('/api/boxeadores/challenges/respond', {
+            await requestJson(`/api/entrenadores/me/challenges/respond?email=${encodeURIComponent(email)}`, {
                 method: 'POST',
-                body: {
-                    email: boxerEmail,
-                    challengeId,
-                    action
-                }
+                body: { challengeId, action }
             });
             setMessage({
                 kind: 'ok',
-                text: `Reto ${action === 'accept' ? 'aceptado' : 'declinado'} correctamente.`
+                text: `Reto ${action === 'accept' ? 'aprobado ✅' : 'rechazado ❌'} correctamente.`
             });
             load();
         } catch (err) {
@@ -1221,19 +1217,23 @@ function CoachChallenges() {
                                         }
                                     },
                                         h('i', { className: 'fas fa-shield-alt' }),
-                                        'Propuesta de Sparring'
+                                        c.direction === 'outbound' ? 'Reto Enviado' : 'Propuesta de Sparring'
                                     ),
-                                    h('div', {
-                                        style: {
-                                            padding: '4px 12px',
-                                            borderRadius: 20,
-                                            fontSize: '.7rem',
-                                            fontWeight: 800,
-                                            textTransform: 'uppercase',
-                                            backgroundColor: c.status === 'accepted' ? '#dcfce7' : c.status === 'declined' ? '#fee2e2' : '#f3f4f6',
-                                            color: c.status === 'accepted' ? '#166534' : c.status === 'declined' ? '#991b1b' : '#374151'
-                                        }
-                                    }, c.status === 'pending' ? 'Pendiente' : c.status === 'accepted' ? 'Aceptada' : 'Declinada')
+                                    (() => {
+                                        const s = c.status || 'pending';
+                                        const dir = c.direction || 'inbound';
+                                        let label, bg, color;
+                                        if (s === 'accepted') { label = '✅ Confirmado'; bg = '#dcfce7'; color = '#166534'; }
+                                        else if (s === 'declined') { label = '❌ Rechazado'; bg = '#fee2e2'; color = '#991b1b'; }
+                                        else if (s === 'pending_coach_to') {
+                                            label = dir === 'inbound' ? '⏳ Tu aprobación necesaria' : '⏳ Esperando al entrenador rival';
+                                            bg = '#fef3c7'; color = '#92400e';
+                                        } else if (s === 'pending_coach_from') {
+                                            label = dir === 'outbound' ? '⏳ Tu aprobación necesaria' : '⏳ Esperando al entrenador rival';
+                                            bg = '#fef3c7'; color = '#92400e';
+                                        } else { label = 'Pendiente'; bg = '#f3f4f6'; color = '#374151'; }
+                                        return h('div', { style: { padding: '4px 12px', borderRadius: 20, fontSize: '.7rem', fontWeight: 800, textTransform: 'uppercase', backgroundColor: bg, color } }, label);
+                                    })()
                                 ),
 
                                 // Main Matchup Area
@@ -1332,37 +1332,28 @@ function CoachChallenges() {
                                     }
                                 }, `"${c.note}"`) : null,
 
-                                // Action Buttons
-                                c.status === 'pending' ? h(
-                                    'div', {
-                                    style: {
-                                        display: 'flex',
-                                        gap: 12,
-                                        marginTop: 8
-                                    }
-                                },
-                                    h('button', {
-                                        className: 'btn btn-primary',
-                                        style: {
-                                            flex: 2,
-                                            padding: '12px',
-                                            fontSize: '.9rem',
-                                            fontWeight: 700
-                                        },
-                                        onClick: () => respond(c.id, 'accept', c.boxerEmail)
-                                    }, 'Confirmar Sparring'),
-                                    h('button', {
-                                        className: 'btn btn-secondary',
-                                        style: {
-                                            flex: 1,
-                                            padding: '12px',
-                                            fontSize: '.9rem',
-                                            color: '#ef4444',
-                                            borderColor: '#ef4444'
-                                        },
-                                        onClick: () => respond(c.id, 'decline', c.boxerEmail)
-                                    }, 'Declinar')
-                                ) : null
+                                // Action Buttons - shown only when it's THIS coach's turn
+                                (() => {
+                                    const s = c.status || 'pending';
+                                    const dir = c.direction || 'inbound';
+                                    const canAct =
+                                        (s === 'pending_coach_to' && dir === 'inbound') ||
+                                        (s === 'pending_coach_from' && dir === 'outbound') ||
+                                        s === 'pending'; // legacy support
+                                    if (!canAct) return null;
+                                    return h('div', { style: { display: 'flex', gap: 12, marginTop: 8 } },
+                                        h('button', {
+                                            className: 'btn btn-primary',
+                                            style: { flex: 2, padding: '12px', fontSize: '.9rem', fontWeight: 700 },
+                                            onClick: () => respond(c.id, 'accept')
+                                        }, '✅ Aprobar Sparring'),
+                                        h('button', {
+                                            className: 'btn btn-secondary',
+                                            style: { flex: 1, padding: '12px', fontSize: '.9rem', color: '#ef4444', borderColor: '#ef4444' },
+                                            onClick: () => respond(c.id, 'decline')
+                                        }, '❌ Rechazar')
+                                    );
+                                })()
                             );
                         })
                     )
@@ -1420,10 +1411,20 @@ const showCoachSection = () => {
         staticHeader.style.display = isHome ? 'block' : 'none';
     }
 
-    coachDashboardSection.style.display = isHome ? 'grid' : 'none';
-    coachManagementSection.style.display = inManagement ? 'grid' : 'none';
-    coachChallengesSection.style.display = inChallenges ? 'grid' : 'none';
-    coachGymSection.style.display = inGym ? 'grid' : 'none';
+    // Show/hide sections. When hiding, also set height:0 and overflow:hidden to contain FullCalendar
+    const setVisible = (el, visible) => {
+        if (!el) return;
+        el.style.display = visible ? 'grid' : 'none';
+        el.style.height = visible ? '' : '0';
+        el.style.overflow = visible ? '' : 'hidden';
+        el.style.position = visible ? '' : 'absolute';
+        el.style.pointerEvents = visible ? '' : 'none';
+    };
+
+    setVisible(coachDashboardSection, isHome);
+    setVisible(coachManagementSection, inManagement);
+    setVisible(coachChallengesSection, inChallenges);
+    setVisible(coachGymSection, inGym);
 
     if (navHomeItem) navHomeItem.classList.toggle('active', isHome);
     if (coachNavItem) coachNavItem.classList.toggle('active', inManagement);
