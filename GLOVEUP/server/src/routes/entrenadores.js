@@ -491,6 +491,35 @@ router.delete('/me/boxeadores/:id', async (req, res) => {
     }
 });
 
+router.get('/me/challenges-for-boxers', async (req, res) => {
+    try {
+        const coach = await requireCoachByEmail(req.query.email);
+        const boxers = await Boxeador.find({
+            entrenadorId: coach._id
+        }).select('nombre email sparringChallengesReceived').lean();
+
+        let challenges = [];
+        boxers.forEach(b => {
+            const received = Array.isArray(b.sparringChallengesReceived) ? b.sparringChallengesReceived : [];
+            received.forEach(c => {
+                challenges.push({
+                    ...c,
+                    boxerName: b.nombre || '',
+                    boxerEmail: b.email || ''
+                });
+            });
+        });
+
+        challenges.sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+
+        return res.json(challenges);
+    } catch (err) {
+        return res.status(err.status || 400).json({
+            error: err.message
+        });
+    }
+});
+
 router.get('/me/cobros', async (req, res) => {
     const email = (req.query.email || '').toString().trim().toLowerCase();
     if (!email) {

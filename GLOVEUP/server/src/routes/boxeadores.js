@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import mongoose from 'mongoose';
 import Boxeador from '../models/Boxeador.js';
 import Entrenador from '../models/Entrenador.js';
+import { crearNotificacion } from './notificaciones.js';
 
 const router = Router();
 
@@ -271,6 +272,22 @@ router.post('/challenges', async (req, res) => {
             });
         }
 
+        // Notificaciones al enviar reto
+        await crearNotificacion({
+            para: fromEmail,
+            tipo: 'sparring',
+            titulo: '🥊 Reto enviado',
+            cuerpo: `Has enviado un reto de sparring a ${record.toNombre || record.toEmail}.`,
+            de: record.toEmail
+        });
+        await crearNotificacion({
+            para: record.toEmail,
+            tipo: 'sparring',
+            titulo: '📥 Nuevo reto de sparring',
+            cuerpo: `${record.fromNombre || record.fromEmail} te ha retado. ¡Revisa tu perfil!`,
+            de: fromEmail
+        });
+
         return res.status(201).json(record);
     } catch (err) {
         return res.status(400).json({
@@ -392,6 +409,32 @@ router.post('/challenges/respond', async (req, res) => {
                         }
                     });
                 }
+            }
+        }
+
+        // Notificaciones al responder reto
+        const statusText = newStatus === 'accepted' ? 'aceptado' : 'declinado';
+        const emoji = newStatus === 'accepted' ? '✅' : '❌';
+        
+        await crearNotificacion({
+            para: fromEmail,
+            tipo: 'sparring',
+            titulo: `${emoji} Reto ${statusText}`,
+            cuerpo: `${to.nombre || 'Un usuario'} ha ${statusText} tu reto de sparring.`,
+            de: to.email
+        });
+
+        if (newStatus === 'accepted') {
+            // Notificar a los entrenadores supervisores implicados
+            const coachEmails = Array.isArray(challenge.coachEmails) ? challenge.coachEmails : [];
+            for (const cEmail of coachEmails) {
+                await crearNotificacion({
+                    para: cEmail,
+                    tipo: 'sparring',
+                    titulo: '📢 Supervisión de Sparring',
+                    cuerpo: `Se ha aceptado un sparring bajo tu supervisión entre ${challenge.fromNombre} y ${challenge.toNombre}.`,
+                    de: challenge.fromEmail
+                });
             }
         }
 

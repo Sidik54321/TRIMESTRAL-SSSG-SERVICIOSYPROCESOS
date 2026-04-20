@@ -849,15 +849,28 @@
                     if (presetGrid) {
                         presetGrid.querySelectorAll('.glv-selection-card').forEach(c => c.classList.remove('active'));
                     }
+                    if (challengePreset) challengePreset.value = '';
+                    if (challengeDatetime) challengeDatetime.value = '';
+                    if (challengeNote) challengeNote.value = '';
+                    if (challengeDatetime && challengeDatetime.dataset) {
+                        challengeDatetime.dataset.iso = '';
+                    }
+
                     const gymSearch = document.getElementById('gym-search');
                     if (gymSearch) gymSearch.value = '';
                     const gymChecklist = document.getElementById('gym-checklist');
                     if (gymChecklist) {
-                        gymChecklist.querySelectorAll('.coach-item').forEach(i => i.classList.remove('selected'));
-                        const rbs = gymChecklist.querySelectorAll('input[type="radio"]');
-                        rbs.forEach(rb => { rb.checked = false; });
+                        if (gymChecklist.dataset) gymChecklist.dataset.ready = '0';
+                        gymChecklist.innerHTML = '';
                     }
                     ensureGymOptions();
+
+                    const coachSearch = document.getElementById('coach-search');
+                    if (coachSearch) coachSearch.value = '';
+                    const coachChecklist = document.getElementById('coach-checklist');
+                    if (coachChecklist) coachChecklist.innerHTML = '';
+                    await ensureCoachOptions();
+
                     challengeModal.showModal();
                 });
             }

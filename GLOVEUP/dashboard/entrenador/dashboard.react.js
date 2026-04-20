@@ -2127,6 +2127,202 @@ function CoachFinance() {
     );
 }
 
+function CoachChallenges() {
+    const [loading, setLoading] = useState(true);
+    const [message, setMessage] = useState(null);
+    const [challenges, setChallenges] = useState([]);
+
+    const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
+
+    const load = async() => {
+        if (!email) {
+            setMessage({
+                kind: 'error',
+                text: 'No se ha encontrado el email del entrenador en la sesión.'
+            });
+            setLoading(false);
+            return;
+        }
+        setLoading(true);
+        try {
+            const data = await requestJson(`/api/entrenadores/me/challenges-for-boxers?email=${encodeURIComponent(email)}`);
+            setChallenges(Array.isArray(data) ? data : []);
+            setMessage(null);
+        } catch (err) {
+            setMessage({
+                kind: 'error',
+                text: err && err.message ? err.message : 'Error cargando los retos de tus boxeadores.'
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        load();
+    }, []);
+
+    const respond = async(challengeId, action, boxerEmail) => {
+        try {
+            await requestJson('/api/boxeadores/challenges/respond', {
+                method: 'POST',
+                body: {
+                    email: boxerEmail,
+                    challengeId,
+                    action
+                }
+            });
+            setMessage({
+                kind: 'ok',
+                text: `Reto ${action === 'accept' ? 'aceptado' : 'declinado'} correctamente.`
+            });
+            load();
+        } catch (err) {
+            setMessage({
+                kind: 'error',
+                text: err && err.message ? err.message : 'No se pudo procesar la respuesta.'
+            });
+        }
+    };
+
+    return h(
+        React.Fragment,
+        null,
+        h(
+            'div', {
+                className: 'dashboard-panel'
+            },
+            h('h2', null, 'Retos de tus boxeadores'),
+            h('p', {
+                className: 'muted',
+                style: {
+                    marginTop: 8
+                }
+            }, 'Aquí aparecen los retos de sparring que han recibido tus boxeadores asignados.'),
+            message ? h('div', {
+                style: {
+                    fontWeight: 600,
+                    marginTop: 10,
+                    color: message.kind === 'error' ? '#b91c1c' : '#065f46'
+                }
+            }, message.text) : null,
+            loading ? h('p', {
+                style: {
+                    marginTop: 20
+                }
+            }, 'Cargando retos...') :
+            challenges.length === 0 ? h('p', {
+                style: {
+                    padding: '40px 20px',
+                    textAlign: 'center',
+                    opacity: 0.5
+                }
+            }, 'No hay retos recibidos para tus boxeadores.') :
+            h(
+                'div', {
+                    style: {
+                        display: 'grid',
+                        gap: 16,
+                        marginTop: 20
+                    }
+                },
+                ...challenges.map((c) => h(
+                    'div', {
+                        key: c.id,
+                        className: 'sparring-card',
+                        style: {
+                            display: 'grid',
+                            gridTemplateColumns: '1fr auto',
+                            gap: 12,
+                            alignItems: 'center',
+                            cursor: 'default',
+                            padding: '16px 20px'
+                        }
+                    },
+                    h(
+                        'div', {
+                            style: {
+                                display: 'grid',
+                                gap: 4
+                            }
+                        },
+                        h('div', {
+                            style: {
+                                fontWeight: 800,
+                                fontSize: '1.05rem',
+                                color: 'var(--color-accent, #f97316)'
+                            }
+                        }, `${c.fromNombre} rerta a ${c.boxerName}`),
+                        h('div', {
+                            style: {
+                                fontSize: '.85rem',
+                                opacity: 0.8
+                            }
+                        }, h('i', {
+                            className: 'fas fa-calendar-alt'
+                        }), ` ${formatDateEs(c.scheduledAt.slice(0, 10))} a las ${c.scheduledAt.slice(11, 16)}`),
+                        h('div', {
+                            style: {
+                                fontSize: '.85rem',
+                                opacity: 0.8
+                            }
+                        }, h('i', {
+                            className: 'fas fa-building'
+                        }), ` ${c.gymName}`),
+                        c.note ? h('p', {
+                            style: {
+                                fontSize: '.8rem',
+                                marginTop: 6,
+                                opacity: 0.6,
+                                fontStyle: 'italic'
+                            }
+                        }, `"${c.note}"`) : null,
+                        h('div', {
+                            style: {
+                                marginTop: 8,
+                                display: 'inline-block',
+                                padding: '4px 10px',
+                                borderRadius: 20,
+                                fontSize: '.7rem',
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                backgroundColor: c.status === 'accepted' ? '#dcfce7' : c.status === 'declined' ? '#fee2e2' : '#f3f4f6',
+                                color: c.status === 'accepted' ? '#166534' : c.status === 'declined' ? '#991b1b' : '#374151'
+                            }
+                        }, c.status === 'pending' ? 'Pendiente' : c.status === 'accepted' ? 'Aceptado' : 'Declinado')
+                    ),
+                    c.status === 'pending' ? h(
+                        'div', {
+                            style: {
+                                display: 'grid',
+                                gap: 8
+                            }
+                        },
+                        h('button', {
+                            className: 'btn btn-primary',
+                            style: {
+                                padding: '8px 16px',
+                                fontSize: '.8rem'
+                            },
+                            onClick: () => respond(c.id, 'accept', c.boxerEmail)
+                        }, 'Aceptar'),
+                        h('button', {
+                            className: 'btn btn-secondary',
+                            style: {
+                                padding: '8px 16px',
+                                fontSize: '.8rem',
+                                borderColor: '#ef4444',
+                                color: '#ef4444'
+                            },
+                            onClick: () => respond(c.id, 'decline', c.boxerEmail)
+                        }, 'Declinar')
+                    ) : null
+                ))
+            )
+        )
+    );
+}
+
 const dashboardRoot = document.getElementById('coach-dashboard-root');
 if (dashboardRoot) {
     ReactDOM.createRoot(dashboardRoot).render(h(CoachStatsDashboard, null));
@@ -2142,12 +2338,19 @@ if (gymRoot) {
     ReactDOM.createRoot(gymRoot).render(h(CoachManagement, null));
 }
 
+const challengesRoot = document.getElementById('coach-challenges-root');
+if (challengesRoot) {
+    ReactDOM.createRoot(challengesRoot).render(h(CoachChallenges, null));
+}
+
 const SESSION_MAINTAINED_KEY = 'gloveup_session_maintained';
 const coachDashboardSection = document.getElementById('coach-dashboard');
 const coachManagementSection = document.getElementById('coach-management');
+const coachChallengesSection = document.getElementById('coach-challenges');
 const coachGymSection = document.getElementById('coach-gym');
 const navHomeItem = document.getElementById('nav-item-inicio');
 const coachNavItem = document.getElementById('coach-nav-item');
+const coachChallengesNavItem = document.getElementById('coach-challenges-nav-item');
 const coachGymNavItem = document.getElementById('coach-gym-nav-item');
 const logoutButton = document.getElementById('logout-button');
 const role = (localStorage.getItem(STORED_USER_ROLE_KEY) || '').toString().trim().toLowerCase();
@@ -2157,24 +2360,29 @@ const isSessionMaintained =
     localStorage.getItem(SESSION_MAINTAINED_KEY) === 'true';
 
 const showCoachSection = () => {
-    if (!coachDashboardSection || !coachManagementSection || !coachGymSection) return;
+    if (!coachDashboardSection || !coachManagementSection || !coachChallengesSection || !coachGymSection) return;
     const hash = String(window.location.hash || '').toLowerCase();
     const inManagement = hash === '#coach-management';
+    const inChallenges = hash === '#coach-challenges';
     const inGym = hash === '#coach-gym';
-    coachDashboardSection.style.display = inManagement || inGym ? 'none' : 'grid';
+    coachDashboardSection.style.display = inManagement || inChallenges || inGym ? 'none' : 'grid';
     coachManagementSection.style.display = inManagement ? 'grid' : 'none';
+    coachChallengesSection.style.display = inChallenges ? 'grid' : 'none';
     coachGymSection.style.display = inGym ? 'grid' : 'none';
 
-    if (navHomeItem) navHomeItem.classList.toggle('active', !inManagement && !inGym);
+    if (navHomeItem) navHomeItem.classList.toggle('active', !inManagement && !inChallenges && !inGym);
     if (coachNavItem) coachNavItem.classList.toggle('active', inManagement);
+    if (coachChallengesNavItem) coachChallengesNavItem.classList.toggle('active', inChallenges);
     if (coachGymNavItem) coachGymNavItem.classList.toggle('active', inGym);
 };
 
 if (role !== 'entrenador' || !email || !isSessionMaintained) {
     if (coachDashboardSection) coachDashboardSection.style.display = 'grid';
     if (coachManagementSection) coachManagementSection.style.display = 'none';
+    if (coachChallengesSection) coachChallengesSection.style.display = 'none';
     if (coachGymSection) coachGymSection.style.display = 'none';
     if (coachNavItem) coachNavItem.style.display = 'none';
+    if (coachChallengesNavItem) coachChallengesNavItem.style.display = 'none';
     if (coachGymNavItem) coachGymNavItem.style.display = 'none';
     if (dashboardRoot) {
         ReactDOM.createRoot(dashboardRoot).render(
@@ -2193,6 +2401,7 @@ if (role !== 'entrenador' || !email || !isSessionMaintained) {
     }
 } else {
     if (coachNavItem) coachNavItem.style.display = '';
+    if (coachChallengesNavItem) coachChallengesNavItem.style.display = '';
     if (coachGymNavItem) coachGymNavItem.style.display = '';
     showCoachSection();
     window.addEventListener('hashchange', showCoachSection);
