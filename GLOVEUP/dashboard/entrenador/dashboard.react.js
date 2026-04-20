@@ -1126,7 +1126,7 @@ function CoachChallenges() {
             });
             setMessage({
                 kind: 'ok',
-                text: `Reto ${action === 'accept' ? 'aprobado âœ…' : 'rechazado âŒ'} correctamente.`
+                text: `Reto ${action === 'accept' ? 'aprobado' : 'rechazado'} correctamente.`
             });
             load();
         } catch (err) {
@@ -1173,10 +1173,10 @@ function CoachChallenges() {
                 }
             },
                 [
-                    { key: 'all', label: 'Todos', emoji: '📋' },
-                    { key: 'pending', label: 'Pendientes', emoji: '⏳' },
-                    { key: 'accepted', label: 'Aceptados', emoji: '✅' },
-                    { key: 'declined', label: 'Rechazados', emoji: '❌' }
+                    { key: 'all',      label: 'Todos',       icon: 'fa-list' },
+                    { key: 'pending',  label: 'Pendientes',  icon: 'fa-clock' },
+                    { key: 'accepted', label: 'Aceptados',   icon: 'fa-check-circle' },
+                    { key: 'declined', label: 'Rechazados',  icon: 'fa-times-circle' }
                 ].map(tab => {
                     const count = tab.key === 'all' ? challenges.length
                         : tab.key === 'pending' ? challenges.filter(c => isPendingStatus(c.status)).length
@@ -1191,22 +1191,23 @@ function CoachChallenges() {
                             gap: 6,
                             padding: '8px 16px',
                             borderRadius: '999px',
-                            border: isActive ? '2px solid var(--color-accent, #f97316)' : '1px solid var(--color-border, #e5e7eb)',
-                            backgroundColor: isActive ? 'var(--color-accent, #f97316)' : '#fff',
-                            color: isActive ? '#fff' : 'var(--color-text, #374151)',
+                            border: isActive ? '2px solid #111827' : '1px solid #e5e7eb',
+                            backgroundColor: isActive ? '#111827' : '#fff',
+                            color: isActive ? '#fff' : '#374151',
                             fontWeight: 700,
                             fontSize: '.8rem',
                             cursor: 'pointer',
                             transition: 'all .18s'
                         }
                     },
-                        tab.emoji, ' ', tab.label,
+                        h('i', { className: `fas ${tab.icon}`, style: { fontSize: '.75rem' } }),
+                        ' ', tab.label,
                         h('span', {
                             style: {
                                 marginLeft: 4,
                                 padding: '1px 7px',
                                 borderRadius: '999px',
-                                backgroundColor: isActive ? 'rgba(255,255,255,0.25)' : 'var(--color-secondary, #f3f4f6)',
+                                backgroundColor: isActive ? 'rgba(255,255,255,0.15)' : '#f3f4f6',
                                 color: isActive ? '#fff' : '#6b7280',
                                 fontSize: '.75rem',
                                 fontWeight: 800
@@ -1230,7 +1231,7 @@ function CoachChallenges() {
             loading ? h('p', { style: { marginTop: 20, textAlign: 'center', opacity: 0.6 } }, 'Cargando retos...') :
                 filteredChallenges.length === 0 ? h('p', {
                     style: { padding: '40px 20px', textAlign: 'center', opacity: 0.5 }
-                }, challenges.length === 0 ? 'No hay retos para tus boxeadores.' : 'No hay retos en esta categoría.') :
+                }, challenges.length === 0 ? 'No hay retos para tus boxeadores.' : 'No hay retos en esta categoria.') :
                     h('div', {
                         style: { display: 'flex', flexDirection: 'column', gap: 12, marginTop: 4 }
                     },
@@ -1280,13 +1281,13 @@ function CoachChallenges() {
                                         const s = c.status || 'pending';
                                         const dir = c.direction || 'inbound';
                                         let label, bg, color;
-                                        if (s === 'accepted') { label = 'âœ… Confirmado'; bg = '#dcfce7'; color = '#166534'; }
-                                        else if (s === 'declined') { label = 'âŒ Rechazado'; bg = '#fee2e2'; color = '#991b1b'; }
+                                        if (s === 'accepted') { label = 'Confirmado'; bg = '#dcfce7'; color = '#166534'; }
+                                        else if (s === 'declined') { label = 'Rechazado'; bg = '#fee2e2'; color = '#991b1b'; }
                                         else if (s === 'pending_coach_to') {
-                                            label = dir === 'inbound' ? 'â³ Tu aprobaciÃ³n necesaria' : 'â³ Esperando al entrenador rival';
+                                            label = dir === 'inbound' ? 'Tu aprobacion necesaria' : 'Esperando al entrenador rival';
                                             bg = '#fef3c7'; color = '#92400e';
                                         } else if (s === 'pending_coach_from') {
-                                            label = dir === 'outbound' ? 'â³ Tu aprobaciÃ³n necesaria' : 'â³ Esperando al entrenador rival';
+                                            label = dir === 'outbound' ? 'Tu aprobacion necesaria' : 'Esperando al entrenador rival';
                                             bg = '#fef3c7'; color = '#92400e';
                                         } else { label = 'Pendiente'; bg = '#f3f4f6'; color = '#374151'; }
                                         return h('div', { style: { padding: '4px 12px', borderRadius: 20, fontSize: '.7rem', fontWeight: 800, textTransform: 'uppercase', backgroundColor: bg, color } }, label);
@@ -1369,12 +1370,12 @@ function CoachChallenges() {
                                 },
                                     h('div', { style: { fontSize: '.8rem', color: '#4b5563', display: 'flex', alignItems: 'center', gap: 8 } },
                                         h('i', { className: 'fas fa-building', style: { color: '#9ca3af' } }),
-                                        h('span', { style: { fontWeight: 600 } }, 'UbicaciÃ³n:'),
+                                        h('span', { style: { fontWeight: 600 } }, 'Ubicacion:'),
                                         c.gymName
                                     ),
                                     Array.isArray(c.coachNombres) && c.coachNombres.length > 0 ? h('div', { style: { fontSize: '.8rem', color: '#4b5563', display: 'flex', alignItems: 'center', gap: 8 } },
                                         h('i', { className: 'fas fa-user-tie', style: { color: '#9ca3af' } }),
-                                        h('span', { style: { fontWeight: 600 } }, 'SupervisiÃ³n:'),
+                                        h('span', { style: { fontWeight: 600 } }, 'Supervision:'),
                                         c.coachNombres.join(', ')
                                     ) : null
                                 ),
@@ -1403,12 +1404,18 @@ function CoachChallenges() {
                                             className: 'btn btn-primary',
                                             style: { flex: 2, padding: '12px', fontSize: '.9rem', fontWeight: 700 },
                                             onClick: () => respond(c.id, 'accept')
-                                        }, 'âœ… Aprobar Sparring'),
+                                        },
+                                            h('i', { className: 'fas fa-check', style: { marginRight: 6 } }),
+                                            'Aprobar Sparring'
+                                        ),
                                         h('button', {
                                             className: 'btn btn-secondary',
                                             style: { flex: 1, padding: '12px', fontSize: '.9rem', color: '#ef4444', borderColor: '#ef4444' },
                                             onClick: () => respond(c.id, 'decline')
-                                        }, 'âŒ Rechazar')
+                                        },
+                                            h('i', { className: 'fas fa-times', style: { marginRight: 6 } }),
+                                            'Rechazar'
+                                        )
                                     );
                                 })()
                             );
