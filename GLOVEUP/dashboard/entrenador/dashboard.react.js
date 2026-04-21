@@ -1,4 +1,4 @@
-const React = window.React;
+﻿const React = window.React;
 const ReactDOM = window.ReactDOM;
 const {
     useEffect,
@@ -248,7 +248,7 @@ const buildCoachCalendarEvents = (boxers, metricas) => {
         if (insc) {
             events.push({
                 id: `inscripcion-${b && b._id ? b._id : boxerName}-${insc}`,
-                title: `InscripciÃ³n: ${boxerName}`,
+                title: `Inscripción: ${boxerName}`,
                 start: insc,
                 allDay: true,
                 classNames: ['gloveup-event--inscripcion'],
@@ -326,7 +326,7 @@ function CoachCalendar({
         const el = elRef.current;
         const FullCalendarLib = window.FullCalendar;
         if (!el || !FullCalendarLib || !FullCalendarLib.Calendar) {
-            setDetails('No se pudo cargar el calendario. Revisa tu conexiÃ³n o bloqueadores de contenido.');
+            setDetails('No se pudo cargar el calendario. Revisa tu conexión o bloqueadores de contenido.');
             return;
         }
 
@@ -384,7 +384,7 @@ function CoachCalendar({
             }, 'Sparring'),
             h('span', {
                 className: 'coach-calendar-pill coach-calendar-pill--inscripcion'
-            }, 'InscripciÃ³n'),
+            }, 'Inscripción'),
             h('span', {
                 className: 'coach-calendar-pill coach-calendar-pill--recordatorio'
             }, 'Recordatorio')
@@ -393,7 +393,7 @@ function CoachCalendar({
             className: 'gloveup-calendar',
             ref: elRef,
             role: 'application',
-            'aria-label': 'Calendario de gestiÃ³n'
+            'aria-label': 'Calendario de Gestión'
         }),
         h('div', {
             className: 'coach-calendar-details'
@@ -521,7 +521,7 @@ function CoachStatsDashboard() {
         if (!email) {
             setMessage({
                 kind: 'error',
-                text: 'No se ha encontrado el email del entrenador en la sesiÃ³n.'
+                text: 'No se ha encontrado el email del entrenador en la sesión.'
             });
             setLoading(false);
             return;
@@ -552,7 +552,7 @@ function CoachStatsDashboard() {
         } catch (err) {
             setMessage({
                 kind: 'error',
-                text: err && err.message ? err.message : 'Error cargando las mÃ©tricas del entrenador.'
+                text: err && err.message ? err.message : 'Error cargando las métricas del entrenador.'
             });
         } finally {
             setLoading(false);
@@ -578,7 +578,7 @@ function CoachStatsDashboard() {
         },
             h('div', { className: 'dashboard-title-block' },
                 h('h1', { style: { fontSize: '2rem', fontWeight: 900 } }, coachName || 'Entrenador'),
-                h('p', { style: { opacity: 0.8 } }, 'Resumen de actividad y gestiÃ³n de boxeadores.')
+                h('p', { style: { opacity: 0.8 } }, 'Resumen de actividad y Gestión de boxeadores.')
             )
         ),
         
@@ -797,7 +797,7 @@ function CoachManagement() {
                         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 8, marginTop: 10 } },
                             fotos.map((src, idx) => h('div', { key: idx, style: { position: 'relative' } },
                                 h('img', { src, style: { width: '100%', height: 60, objectFit: 'cover', borderRadius: 8 } }),
-                                h('button', { onClick: () => setFotos(prev => prev.filter((_, i) => i !== idx)), style: { position: 'absolute', top: 0, right: 0, background: 'red', color: 'white', border: 'none', borderRadius: '50%', cursor: 'pointer' } }, 'Ã—')
+                                h('button', { onClick: () => setFotos(prev => prev.filter((_, i) => i !== idx)), style: { position: 'absolute', top: 0, right: 0, background: 'red', color: 'white', border: 'none', borderRadius: '50%', cursor: 'pointer' } }, '×')
                             ))
                         )
                     )
@@ -812,7 +812,7 @@ function CoachManagement() {
                 h('input', { value: search, onChange: (e) => setSearch(e.target.value), placeholder: 'Buscar...' }),
                 h('div', { className: 'coach-boxers-assign' },
                     h('input', { value: assignEmail, onChange: (e) => setAssignEmail(e.target.value), placeholder: 'Email o DNI' }),
-                    h('button', { className: 'submit-button', onClick: addBoxer }, 'AÃ±adir'),
+                    h('button', { className: 'submit-button', onClick: addBoxer }, 'Añadir'),
                     h('button', { className: 'submit-button coach-remove-button', onClick: removeBoxer }, 'Quitar')
                 )
             ),
@@ -867,7 +867,7 @@ function CoachFinance() {
         if (!email) {
             setMessage({
                 kind: 'error',
-                text: 'No se ha encontrado el email del entrenador en la sesiÃ³n.'
+                text: 'No se ha encontrado el email del entrenador en la sesión.'
             });
             setLoading(false);
             return;
@@ -901,7 +901,7 @@ function CoachFinance() {
         } catch (err) {
             setMessage({
                 kind: 'error',
-                text: err && err.message ? err.message : 'Error cargando la gestiÃ³n econÃ³mica.'
+                text: err && err.message ? err.message : 'Error cargando la Gestión económica.'
             });
         } finally {
             setLoading(false);
@@ -944,7 +944,7 @@ function CoachFinance() {
             'div', {
             className: 'dashboard-panel'
         },
-            h('h2', null, 'GestiÃ³n'),
+            h('h2', null, 'Gestión'),
             message ? h('div', {
                 style: {
                     fontWeight: 600,
@@ -1002,7 +1002,7 @@ function CoachFinance() {
                 h(MetricCard, {
                     label: 'Ingresos estimados (mes)',
                     pill: formatCurrency(metricas.ingresosMes || 0),
-                    sub: 'Precio mensual Ã— inscripciones del mes.',
+                    sub: 'Precio mensual × inscripciones del mes.',
                     chartProps: {
                         label: 'Ingresos',
                         value: metricas.ingresosMes || 0,
@@ -1094,7 +1094,7 @@ function CoachChallenges() {
         if (!email) {
             setMessage({
                 kind: 'error',
-                text: 'No se ha encontrado el email del entrenador en la sesiÃ³n.'
+                text: 'No se ha encontrado el email del entrenador en la sesión.'
             });
             setLoading(false);
             return;
@@ -1469,7 +1469,7 @@ const showCoachSection = () => {
     const inChallenges = hash === '#coach-challenges';
     const inGym = hash === '#coach-gym';
 
-    // Ocultar el header estÃ¡tico del dashboard si no estamos en 'Inicio'
+    // Ocultar el header estático del dashboard si no estamos en 'Inicio'
     const staticHeader = document.querySelector('.dashboard-header');
     if (staticHeader) {
         staticHeader.style.display = isHome ? 'block' : 'none';
@@ -1510,8 +1510,8 @@ if (role !== 'entrenador' || !email || !isSessionMaintained) {
                 'div', {
                 className: 'dashboard-panel'
             },
-                h('h2', null, 'Necesitas iniciar sesiÃ³n'),
-                h('p', null, 'Inicia sesiÃ³n como entrenador para acceder al panel.'),
+                h('h2', null, 'Necesitas iniciar sesión'),
+                h('p', null, 'Inicia sesión como entrenador para acceder al panel.'),
                 h('a', {
                     className: 'btn btn-primary',
                     href: '../../auth/index.html'
