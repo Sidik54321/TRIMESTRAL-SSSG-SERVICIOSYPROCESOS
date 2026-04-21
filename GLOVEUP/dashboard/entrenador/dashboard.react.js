@@ -51,8 +51,8 @@ const requestJson = (path, options = {}) => {
 
 const formatCurrency = (value) => {
     const num = Number(value);
-    if (!Number.isFinite(num) || num <= 0) return '0â‚¬';
-    return `${num.toFixed(2)}â‚¬`;
+    if (!Number.isFinite(num) || num <= 0) return '0€';
+    return `${num.toFixed(2)}€`;
 };
 
 const cap = (n) => Math.max(0, Math.min(100, n));
@@ -353,7 +353,7 @@ function CoachCalendar({
                     if (partner) parts.push(`Partner: ${partner}`);
                     if (place) parts.push(`Lugar: ${place}`);
                     if (kind) parts.push(kind);
-                    setDetails(parts.filter(Boolean).join(' Â· '));
+                    setDetails(parts.filter(Boolean).join(' · '));
                 }
             });
             calendarRef.current.render();
@@ -1337,7 +1337,7 @@ function CoachChallenges() {
                                             h('div', { style: { fontWeight: 700, fontSize: '.75rem', color: '#111827' } }, c.preset),
                                             h('div', { style: { fontSize: '.7rem', color: '#6b7280', marginTop: 2 } },
                                                 h('i', { className: 'fas fa-calendar-alt', style: { marginRight: 4 } }),
-                                                `${formatDateEs(c.scheduledAt.slice(0, 10))} â€¢ ${c.scheduledAt.slice(11, 16)}`
+                                                `${formatDateEs(c.scheduledAt.slice(0, 10))} • ${c.scheduledAt.slice(11, 16)}`
                                             )
                                         )
                                     ),
