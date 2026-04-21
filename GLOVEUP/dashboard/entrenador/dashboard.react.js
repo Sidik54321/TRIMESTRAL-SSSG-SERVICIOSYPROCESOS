@@ -332,6 +332,9 @@ function CoachCalendar({
     const [formNotas, setFormNotas] = useState('');
     const [formLoading, setFormLoading] = useState(false);
     const [formError, setFormError] = useState('');
+    const [filters, setFilters] = useState({ sparring: true, inscripcion: true, recordatorio: true, personalizado: true });
+
+    const toggleFilter = (key) => setFilters(prev => ({ ...prev, [key]: !prev[key] }));
 
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
 
@@ -469,9 +472,18 @@ function CoachCalendar({
             calendarRef.current.render();
         }
 
+        const filteredEvents = (Array.isArray(events) ? events : []).filter((e) => {
+            const kind = e.extendedProps && e.extendedProps.kind ? String(e.extendedProps.kind) : '';
+            if (kind === 'sparring') return filters.sparring;
+            if (kind === 'inscripcion') return filters.inscripcion;
+            if (kind === 'recordatorio') return filters.recordatorio;
+            if (kind === 'personalizado') return filters.personalizado;
+            return true;
+        });
+
         calendarRef.current.removeAllEvents();
-        (Array.isArray(events) ? events : []).forEach((e) => calendarRef.current.addEvent(e));
-    }, [events]);
+        filteredEvents.forEach((e) => calendarRef.current.addEvent(e));
+    }, [events, filters]);
 
     useEffect(() => {
         return () => {
@@ -620,11 +632,27 @@ function CoachCalendar({
         null,
         modalOverlay,
         h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 } },
-            h('div', { className: 'coach-calendar-legend' },
-                h('span', { className: 'coach-calendar-pill coach-calendar-pill--sparring' }, 'Sparring'),
-                h('span', { className: 'coach-calendar-pill coach-calendar-pill--inscripcion' }, 'Inscripcion'),
-                h('span', { className: 'coach-calendar-pill coach-calendar-pill--recordatorio' }, 'Recordatorio'),
-                h('span', { className: 'coach-calendar-pill', style: { backgroundColor: '#3b82f6', color: '#fff' } }, 'Personalizado')
+            h('div', { className: 'coach-calendar-legend', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
+                h('span', { 
+                    className: 'coach-calendar-pill coach-calendar-pill--sparring',
+                    onClick: () => toggleFilter('sparring'),
+                    style: { cursor: 'pointer', opacity: filters.sparring ? 1 : 0.4, transition: 'opacity 0.2s', userSelect: 'none' }
+                }, 'Sparring'),
+                h('span', { 
+                    className: 'coach-calendar-pill coach-calendar-pill--inscripcion',
+                    onClick: () => toggleFilter('inscripcion'),
+                    style: { cursor: 'pointer', opacity: filters.inscripcion ? 1 : 0.4, transition: 'opacity 0.2s', userSelect: 'none' }
+                }, 'Inscripcion'),
+                h('span', { 
+                    className: 'coach-calendar-pill coach-calendar-pill--recordatorio',
+                    onClick: () => toggleFilter('recordatorio'),
+                    style: { cursor: 'pointer', opacity: filters.recordatorio ? 1 : 0.4, transition: 'opacity 0.2s', userSelect: 'none' }
+                }, 'Recordatorio'),
+                h('span', { 
+                    className: 'coach-calendar-pill', 
+                    onClick: () => toggleFilter('personalizado'),
+                    style: { backgroundColor: '#3b82f6', color: '#fff', cursor: 'pointer', opacity: filters.personalizado ? 1 : 0.4, transition: 'opacity 0.2s', userSelect: 'none' } 
+                }, 'Personalizado')
             ),
             h('button', {
                 className: 'btn btn-primary',
