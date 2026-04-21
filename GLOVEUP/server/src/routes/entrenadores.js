@@ -189,6 +189,71 @@ router.put('/me', async (req, res) => {
     }
 });
 
+// ──────── Calendar Events CRUD ────────
+
+// GET  /me/calendar-events  — lista los eventos personalizados del entrenador
+router.get('/me/calendar-events', async (req, res) => {
+    try {
+        const coach = await requireCoachByEmail(req.query.email);
+        return res.json(Array.isArray(coach.calendarEvents) ? coach.calendarEvents : []);
+    } catch (err) {
+        return res.status(err.status || 400).json({ error: err.message });
+    }
+});
+
+// POST /me/calendar-events  — crear evento
+router.post('/me/calendar-events', async (req, res) => {
+    try {
+        const coach = await requireCoachByEmail(req.query.email);
+        const { title, start, end, allDay, color, tipo, notas } = req.body || {};
+        if (!title || !start) {
+            return res.status(400).json({ error: 'Titulo y fecha de inicio son obligatorios.' });
+        }
+        const ev = { title, start, end: end || '', allDay: allDay !== false, color: color || '#3b82f6', tipo: tipo || 'personalizado', notas: notas || '' };
+        coach.calendarEvents.push(ev);
+        await coach.save();
+        const created = coach.calendarEvents[coach.calendarEvents.length - 1];
+        return res.status(201).json(created);
+    } catch (err) {
+        return res.status(err.status || 400).json({ error: err.message });
+    }
+});
+
+// PUT /me/calendar-events/:eventId  — editar evento
+router.put('/me/calendar-events/:eventId', async (req, res) => {
+    try {
+        const coach = await requireCoachByEmail(req.query.email);
+        const ev = coach.calendarEvents.id(req.params.eventId);
+        if (!ev) return res.status(404).json({ error: 'Evento no encontrado.' });
+        const { title, start, end, allDay, color, tipo, notas } = req.body || {};
+        if (title !== undefined) ev.title = title;
+        if (start !== undefined) ev.start = start;
+        if (end !== undefined) ev.end = end;
+        if (allDay !== undefined) ev.allDay = allDay;
+        if (color !== undefined) ev.color = color;
+        if (tipo !== undefined) ev.tipo = tipo;
+        if (notas !== undefined) ev.notas = notas;
+        await coach.save();
+        return res.json(ev);
+    } catch (err) {
+        return res.status(err.status || 400).json({ error: err.message });
+    }
+});
+
+// DELETE /me/calendar-events/:eventId  — eliminar evento
+router.delete('/me/calendar-events/:eventId', async (req, res) => {
+    try {
+        const coach = await requireCoachByEmail(req.query.email);
+        const ev = coach.calendarEvents.id(req.params.eventId);
+        if (!ev) return res.status(404).json({ error: 'Evento no encontrado.' });
+        ev.deleteOne();
+        await coach.save();
+        return res.json({ ok: true });
+    } catch (err) {
+        return res.status(err.status || 400).json({ error: err.message });
+    }
+});
+
 router.get('/me/metricas', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);

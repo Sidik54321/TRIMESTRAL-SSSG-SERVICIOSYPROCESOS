@@ -1,4 +1,4 @@
-﻿const React = window.React;
+const React = window.React;
 const ReactDOM = window.ReactDOM;
 const {
     useEffect,
@@ -316,17 +316,119 @@ const buildCoachCalendarEvents = (boxers, metricas) => {
 };
 
 function CoachCalendar({
-    events
+    events,
+    onEventsChange
 }) {
     const elRef = useRef(null);
     const calendarRef = useRef(null);
-    const [details, setDetails] = useState('Selecciona un evento para ver detalles.');
+    const [details, setDetails] = useState('Selecciona un evento o haz clic en un dia para crear uno nuevo.');
+    const [showModal, setShowModal] = useState(false);
+    const [editingEvent, setEditingEvent] = useState(null);
+    const [formTitle, setFormTitle] = useState('');
+    const [formStart, setFormStart] = useState('');
+    const [formEnd, setFormEnd] = useState('');
+    const [formColor, setFormColor] = useState('#3b82f6');
+    const [formTipo, setFormTipo] = useState('personalizado');
+    const [formNotas, setFormNotas] = useState('');
+    const [formLoading, setFormLoading] = useState(false);
+    const [formError, setFormError] = useState('');
+
+    const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
+
+    const openCreateModal = (dateStr) => {
+        setEditingEvent(null);
+        setFormTitle('');
+        setFormStart(dateStr || toIsoDate(new Date()));
+        setFormEnd('');
+        setFormColor('#3b82f6');
+        setFormTipo('personalizado');
+        setFormNotas('');
+        setFormError('');
+        setShowModal(true);
+    };
+
+    const openEditModal = (ev) => {
+        const dbId = ev.extendedProps && ev.extendedProps.dbId ? ev.extendedProps.dbId : null;
+        if (!dbId) {
+            setDetails('Este evento es automatico y no se puede editar.');
+            return;
+        }
+        setEditingEvent({ id: dbId, fcEvent: ev });
+        setFormTitle(ev.title || '');
+        setFormStart(ev.startStr ? ev.startStr.slice(0, 10) : '');
+        setFormEnd(ev.endStr ? ev.endStr.slice(0, 10) : '');
+        setFormColor(ev.backgroundColor || ev.extendedProps.color || '#3b82f6');
+        setFormTipo(ev.extendedProps.tipo || 'personalizado');
+        setFormNotas(ev.extendedProps.notas || '');
+        setFormError('');
+        setShowModal(true);
+    };
+
+    const closeModal = () => {
+        setShowModal(false);
+        setEditingEvent(null);
+        setFormError('');
+    };
+
+    const saveEvent = async () => {
+        if (!formTitle.trim() || !formStart) {
+            setFormError('El titulo y la fecha son obligatorios.');
+            return;
+        }
+        setFormLoading(true);
+        setFormError('');
+        try {
+            const body = {
+                title: formTitle.trim(),
+                start: formStart,
+                end: formEnd || '',
+                allDay: true,
+                color: formColor,
+                tipo: formTipo,
+                notas: formNotas.trim()
+            };
+            if (editingEvent) {
+                await requestJson(`/api/entrenadores/me/calendar-events/${editingEvent.id}?email=${encodeURIComponent(email)}`, {
+                    method: 'PUT',
+                    body
+                });
+            } else {
+                await requestJson(`/api/entrenadores/me/calendar-events?email=${encodeURIComponent(email)}`, {
+                    method: 'POST',
+                    body
+                });
+            }
+            closeModal();
+            if (onEventsChange) onEventsChange();
+        } catch (err) {
+            setFormError(err && err.message ? err.message : 'Error al guardar el evento.');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const deleteEvent = async () => {
+        if (!editingEvent) return;
+        if (!window.confirm('Eliminar este evento?')) return;
+        setFormLoading(true);
+        try {
+            await requestJson(`/api/entrenadores/me/calendar-events/${editingEvent.id}?email=${encodeURIComponent(email)}`, {
+                method: 'DELETE'
+            });
+            closeModal();
+            if (onEventsChange) onEventsChange();
+        } catch (err) {
+            setFormError(err && err.message ? err.message : 'Error al eliminar.');
+        } finally {
+            setFormLoading(false);
+        }
+    };
 
     useEffect(() => {
         const el = elRef.current;
         const FullCalendarLib = window.FullCalendar;
         if (!el || !FullCalendarLib || !FullCalendarLib.Calendar) {
-            setDetails('No se pudo cargar el calendario. Revisa tu conexión o bloqueadores de contenido.');
+            setDetails('No se pudo cargar el calendario. Revisa tu conexion o bloqueadores de contenido.');
             return;
         }
 
@@ -341,19 +443,27 @@ function CoachCalendar({
                     center: 'title',
                     right: 'dayGridMonth,listMonth'
                 },
+                dateClick: (info) => {
+                    openCreateModal(info.dateStr);
+                },
                 eventClick: (info) => {
                     const ev = info.event;
-                    const kind = ev.extendedProps && ev.extendedProps.kind ? String(ev.extendedProps.kind) : '';
-                    const dateText = ev.startStr ? formatDateEs(ev.startStr.slice(0, 10)) : '';
-                    const boxer = ev.extendedProps && ev.extendedProps.boxer ? String(ev.extendedProps.boxer) : '';
-                    const partner = ev.extendedProps && ev.extendedProps.partner ? String(ev.extendedProps.partner) : '';
-                    const place = ev.extendedProps && ev.extendedProps.place ? String(ev.extendedProps.place) : '';
-                    const parts = [dateText, ev.title];
-                    if (boxer && kind === 'inscripcion') parts.push(`Alumno: ${boxer}`);
-                    if (partner) parts.push(`Partner: ${partner}`);
-                    if (place) parts.push(`Lugar: ${place}`);
-                    if (kind) parts.push(kind);
-                    setDetails(parts.filter(Boolean).join(' · '));
+                    const dbId = ev.extendedProps && ev.extendedProps.dbId;
+                    if (dbId) {
+                        openEditModal(ev);
+                    } else {
+                        const kind = ev.extendedProps && ev.extendedProps.kind ? String(ev.extendedProps.kind) : '';
+                        const dateText = ev.startStr ? formatDateEs(ev.startStr.slice(0, 10)) : '';
+                        const boxer = ev.extendedProps && ev.extendedProps.boxer ? String(ev.extendedProps.boxer) : '';
+                        const partner = ev.extendedProps && ev.extendedProps.partner ? String(ev.extendedProps.partner) : '';
+                        const place = ev.extendedProps && ev.extendedProps.place ? String(ev.extendedProps.place) : '';
+                        const parts = [dateText, ev.title];
+                        if (boxer && kind === 'inscripcion') parts.push(`Alumno: ${boxer}`);
+                        if (partner) parts.push(`Partner: ${partner}`);
+                        if (place) parts.push(`Lugar: ${place}`);
+                        if (kind) parts.push(kind);
+                        setDetails(parts.filter(Boolean).join(' · '));
+                    }
                 }
             });
             calendarRef.current.render();
@@ -372,32 +482,166 @@ function CoachCalendar({
         };
     }, []);
 
+    const colorOptions = [
+        { value: '#3b82f6', label: 'Azul' },
+        { value: '#ef4444', label: 'Rojo' },
+        { value: '#22c55e', label: 'Verde' },
+        { value: '#f59e0b', label: 'Naranja' },
+        { value: '#8b5cf6', label: 'Morado' },
+        { value: '#111827', label: 'Negro' }
+    ];
+
+    const tipoOptions = [
+        { value: 'personalizado', label: 'Personalizado' },
+        { value: 'entrenamiento', label: 'Entrenamiento' },
+        { value: 'competicion', label: 'Competicion' },
+        { value: 'reunion', label: 'Reunion' },
+        { value: 'descanso', label: 'Descanso' }
+    ];
+
+    const modalOverlay = showModal ? h('div', {
+        style: {
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', zIndex: 9999
+        },
+        onClick: (e) => { if (e.target === e.currentTarget) closeModal(); }
+    },
+        h('div', {
+            style: {
+                backgroundColor: '#fff', borderRadius: '20px', padding: '32px',
+                maxWidth: 480, width: '90%', boxShadow: '0 25px 50px rgba(0,0,0,0.2)',
+                maxHeight: '90vh', overflowY: 'auto'
+            }
+        },
+            h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 } },
+                h('h3', { style: { margin: 0, fontSize: '1.3rem', fontWeight: 800 } },
+                    editingEvent ? 'Editar Evento' : 'Nuevo Evento'),
+                h('button', {
+                    onClick: closeModal,
+                    style: { background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#6b7280', lineHeight: 1 }
+                }, String.fromCharCode(215))
+            ),
+            formError ? h('div', {
+                style: { padding: '10px 14px', borderRadius: 12, backgroundColor: '#fee2e2', color: '#b91c1c', fontSize: '.85rem', fontWeight: 600, marginBottom: 16 }
+            }, formError) : null,
+
+            // Titulo
+            h('label', { style: { display: 'block', fontSize: '.8rem', fontWeight: 700, marginBottom: 6, color: '#374151' } }, 'Titulo *'),
+            h('input', {
+                type: 'text', value: formTitle, placeholder: 'Ej: Entrenamiento especial',
+                onChange: (e) => setFormTitle(e.target.value),
+                style: { width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e5e7eb', fontSize: '.9rem', marginBottom: 16, boxSizing: 'border-box' }
+            }),
+
+            // Fechas
+            h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 } },
+                h('div', null,
+                    h('label', { style: { display: 'block', fontSize: '.8rem', fontWeight: 700, marginBottom: 6, color: '#374151' } }, 'Fecha inicio *'),
+                    h('input', {
+                        type: 'date', value: formStart,
+                        onChange: (e) => setFormStart(e.target.value),
+                        style: { width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e5e7eb', fontSize: '.9rem', boxSizing: 'border-box' }
+                    })
+                ),
+                h('div', null,
+                    h('label', { style: { display: 'block', fontSize: '.8rem', fontWeight: 700, marginBottom: 6, color: '#374151' } }, 'Fecha fin'),
+                    h('input', {
+                        type: 'date', value: formEnd,
+                        onChange: (e) => setFormEnd(e.target.value),
+                        style: { width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e5e7eb', fontSize: '.9rem', boxSizing: 'border-box' }
+                    })
+                )
+            ),
+
+            // Tipo y Color
+            h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 } },
+                h('div', null,
+                    h('label', { style: { display: 'block', fontSize: '.8rem', fontWeight: 700, marginBottom: 6, color: '#374151' } }, 'Tipo'),
+                    h('select', {
+                        value: formTipo,
+                        onChange: (e) => setFormTipo(e.target.value),
+                        style: { width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e5e7eb', fontSize: '.9rem', boxSizing: 'border-box', backgroundColor: '#fff' }
+                    }, ...tipoOptions.map(o => h('option', { key: o.value, value: o.value }, o.label)))
+                ),
+                h('div', null,
+                    h('label', { style: { display: 'block', fontSize: '.8rem', fontWeight: 700, marginBottom: 6, color: '#374151' } }, 'Color'),
+                    h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
+                        ...colorOptions.map(c => h('button', {
+                            key: c.value,
+                            type: 'button',
+                            title: c.label,
+                            onClick: () => setFormColor(c.value),
+                            style: {
+                                width: 28, height: 28, borderRadius: '50%',
+                                backgroundColor: c.value, border: formColor === c.value ? '3px solid #111827' : '2px solid #e5e7eb',
+                                cursor: 'pointer', transition: 'all .15s'
+                            }
+                        }))
+                    )
+                )
+            ),
+
+            // Notas
+            h('label', { style: { display: 'block', fontSize: '.8rem', fontWeight: 700, marginBottom: 6, color: '#374151' } }, 'Notas'),
+            h('textarea', {
+                value: formNotas, placeholder: 'Notas opcionales...',
+                onChange: (e) => setFormNotas(e.target.value),
+                rows: 3,
+                style: { width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e5e7eb', fontSize: '.9rem', resize: 'vertical', marginBottom: 20, boxSizing: 'border-box', fontFamily: 'inherit' }
+            }),
+
+            // Botones de accion
+            h('div', { style: { display: 'flex', gap: 10 } },
+                h('button', {
+                    className: 'btn btn-primary',
+                    disabled: formLoading,
+                    onClick: saveEvent,
+                    style: { flex: 2, padding: '12px', fontSize: '.9rem', fontWeight: 700, borderRadius: 12 }
+                },
+                    h('i', { className: `fas ${editingEvent ? 'fa-save' : 'fa-plus'}`, style: { marginRight: 6 } }),
+                    formLoading ? 'Guardando...' : (editingEvent ? 'Guardar cambios' : 'Crear evento')
+                ),
+                editingEvent ? h('button', {
+                    className: 'btn btn-secondary',
+                    disabled: formLoading,
+                    onClick: deleteEvent,
+                    style: { flex: 1, padding: '12px', fontSize: '.9rem', color: '#ef4444', borderColor: '#ef4444', borderRadius: 12 }
+                },
+                    h('i', { className: 'fas fa-trash', style: { marginRight: 6 } }),
+                    'Eliminar'
+                ) : null
+            )
+        )
+    ) : null;
+
     return h(
         React.Fragment,
         null,
-        h(
-            'div', {
-            className: 'coach-calendar-legend'
-        },
-            h('span', {
-                className: 'coach-calendar-pill coach-calendar-pill--sparring'
-            }, 'Sparring'),
-            h('span', {
-                className: 'coach-calendar-pill coach-calendar-pill--inscripcion'
-            }, 'Inscripción'),
-            h('span', {
-                className: 'coach-calendar-pill coach-calendar-pill--recordatorio'
-            }, 'Recordatorio')
+        modalOverlay,
+        h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 } },
+            h('div', { className: 'coach-calendar-legend' },
+                h('span', { className: 'coach-calendar-pill coach-calendar-pill--sparring' }, 'Sparring'),
+                h('span', { className: 'coach-calendar-pill coach-calendar-pill--inscripcion' }, 'Inscripcion'),
+                h('span', { className: 'coach-calendar-pill coach-calendar-pill--recordatorio' }, 'Recordatorio'),
+                h('span', { className: 'coach-calendar-pill', style: { backgroundColor: '#3b82f6', color: '#fff' } }, 'Personalizado')
+            ),
+            h('button', {
+                className: 'btn btn-primary',
+                onClick: () => openCreateModal(''),
+                style: { padding: '8px 18px', fontSize: '.85rem', fontWeight: 700, borderRadius: 12 }
+            },
+                h('i', { className: 'fas fa-plus', style: { marginRight: 6 } }),
+                'Nuevo evento'
+            )
         ),
         h('div', {
             className: 'gloveup-calendar',
             ref: elRef,
             role: 'application',
-            'aria-label': 'Calendario de Gestión'
+            'aria-label': 'Calendario de Gestion'
         }),
-        h('div', {
-            className: 'coach-calendar-details'
-        }, details)
+        h('div', { className: 'coach-calendar-details' }, details)
     );
 }
 
@@ -513,6 +757,7 @@ function CoachStatsDashboard() {
         gimnasio: ''
     });
     const [boxers, setBoxers] = useState([]);
+    const [customEvents, setCustomEvents] = useState([]);
 
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
     const coachName = (localStorage.getItem('gloveup_user_name') || '').trim();
@@ -521,17 +766,18 @@ function CoachStatsDashboard() {
         if (!email) {
             setMessage({
                 kind: 'error',
-                text: 'No se ha encontrado el email del entrenador en la sesión.'
+                text: 'No se ha encontrado el email del entrenador en la sesion.'
             });
             setLoading(false);
             return;
         }
         setLoading(true);
         try {
-            const [metricsInfo, boxersInfo, coachInfo] = await Promise.all([
+            const [metricsInfo, boxersInfo, coachInfo, calEventsInfo] = await Promise.all([
                 requestJson(`/api/entrenadores/me/metricas?email=${encodeURIComponent(email)}`),
                 requestJson(`/api/entrenadores/me/boxeadores?email=${encodeURIComponent(email)}`).catch(() => []),
-                requestJson(`/api/entrenadores/me?email=${encodeURIComponent(email)}`).catch(() => ({}))
+                requestJson(`/api/entrenadores/me?email=${encodeURIComponent(email)}`).catch(() => ({})),
+                requestJson(`/api/entrenadores/me/calendar-events?email=${encodeURIComponent(email)}`).catch(() => [])
             ]);
             
             const precioMensual = metricsInfo && typeof metricsInfo.precioMensual === 'number' ?
@@ -548,11 +794,12 @@ function CoachStatsDashboard() {
                 gimnasio
             });
             setBoxers(Array.isArray(boxersInfo) ? boxersInfo : []);
+            setCustomEvents(Array.isArray(calEventsInfo) ? calEventsInfo : []);
             setMessage(null);
         } catch (err) {
             setMessage({
                 kind: 'error',
-                text: err && err.message ? err.message : 'Error cargando las métricas del entrenador.'
+                text: err && err.message ? err.message : 'Error cargando las metricas del entrenador.'
             });
         } finally {
             setLoading(false);
@@ -563,7 +810,26 @@ function CoachStatsDashboard() {
         load();
     }, []);
 
-    const calendarEvents = useMemo(() => buildCoachCalendarEvents(boxers, metricas), [boxers, metricas]);
+    const calendarEvents = useMemo(() => {
+        const autoEvents = buildCoachCalendarEvents(boxers, metricas);
+        const custom = (Array.isArray(customEvents) ? customEvents : []).map(ev => ({
+            id: `custom-${ev._id}`,
+            title: ev.title || 'Evento',
+            start: ev.start,
+            end: ev.end || undefined,
+            allDay: ev.allDay !== false,
+            backgroundColor: ev.color || '#3b82f6',
+            borderColor: ev.color || '#3b82f6',
+            extendedProps: {
+                dbId: ev._id,
+                kind: 'personalizado',
+                tipo: ev.tipo || 'personalizado',
+                notas: ev.notas || '',
+                color: ev.color || '#3b82f6'
+            }
+        }));
+        return [...autoEvents, ...custom];
+    }, [boxers, metricas, customEvents]);
 
     if (loading && boxers.length === 0) {
         return h('div', { style: { padding: 40, textAlign: 'center', opacity: 0.5 } }, 'Cargando panel...');
@@ -578,7 +844,7 @@ function CoachStatsDashboard() {
         },
             h('div', { className: 'dashboard-title-block' },
                 h('h1', { style: { fontSize: '2rem', fontWeight: 900 } }, coachName || 'Entrenador'),
-                h('p', { style: { opacity: 0.8 } }, 'Resumen de actividad y Gestión de boxeadores.')
+                h('p', { style: { opacity: 0.8 } }, 'Resumen de actividad y gestion de boxeadores.')
             )
         ),
         
@@ -599,7 +865,7 @@ function CoachStatsDashboard() {
             style: { marginBottom: 24 }
         },
             h('h2', { style: { marginBottom: 16 } }, 'Calendario de Actividades'),
-            h(CoachCalendar, { events: calendarEvents })
+            h(CoachCalendar, { events: calendarEvents, onEventsChange: load })
         )
     );
 }
