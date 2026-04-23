@@ -233,13 +233,18 @@ router.post('/challenges', async (req, res) => {
             if (toCoach) coachToEmail = (toCoach.email || '').toLowerCase();
         }
 
-        // Determine initial status based on which coaches exist
-        let initialStatus = 'pending';
-        if (coachToEmail) {
-            initialStatus = 'pending_coach_to';
-        } else if (coachFromEmail) {
-            initialStatus = 'pending_coach_from';
+        // Ambos boxeadores deben tener entrenador asignado para poder crear un sparring
+        if (!coachFromEmail || !coachToEmail) {
+            const missing = [];
+            if (!coachFromEmail) missing.push(from.nombre || fromEmail);
+            if (!coachToEmail) missing.push(to.nombre || toEmailNorm);
+            return res.status(400).json({
+                error: `No se puede crear el reto: ${missing.join(' y ')} no tiene(n) entrenador asignado. Ambos boxeadores necesitan un entrenador para que el sparring sea aprobado.`
+            });
         }
+
+        // Siempre se requiere la aprobacion de ambos entrenadores
+        const initialStatus = 'pending_coach_to';
 
         const record = {
             id,

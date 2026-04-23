@@ -747,11 +747,10 @@ router.post('/me/challenges/respond', async (req, res) => {
         if (action === 'decline') {
             newStatus = 'declined';
         } else if (effectiveStatus === 'pending_coach_to') {
-            // Entrenador del retado aceptó → comprobar si el entrenador del retador también debe aprobar
-            const coachFromEmail = (foundChallenge.coachFromEmail || '');
-            newStatus = coachFromEmail ? 'pending_coach_from' : 'accepted';
+            // Entrenador del retado acepto -> siempre pasa al entrenador del retador
+            newStatus = 'pending_coach_from';
         } else {
-            // Entrenador del retador aceptó → sparring completamente confirmado
+            // Entrenador del retador acepto -> sparring completamente confirmado
             newStatus = 'accepted';
         }
 
@@ -777,7 +776,7 @@ router.post('/me/challenges/respond', async (req, res) => {
 
         // Handle outcomes
         if (newStatus === 'accepted') {
-            // Both coaches approved → create sparring session
+            // Both coaches approved -> create sparring session
             const sessionId = crypto.randomUUID();
             const now = new Date().toISOString();
             const session = {
@@ -811,19 +810,24 @@ router.post('/me/challenges/respond', async (req, res) => {
             }
 
             // Notify both boxers
-            await crearNotificacion({ para: fromEmail, tipo: 'sparring', titulo: '🥊 ¡Sparring Confirmado!', cuerpo: `Tu sparring con ${foundChallenge.toNombre} ha sido aprobado por ambos entrenadores. ¡Prepárate!`, de: toEmail });
-            await crearNotificacion({ para: toEmail, tipo: 'sparring', titulo: '🥊 ¡Sparring Confirmado!', cuerpo: `Tu sparring con ${foundChallenge.fromNombre} ha sido aprobado por ambos entrenadores. ¡Prepárate!`, de: fromEmail });
+            await crearNotificacion({ para: fromEmail, tipo: 'sparring', titulo: 'Sparring Confirmado', cuerpo: `Tu sparring con ${foundChallenge.toNombre} ha sido aprobado por ambos entrenadores.`, de: toEmail });
+            await crearNotificacion({ para: toEmail, tipo: 'sparring', titulo: 'Sparring Confirmado', cuerpo: `Tu sparring con ${foundChallenge.fromNombre} ha sido aprobado por ambos entrenadores.`, de: fromEmail });
 
         } else if (newStatus === 'pending_coach_from') {
             // Notify the challenger's coach that it's their turn
             const coachFromEmail = (foundChallenge.coachFromEmail || '');
             if (coachFromEmail) {
-                await crearNotificacion({ para: coachFromEmail, tipo: 'sparring', titulo: '🔔 Confirma el sparring de tu boxeador', cuerpo: `El entrenador rival ha aprobado. Necesitas confirmar el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}.`, de: coachEmail });
+                await crearNotificacion({ para: coachFromEmail, tipo: 'sparring', titulo: 'Confirma el sparring de tu boxeador', cuerpo: `El entrenador rival ha aprobado. Necesitas confirmar el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}.`, de: coachEmail });
             }
         } else if (newStatus === 'declined') {
             // Notify both boxers of the rejection
-            await crearNotificacion({ para: fromEmail, tipo: 'sparring', titulo: '❌ Sparring Rechazado', cuerpo: `Un entrenador ha rechazado el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}.`, de: coachEmail });
-            await crearNotificacion({ para: toEmail, tipo: 'sparring', titulo: '❌ Sparring Rechazado', cuerpo: `Un entrenador ha rechazado el sparring.`, de: coachEmail });
+            await crearNotificacion({ para: fromEmail, tipo: 'sparring', titulo: 'Sparring Rechazado', cuerpo: `Un entrenador ha rechazado el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}. El reto ha sido cancelado.`, de: coachEmail });
+            await crearNotificacion({ para: toEmail, tipo: 'sparring', titulo: 'Sparring Rechazado', cuerpo: `Un entrenador ha rechazado el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}. El reto ha sido cancelado.`, de: coachEmail });
+            // Notify the other coach too
+            const otherCoachEmail = isToCoach ? (foundChallenge.coachFromEmail || '') : (foundChallenge.coachToEmail || '');
+            if (otherCoachEmail && otherCoachEmail !== coachEmail) {
+                await crearNotificacion({ para: otherCoachEmail, tipo: 'sparring', titulo: 'Sparring Cancelado', cuerpo: `El entrenador rival ha rechazado el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}. El reto ha sido cancelado.`, de: coachEmail });
+            }
         }
 
         return res.json({ ok: true, status: newStatus });
