@@ -26,12 +26,42 @@
         return d.getDate() + '/' + (d.getMonth() + 1);
     }
 
+    function getLocPrefs() {
+        let prefs = { sparring: true, mensaje: true, gimnasio: true, general: true };
+        try {
+            const raw = localStorage.getItem('gloveup_notif_prefs');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                prefs = {
+                    sparring: parsed.sparring !== false,
+                    mensaje: parsed.mensajes !== false,
+                    gimnasio: parsed.gimnasio !== false,
+                    general: parsed.general !== false,
+                };
+            }
+        } catch (e) {}
+        return prefs;
+    }
+
     async function updateBadge() {
         if (!me()) return;
-        const data = await apiFetch(`/api/notificaciones/no-leidas?email=${encodeURIComponent(me())}`);
+        const notifs = await apiFetch(`/api/notificaciones?email=${encodeURIComponent(me())}`);
         const badge = $('glv-notif-badge');
-        if (!badge || !data) return;
-        if (data.count > 0) { badge.textContent = data.count > 9 ? '9+' : data.count; badge.style.display = 'flex'; }
+        if (!badge || !Array.isArray(notifs)) return;
+        
+        const prefs = getLocPrefs();
+        let count = 0;
+        notifs.forEach(n => {
+            if (n.leida) return;
+            const t = n.tipo || 'general';
+            if (t === 'sparring' && !prefs.sparring) return;
+            if (t === 'mensaje' && !prefs.mensaje) return;
+            if (t === 'gimnasio' && !prefs.gimnasio) return;
+            if (t === 'general' && !prefs.general) return;
+            count++;
+        });
+
+        if (count > 0) { badge.textContent = count > 9 ? '9+' : count; badge.style.display = 'flex'; }
         else badge.style.display = 'none';
     }
 
@@ -45,7 +75,23 @@
             list.innerHTML = '<li class="glv-list-hint">Sin notificaciones por ahora.</li>';
             return;
         }
-        notifs.forEach(n => {
+
+        const prefs = getLocPrefs();
+        const filteredNotifs = notifs.filter(n => {
+            const t = n.tipo || 'general';
+            if (t === 'sparring' && !prefs.sparring) return false;
+            if (t === 'mensaje' && !prefs.mensaje) return false;
+            if (t === 'gimnasio' && !prefs.gimnasio) return false;
+            if (t === 'general' && !prefs.general) return false;
+            return true;
+        });
+
+        if (!filteredNotifs.length) {
+            list.innerHTML = '<li class="glv-list-hint">Notificaciones silenciadas o vacías.</li>';
+            return;
+        }
+
+        filteredNotifs.forEach(n => {
             const li = document.createElement('li');
             li.className = 'glv-notif-item' + (n.leida ? ' leida' : '');
             li.dataset.id = n._id;

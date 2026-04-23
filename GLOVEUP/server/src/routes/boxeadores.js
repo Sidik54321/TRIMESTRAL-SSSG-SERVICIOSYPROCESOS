@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import mongoose from 'mongoose';
 import Boxeador from '../models/Boxeador.js';
 import Entrenador from '../models/Entrenador.js';
+import Usuario from '../models/Usuario.js';
 import { crearNotificacion } from './notificaciones.js';
 
 const router = Router();
@@ -518,24 +519,45 @@ router.put('/me', async (req, res) => {
         }
 
         const payload = req.body || {};
+        const nuevoEmail = (payload.nuevoEmail || '').toString().trim().toLowerCase();
+
+        let emailToSave = email;
+        if (nuevoEmail && nuevoEmail !== email) {
+            const existingUser = await Usuario.findOne({ email: nuevoEmail }).lean();
+            if (existingUser) {
+                return res.status(400).json({ error: 'El nuevo email ya está en uso' });
+            }
+            // Actualizar en la colección principal de usuarios
+            await Usuario.updateOne({ email }, { $set: { email: nuevoEmail } });
+            emailToSave = nuevoEmail;
+        }
+
         const update = {
             nombre: payload.nombre,
             alias: payload.alias || '',
             disciplina: payload.disciplina || '',
             peso: payload.peso || '',
+            categoriaPeso: payload.categoriaPeso || '',
+            genero: payload.genero || 'Masculino',
+            frecuenciaSparring: payload.frecuenciaSparring || 'Semanal',
+            guardia: payload.guardia || 'Diestro',
             altura: payload.altura || '',
             edad: payload.edad || null,
             ubicacion: payload.ubicacion || '',
             bio: payload.bio || '',
             foto: payload.foto || '',
-            sparringHistory: Array.isArray(payload.sparringHistory) ? payload.sparringHistory : []
+            sparringHistory: Array.isArray(payload.sparringHistory) ? payload.sparringHistory : [],
         };
+
+        if (emailToSave !== email) {
+            update.email = emailToSave;
+        }
 
         const saved = await Boxeador.findOneAndUpdate({
             email
         }, {
             $setOnInsert: {
-                email
+                email: emailToSave
             },
             $set: update
         }, {

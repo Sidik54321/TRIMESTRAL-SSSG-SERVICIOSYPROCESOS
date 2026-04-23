@@ -62,6 +62,25 @@ const BoxeadorSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    categoriaPeso: {
+        type: String,
+        trim: true
+    },
+    genero: {
+        type: String,
+        enum: ['Masculino', 'Femenino', 'Otro'],
+        default: 'Masculino'
+    },
+    frecuenciaSparring: {
+        type: String,
+        enum: ['Diaria', 'Semanal', 'Mensual'],
+        default: 'Semanal'
+    },
+    guardia: {
+        type: String,
+        enum: ['Diestro', 'Zurdo'],
+        default: 'Diestro'
+    },
     foto: {
         type: String,
         trim: true

@@ -167,6 +167,19 @@ router.put('/me', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
         const payload = req.body || {};
+        const nuevoEmail = (payload.nuevoEmail || '').toString().trim().toLowerCase();
+
+        let emailToSave = coach.email;
+        if (nuevoEmail && nuevoEmail !== coach.email) {
+            const existingUser = await Usuario.findOne({ email: nuevoEmail }).lean();
+            if (existingUser) {
+                return res.status(400).json({ error: 'El nuevo email ya está en uso' });
+            }
+            // Actualizar en la colección principal de usuarios
+            await Usuario.updateOne({ email: coach.email }, { $set: { email: nuevoEmail } });
+            emailToSave = nuevoEmail;
+        }
+
         const precioMensual = payload.precioMensual === undefined ? coach.precioMensual : Number(payload.precioMensual);
         const safePrecio = Number.isFinite(precioMensual) && precioMensual >= 0 ? precioMensual : 0;
         const update = {
@@ -175,8 +188,13 @@ router.put('/me', async (req, res) => {
             gimnasio: payload.gimnasio === undefined ? (coach.gimnasio || '') : (payload.gimnasio || ''),
             precioMensual: safePrecio,
             ubicacion: payload.ubicacion === undefined ? (coach.ubicacion || '') : (payload.ubicacion || ''),
+            genero: payload.genero === undefined ? (coach.genero || 'Masculino') : payload.genero,
             foto: payload.foto === undefined ? (coach.foto || '') : (payload.foto || '')
         };
+
+        if (emailToSave !== coach.email) {
+            update.email = emailToSave;
+        }
 
         coach.set(update);
         await coach.save();
@@ -722,19 +740,15 @@ router.post('/me/challenges/respond', async (req, res) => {
         // Compatibilidad con retos antiguos: 'pending' se trata como 'pending_coach_to'
         const effectiveStatus = curStatus === 'pending' ? 'pending_coach_to' : curStatus;
 
-        // Validar que este entrenador debe responder en esta fase
-        if (isToCoach && effectiveStatus !== 'pending_coach_to') {
-            if (effectiveStatus === 'pending_coach_from') return res.status(400).json({ error: 'Ya aprobaste este reto. Esperando al entrenador del retador.' });
-            if (effectiveStatus === 'accepted') return res.status(400).json({ error: 'Este sparring ya fue confirmado.' });
-            if (effectiveStatus === 'declined') return res.status(400).json({ error: 'Este reto ya fue rechazado.' });
-            return res.status(400).json({ error: `Este reto no está pendiente de tu aprobación (estado: ${curStatus})` });
+        // Validar que este entrenador no haya respondido ya
+        if (isToCoach && foundChallenge.coachToApproval !== null) {
+            return res.status(400).json({ error: 'Ya has respondido a este reto como el entrenador del retado.' });
         }
-        if (!isToCoach && effectiveStatus !== 'pending_coach_from') {
-            if (effectiveStatus === 'pending_coach_to') return res.status(400).json({ error: 'El entrenador del retado aún no ha respondido.' });
-            if (effectiveStatus === 'accepted') return res.status(400).json({ error: 'Este sparring ya fue confirmado.' });
-            if (effectiveStatus === 'declined') return res.status(400).json({ error: 'Este reto ya fue rechazado.' });
-            return res.status(400).json({ error: `Este reto no está pendiente de tu aprobación (estado: ${curStatus})` });
+        if (!isToCoach && foundChallenge.coachFromApproval !== null) {
+            return res.status(400).json({ error: 'Ya has respondido a este reto como el entrenador del retador.' });
         }
+        if (curStatus === 'accepted') return res.status(400).json({ error: 'Este sparring ya está confirmado.' });
+        if (curStatus === 'declined') return res.status(400).json({ error: 'Este reto ya ha sido rechazado.' });
 
         const fromEmail = (foundChallenge.fromEmail || '').toLowerCase();
         const toEmail = (foundChallenge.toEmail || '').toLowerCase();
@@ -746,12 +760,17 @@ router.post('/me/challenges/respond', async (req, res) => {
         let newStatus;
         if (action === 'decline') {
             newStatus = 'declined';
-        } else if (effectiveStatus === 'pending_coach_to') {
-            // Entrenador del retado acepto -> siempre pasa al entrenador del retador
-            newStatus = 'pending_coach_from';
         } else {
-            // Entrenador del retador acepto -> sparring completamente confirmado
-            newStatus = 'accepted';
+            const nextTo = isToCoach ? true : !!foundChallenge.coachToApproval;
+            const nextFrom = !isToCoach ? true : !!foundChallenge.coachFromApproval;
+
+            if (nextTo && nextFrom) {
+                newStatus = 'accepted';
+            } else if (!nextTo) {
+                newStatus = 'pending_coach_to';
+            } else {
+                newStatus = 'pending_coach_from';
+            }
         }
 
         // Update the challenge in ALL boxer documents (both received and sent arrays)

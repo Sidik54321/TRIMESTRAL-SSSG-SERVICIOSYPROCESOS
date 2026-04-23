@@ -44,6 +44,11 @@ const EntrenadorSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    genero: {
+        type: String,
+        enum: ['Masculino', 'Femenino', 'Otro'],
+        default: 'Masculino'
+    },
     foto: {
         type: String,
         trim: true

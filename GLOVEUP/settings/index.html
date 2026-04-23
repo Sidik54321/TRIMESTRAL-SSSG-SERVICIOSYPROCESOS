@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GloveUp - Ajustes</title>
+    <link rel="icon" href="../assets/images/logo-fondo-blanco.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Base Global Styles -->
+    <link rel="stylesheet" href="../home/styles.css">
+    <link rel="stylesheet" href="../home/notifications.css">
+    
+    <!-- Settings Specific Styles -->
+    <link rel="stylesheet" href="settings.css">
+</head>
+
+<body class="with-sidebar">
+    <script>
+        const _role = (localStorage.getItem('gloveup_user_role') || '').toLowerCase();
+        if (_role === 'entrenador') document.body.classList.add('theme-entrenador');
+        const _savedTheme = localStorage.getItem('gloveup_theme');
+        if (_savedTheme === 'dark') document.body.classList.add('theme-dark');
+    </script>
+
+    <!-- SIDEBAR VERTICAL -->
+    <aside class="main-sidebar">
+        <div class="sidebar-header">
+            <img src="../assets/images/unnamed-removebg-preview.png" alt="Logo GloveUp">
+            <span class="app-name">GloveUp</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                <li>
+                    <a href="../onboarding/index.html">
+                        <i class="fas fa-rocket"></i>
+                        <span>Primeros Pasos</span>
+                    </a>
+                </li>
+                <li id="nav-item-inicio">
+                    <a id="nav-home-link" href="../home/dashboard.html">
+                        <i class="fas fa-home"></i>
+                        <span>Inicio</span>
+                    </a>
+                </li>
+                <li id="nav-item-sparring">
+                    <a href="../sparring/index.html">
+                        <i class="fas fa-fist-raised"></i>
+                        <span>Buscar Sparring</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="../gyms/index.html">
+                        <i class="fas fa-building"></i>
+                        <span>Gimnasios</span>
+                    </a>
+                </li>
+                <li id="nav-sparrings-item">
+                    <a href="../profile/index.html?tab=sparrings">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Mis Sparrings</span>
+                    </a>
+                </li>
+                <li id="coach-nav-item" style="display: none;">
+                    <a href="../dashboard/entrenador/dashboard.html#coach-management">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Gestión</span>
+                    </a>
+                </li>
+                <li id="coach-challenges-nav-item" style="display: none;">
+                    <a href="../dashboard/entrenador/dashboard.html#coach-challenges">
+                        <i class="fas fa-fist-raised"></i>
+                        <span>Retos</span>
+                    </a>
+                </li>
+                <li id="coach-gym-nav-item" style="display: none;">
+                    <a href="../dashboard/entrenador/dashboard.html#coach-gym">
+                        <i class="fas fa-building"></i>
+                        <span>Mi Gimnasio</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button id="theme-toggle" class="sidebar-btn">
+                <i class="fas fa-moon"></i>
+                <span>Tema Oscuro</span>
+            </button>
+            <button class="sidebar-btn active" onclick="window.location.href='index.html'">
+                <i class="fas fa-cog"></i>
+                <span>Ajustes</span>
+            </button>
+            <button id="logout-button" class="sidebar-btn" style="color: #ef4444;">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const role = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();
+                const coachNavItem = document.getElementById('coach-nav-item');
+                const coachChallengesNavItem = document.getElementById('coach-challenges-nav-item');
+                const coachGymNavItem = document.getElementById('coach-gym-nav-item');
+                const sparringsNavItem = document.getElementById('nav-sparrings-item');
+                const homeLink = document.getElementById('nav-home-link');
+                
+                if (homeLink) {
+                    homeLink.href = role === 'entrenador' ? '../dashboard/entrenador/dashboard.html' : '../dashboard/boxeador/dashboard.html';
+                }
+                if (coachNavItem) coachNavItem.style.display = role === 'entrenador' ? '' : 'none';
+                if (coachChallengesNavItem) coachChallengesNavItem.style.display = role === 'entrenador' ? '' : 'none';
+                if (coachGymNavItem) coachGymNavItem.style.display = role === 'entrenador' ? '' : 'none';
+                if (sparringsNavItem) sparringsNavItem.style.display = role === 'entrenador' ? 'none' : '';
+            });
+        </script>
+    </aside>
+
+    <!-- SETTINGS APP CONTENT -->
+    <main class="dashboard-main settings-main">
+        
+        <!-- Header Top Bar (matching image style) -->
+        <header class="settings-top-bar">
+            <button class="btn btn-ghost" id="btn-volver" style="visibility: hidden;">
+                <i class="fas fa-arrow-left"></i> Volver
+            </button>
+        </header>
+
+        <div class="settings-content-wrapper">
+            
+            <!-- MAIN VIEW: Configuración General -->
+            <div id="settings-home-view" class="settings-view active">
+                <div class="settings-header">
+                    <h1>Configuración</h1>
+                    <p>Administra las opciones generales y la cuenta de usuario del sistema GloveUp.</p>
+                </div>
+
+                <div class="settings-cards-list">
+                    <!-- Option 1: Profile -->
+                    <a href="../profile/index.html" class="settings-card-item">
+                        <div class="settings-card-body">
+                            <h3>Gestionar mi Perfil</h3>
+                            <p>Personaliza tu perfil de boxeador o entrenador en la plataforma.</p>
+                        </div>
+                        <i class="fas fa-chevron-right settings-card-arrow"></i>
+                    </a>
+
+                    <!-- Option 2: Notifications -->
+                    <div class="settings-card-item" id="nav-manage-notifications">
+                        <div class="settings-card-body">
+                            <h3>Gestionar mis notificaciones</h3>
+                            <p>Gestiona las notificaciones del sistema para tu cuenta.</p>
+                        </div>
+                        <i class="fas fa-chevron-right settings-card-arrow"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB VIEW: Notificaciones -->
+            <div id="settings-notifications-view" class="settings-view hidden">
+                <div class="settings-header">
+                    <h1>Mis Notificaciones</h1>
+                    <p>Marca una selección para activar o desactivar las diferentes notificaciones que te pueden llegar en GloveUp.</p>
+                </div>
+
+                <div class="notification-options">
+                    <div class="notif-option-row">
+                        <div class="notif-text">
+                            <h4>Nuevos Retos y Sparring</h4>
+                            <p>Notificaciones sobre retos de sparring que has recibido, modificado o respondido.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notif-toggle-sparring" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div class="notif-option-row">
+                        <div class="notif-text">
+                            <h4>Mensajes Privados</h4>
+                            <p>Avisos sobre nuevos mensajes de chat en la plataforma.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notif-toggle-mensajes" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div class="notif-option-row">
+                        <div class="notif-text">
+                            <h4>Actividad de Gimnasio</h4>
+                            <p>Alertas si un boxeador o entrenador asignado a tu gimnasio realiza acciones.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notif-toggle-gimnasio" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="notif-option-row">
+                        <div class="notif-text">
+                            <h4>Alertas del Sistema</h4>
+                            <p>Actualizaciones generales de la plataforma y novedades.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notif-toggle-general" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-action-bar">
+                    <button class="btn btn-primary" id="btn-save-notifs">Guardar Preferencias</button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script src="../home/notifications.js"></script>
+    <script src="settings.js"></script>
+</body>
+</html>

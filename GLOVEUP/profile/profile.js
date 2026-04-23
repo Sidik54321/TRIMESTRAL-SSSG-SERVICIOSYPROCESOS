@@ -58,7 +58,7 @@ function getTabParam() {
 }
 
 function setFormReadonly(readonly) {
-    const inputs = Array.from(document.querySelectorAll('#name, #alias, #discipline, #location, #weight, #height, #age, #bio, #coach-gym, #coach-price, #level, #boxer-gym'));
+    const inputs = Array.from(document.querySelectorAll('#name, #email, #alias, #discipline, #location, #weight, #height, #age, #bio, #coach-gym, #coach-price, #level, #boxer-gym'));
     inputs.forEach((el) => {
         if (!el) return;
         const tag = (el.tagName || '').toLowerCase();
@@ -71,6 +71,9 @@ function setFormReadonly(readonly) {
             el.tabIndex = readonly ? -1 : 0;
         }
     });
+
+    const selects = Array.from(document.querySelectorAll('#weightClass, #stance, #gender, #sparring-freq'));
+    selects.forEach((el) => { if (el) el.disabled = readonly; });
 
     const photoInput = $('photo-input');
     if (photoInput) photoInput.disabled = readonly;
@@ -166,9 +169,14 @@ async function requestJson(path, options = {}) {
 function getProfilePayload() {
     return {
         nombre: $('name').value.trim(),
+        nuevoEmail: $('email').value.trim(),
         alias: $('alias').value.trim(),
         disciplina: $('discipline').value.trim(),
         peso: $('weight').value ? String($('weight').value) : '',
+        categoriaPeso: $('weightClass') && $('weightClass').value ? $('weightClass').value : '',
+        genero: $('gender') && $('gender').value ? $('gender').value : '',
+        guardia: $('stance') && $('stance').value ? $('stance').value : '',
+        frecuenciaSparring: $('sparring-freq') && $('sparring-freq').value ? $('sparring-freq').value : '',
         altura: $('height').value ? String($('height').value) : '',
         edad: $('age').value ? Number($('age').value) : null,
         ubicacion: $('location').value.trim(),
@@ -189,14 +197,18 @@ function resolvePhotoSrc(photo) {
 
 function applyProfileToForm(profile) {
     $('name').value = profile.nombre || localStorage.getItem(STORED_USERNAME_KEY) || '';
+    if ($('email')) $('email').value = profile.email || localStorage.getItem(STORED_EMAIL_KEY) || '';
     $('alias').value = profile.alias || '';
     $('discipline').value = profile.disciplina || '';
     $('weight').value = profile.peso || '';
+    if ($('weightClass')) $('weightClass').value = profile.categoriaPeso || '';
+    if ($('gender')) $('gender').value = profile.genero || '';
+    if ($('stance')) $('stance').value = profile.guardia || '';
+    if ($('sparring-freq')) $('sparring-freq').value = profile.frecuenciaSparring || '';
     $('height').value = profile.altura || '';
     $('age').value = profile.edad || '';
     $('location').value = profile.ubicacion || '';
     $('bio').value = profile.bio || '';
-    $('weightClass').value = profile.peso ? `${profile.peso} kg` : '';
     const levelInput = $('level');
     if (levelInput) levelInput.value = profile.nivel || '';
     const boxerGymInput = $('boxer-gym');
@@ -206,6 +218,8 @@ function applyProfileToForm(profile) {
 
 function applyCoachProfileToForm(profile) {
     $('name').value = profile.nombre || localStorage.getItem(STORED_USERNAME_KEY) || '';
+    if ($('email')) $('email').value = profile.email || localStorage.getItem(STORED_EMAIL_KEY) || '';
+    if ($('gender')) $('gender').value = profile.genero || '';
     $('alias').value = '';
     $('discipline').value = profile.especialidad || 'Boxeo';
     $('location').value = profile.ubicacion || '';
@@ -496,8 +510,10 @@ function getCoachPayload() {
     const safePrice = Number.isFinite(rawPrice) && rawPrice >= 0 ? rawPrice : 0;
     return {
         nombre: $('name').value.trim(),
+        nuevoEmail: $('email') ? $('email').value.trim() : null,
         especialidad: $('discipline').value.trim() || 'Boxeo',
         gimnasio: gymInput ? gymInput.value.trim() : '',
+        genero: $('gender') && $('gender').value ? $('gender').value : '',
         precioMensual: safePrice,
         ubicacion: $('location').value.trim(),
         foto: profileState.foto || ''
@@ -522,6 +538,12 @@ async function saveProfileForm(showAlert = true) {
     });
     if (isCoach) {
         localStorage.setItem(STORED_USERNAME_KEY, saved && saved.nombre ? saved.nombre : '');
+        if (saved && saved.email && saved.email !== email) {
+            localStorage.setItem(STORED_EMAIL_KEY, saved.email);
+            if (sessionStorage.getItem(SESSION_MAINTAINED_KEY)) {
+                sessionStorage.setItem(STORED_EMAIL_KEY, saved.email);
+            }
+        }
         applyCoachProfileToForm(saved || {});
         if (showAlert) {
             alert('Perfil guardado en MongoDB.');
@@ -535,6 +557,12 @@ async function saveProfileForm(showAlert = true) {
         sparringHistory: Array.isArray(saved.sparringHistory) ? saved.sparringHistory : []
     };
     localStorage.setItem(STORED_USERNAME_KEY, profileState.nombre || '');
+    if (saved && saved.email && saved.email !== email) {
+        localStorage.setItem(STORED_EMAIL_KEY, saved.email);
+        if (sessionStorage.getItem(SESSION_MAINTAINED_KEY)) {
+            sessionStorage.setItem(STORED_EMAIL_KEY, saved.email);
+        }
+    }
     applyProfileToForm(profileState);
     if (showAlert) {
         alert('Perfil guardado en MongoDB.');
@@ -687,10 +715,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const boxerOnlyWeight = $('boxer-only-weightclass');
     const boxerOnlyBio = $('boxer-only-bio');
     const boxerOnlyAlias = $('boxer-only-alias');
+    const boxerOnlyStance = $('boxer-only-stance');
+    const boxerOnlyGender = $('boxer-only-gender');
+    const boxerOnlyFreq = $('boxer-only-freq');
+
     if (boxerOnlyStats) boxerOnlyStats.style.display = isCoachProfile ? 'none' : '';
     if (boxerOnlyWeight) boxerOnlyWeight.style.display = isCoachProfile ? 'none' : '';
     if (boxerOnlyBio) boxerOnlyBio.style.display = isCoachProfile ? 'none' : '';
     if (boxerOnlyAlias) boxerOnlyAlias.style.display = isCoachProfile ? 'none' : '';
+    if (boxerOnlyStance) boxerOnlyStance.style.display = isCoachProfile ? 'none' : '';
+    if (boxerOnlyGender) boxerOnlyGender.style.display = isCoachProfile ? 'none' : '';
+    if (boxerOnlyFreq) boxerOnlyFreq.style.display = isCoachProfile ? 'none' : '';
 
     const showMySparrings = !isCoachProfile && !isViewMode && isSparringsTab;
     if (historyCard) historyCard.style.display = showMySparrings ? '' : 'none';

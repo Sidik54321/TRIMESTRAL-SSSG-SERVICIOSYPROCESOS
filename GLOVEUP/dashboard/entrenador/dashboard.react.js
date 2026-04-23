@@ -1368,17 +1368,44 @@ function CoachChallenges() {
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState(null);
     const [challenges, setChallenges] = useState([]);
-    const [filter, setFilter] = useState('all');
+    const [filter, setFilter] = useState('pending');
+    const [archivedIds, setArchivedIds] = useState([]);
+
+    // Cargar archivados de localStorage
+    useEffect(() => {
+        const stored = localStorage.getItem('gloveup_trainer_archived');
+        if (stored) {
+            try { setArchivedIds(JSON.parse(stored)); } catch(e) {}
+        }
+    }, []);
+
+    const archiveChallenge = (id) => {
+        const next = [...archivedIds, id];
+        setArchivedIds(next);
+        localStorage.setItem('gloveup_trainer_archived', JSON.stringify(next));
+    };
+
+    const unarchiveChallenge = (id) => {
+        const next = archivedIds.filter(x => x !== id);
+        setArchivedIds(next);
+        localStorage.setItem('gloveup_trainer_archived', JSON.stringify(next));
+    };
 
     const isPendingStatus = (s) => !s || s === 'pending' || s === 'pending_coach_to' || s === 'pending_coach_from';
 
     const filteredChallenges = useMemo(() => {
-        if (filter === 'all') return challenges;
-        if (filter === 'pending') return challenges.filter(c => isPendingStatus(c.status));
-        if (filter === 'accepted') return challenges.filter(c => c.status === 'accepted');
-        if (filter === 'declined') return challenges.filter(c => c.status === 'declined');
-        return challenges;
-    }, [challenges, filter]);
+        if (filter === 'archived') {
+            return challenges.filter(c => archivedIds.includes(c.id));
+        }
+        // En cualquier otra pestaña, ocultamos lo archivado
+        const visible = challenges.filter(c => !archivedIds.includes(c.id));
+        
+        if (filter === 'all') return visible;
+        if (filter === 'pending') return visible.filter(c => isPendingStatus(c.status));
+        if (filter === 'accepted') return visible.filter(c => c.status === 'accepted');
+        if (filter === 'declined') return visible.filter(c => c.status === 'declined');
+        return visible;
+    }, [challenges, filter, archivedIds]);
 
 
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
@@ -1470,11 +1497,13 @@ function CoachChallenges() {
                     { key: 'all',      label: 'Todos',       icon: 'fa-list' },
                     { key: 'pending',  label: 'Pendientes',  icon: 'fa-clock' },
                     { key: 'accepted', label: 'Aceptados',   icon: 'fa-check-circle' },
-                    { key: 'declined', label: 'Rechazados',  icon: 'fa-times-circle' }
+                    { key: 'declined', label: 'Rechazados',  icon: 'fa-times-circle' },
+                    { key: 'archived', label: 'Historial',   icon: 'fa-archive' }
                 ].map(tab => {
-                    const count = tab.key === 'all' ? challenges.length
-                        : tab.key === 'pending' ? challenges.filter(c => isPendingStatus(c.status)).length
-                        : challenges.filter(c => c.status === tab.key).length;
+                    const count = tab.key === 'archived' ? archivedIds.length
+                        : tab.key === 'all' ? challenges.filter(c => !archivedIds.includes(c.id)).length
+                        : tab.key === 'pending' ? challenges.filter(c => isPendingStatus(c.status) && !archivedIds.includes(c.id)).length
+                        : challenges.filter(c => c.status === tab.key && !archivedIds.includes(c.id)).length;
                     const isActive = filter === tab.key;
                     return h('button', {
                         key: tab.key,
@@ -1574,17 +1603,41 @@ function CoachChallenges() {
                                     (() => {
                                         const s = c.status || 'pending';
                                         const dir = c.direction || 'inbound';
+                                        const isToCoach = dir === 'inbound';
+                                        const myApp = isToCoach ? c.coachToApproval : c.coachFromApproval;
+                                        const otherApp = isToCoach ? c.coachFromApproval : c.coachToApproval;
+
                                         let label, bg, color;
                                         if (s === 'accepted') { label = 'Confirmado'; bg = '#dcfce7'; color = '#166534'; }
                                         else if (s === 'declined') { label = 'Rechazado'; bg = '#fee2e2'; color = '#991b1b'; }
-                                        else if (s === 'pending_coach_to') {
-                                            label = dir === 'inbound' ? 'Tu aprobacion necesaria' : 'Esperando al entrenador rival';
-                                            bg = '#fef3c7'; color = '#92400e';
-                                        } else if (s === 'pending_coach_from') {
-                                            label = dir === 'outbound' ? 'Tu aprobacion necesaria' : 'Esperando al entrenador rival';
-                                            bg = '#fef3c7'; color = '#92400e';
-                                        } else { label = 'Pendiente'; bg = '#f3f4f6'; color = '#374151'; }
-                                        return h('div', { style: { padding: '4px 12px', borderRadius: 20, fontSize: '.7rem', fontWeight: 800, textTransform: 'uppercase', backgroundColor: bg, color } }, label);
+                                        else {
+                                            if (myApp === null && otherApp === null) {
+                                                label = isToCoach ? 'Tu aprobacion necesaria' : 'Debes aprobar tu reto';
+                                                bg = '#fef3c7'; color = '#d97706';
+                                            } else if (myApp !== null && otherApp === null) {
+                                                label = 'Esperando al entrenador rival';
+                                                bg = '#f3f4f6'; color = '#6b7280';
+                                            } else if (myApp === null && otherApp !== null) {
+                                                label = '¡Tu aprobacion necesaria!';
+                                                bg = '#fef3c7'; color = '#92400e';
+                                            } else {
+                                                label = 'Pendiente'; bg = '#f3f4f6'; color = '#374151';
+                                            }
+                                        }
+                                        return h('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
+                                            h('div', { style: { padding: '4px 12px', borderRadius: 20, fontSize: '.7rem', fontWeight: 800, textTransform: 'uppercase', backgroundColor: bg, color } }, label),
+                                            filter === 'archived' ? 
+                                                h('button', {
+                                                    onClick: () => unarchiveChallenge(c.id),
+                                                    title: 'Restaurar',
+                                                    style: { border: 'none', background: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '.9rem' }
+                                                }, h('i', { className: 'fas fa-undo' })) :
+                                                h('button', {
+                                                    onClick: () => archiveChallenge(c.id),
+                                                    title: 'Borrar/Archivar',
+                                                    style: { border: 'none', background: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '.9rem' }
+                                                }, h('i', { className: 'fas fa-trash-alt' }))
+                                        );
                                     })()
                                 ),
 
@@ -1688,10 +1741,11 @@ function CoachChallenges() {
                                 (() => {
                                     const s = c.status || 'pending';
                                     const dir = c.direction || 'inbound';
-                                    const canAct =
-                                        (s === 'pending_coach_to' && dir === 'inbound') ||
-                                        (s === 'pending_coach_from' && dir === 'outbound') ||
-                                        s === 'pending'; // legacy support
+                                    const isToCoach = dir === 'inbound';
+                                    const myApproval = isToCoach ? c.coachToApproval : c.coachFromApproval;
+                                    
+                                    const canAct = (s !== 'accepted' && s !== 'declined') && (myApproval === null);
+
                                     if (!canAct) return null;
                                     return h('div', { style: { display: 'flex', gap: 12, marginTop: 8 } },
                                         h('button', {

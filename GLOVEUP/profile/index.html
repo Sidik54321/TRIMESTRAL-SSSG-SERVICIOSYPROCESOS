@@ -59,12 +59,7 @@
                         <span>Gimnasios</span>
                     </a>
                 </li>
-                <li id="nav-profile-item" >
-                    <a href="../profile/index.html">
-                        <i class="fas fa-user"></i>
-                        <span>Mi Perfil</span>
-                    </a>
-                </li>
+
                 <li id="nav-sparrings-item" >
                     <a href="../profile/index.html?tab=sparrings">
                         <i class="fas fa-clipboard-list"></i>
@@ -110,7 +105,7 @@
                 <i class="fas fa-moon"></i>
                 <span>Tema Oscuro</span>
             </button>
-            <button class="sidebar-btn">
+            <button class="sidebar-btn" onclick="window.location.href='../settings/index.html'">
                 <i class="fas fa-cog"></i>
                 <span>Ajustes</span>
             </button>
@@ -183,6 +178,10 @@
                             <label>Nombre</label>
                             <input id="name" type="text" placeholder="Tu nombre">
                         </div>
+                        <div class="field full-width">
+                            <label>Correo Electrónico (Tu ID de cuenta)</label>
+                            <input id="email" type="email" placeholder="tu@correo.com">
+                        </div>
                         <div class="field" id="boxer-only-alias">
                             <label>Alias</label>
                             <input id="alias" type="text" placeholder="@tuusuario">
@@ -229,9 +228,55 @@
                             </div>
                         </div>
 
-                        <div class="field full-width" id="boxer-only-weightclass">
+                        <div class="field" id="boxer-only-weightclass">
                             <label>Categoría</label>
-                            <input id="weightClass" type="text" placeholder="Ej: Superligero" readonly>
+                            <select id="weightClass">
+                                <option value="">Selecciona</option>
+                                <option>Paja</option>
+                                <option>Minimosca</option>
+                                <option>Mosca</option>
+                                <option>Supermosca</option>
+                                <option>Gallo</option>
+                                <option>Supergallo</option>
+                                <option>Pluma</option>
+                                <option>Superpluma</option>
+                                <option>Ligero</option>
+                                <option>Superligero</option>
+                                <option>Wélter</option>
+                                <option>Superwélter</option>
+                                <option>Medio</option>
+                                <option>Supermedio</option>
+                                <option>Semicompleto</option>
+                                <option>Crucero</option>
+                                <option>Puente</option>
+                                <option>Pesado</option>
+                            </select>
+                        </div>
+                        <div class="field" id="boxer-only-stance">
+                            <label>Guardia</label>
+                            <select id="stance">
+                                <option value="">Selecciona</option>
+                                <option>Diestro</option>
+                                <option>Zurdo</option>
+                            </select>
+                        </div>
+                        <div class="field" id="boxer-only-gender">
+                            <label>Género</label>
+                            <select id="gender">
+                                <option value="">Selecciona</option>
+                                <option>Masculino</option>
+                                <option>Femenino</option>
+                                <option>Otro</option>
+                            </select>
+                        </div>
+                        <div class="field" id="boxer-only-freq">
+                            <label>Frecuencia de Sparring</label>
+                            <select id="sparring-freq">
+                                <option value="">Selecciona</option>
+                                <option>Diaria</option>
+                                <option>Semanal</option>
+                                <option>Mensual</option>
+                            </select>
                         </div>
 
                         <div class="field full-width" id="coach-gym-field" style="display: none;">
@@ -450,7 +495,7 @@
                 const homeLink = document.getElementById('nav-home-link');
                 const coachNavItem = document.getElementById('coach-nav-item');
                 const coachGymNavItem = document.getElementById('coach-gym-nav-item');
-                const profileItem = document.getElementById('nav-profile-item');
+                const profileItem = document.getElementById('nav-profile-item'); // now null, gracefully handled
                 const sparringsItem = document.getElementById('nav-sparrings-item');
                 if (homeLink) {
                     const role = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();
