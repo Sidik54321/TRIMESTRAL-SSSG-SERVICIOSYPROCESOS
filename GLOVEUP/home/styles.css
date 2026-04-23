@@ -1573,6 +1573,33 @@ body.with-sidebar {
     h2 {
         font-size: 2em;
     }
+    .dashboard-metrics, .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .chat-box {
+        right: 10px;
+        bottom: 80px;
+    }
+}
+
+@media (max-width: 380px) {
+    .dashboard-main {
+        padding: 16px 12px 30px;
+    }
+    .find-sparring-section h2 {
+        font-size: 2em;
+    }
+    .main-sidebar {
+        width: 60px;
+        padding: 16px 8px;
+    }
+    body.with-sidebar {
+        padding-left: 60px;
+    }
+    .chat-box {
+        width: 290px;
+    }
 }
 
 
