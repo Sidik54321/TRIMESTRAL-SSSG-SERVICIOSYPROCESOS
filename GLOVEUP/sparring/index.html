@@ -412,7 +412,9 @@
             const paginationTop = document.querySelector('.pagination-top');
             const paginationBottom = document.querySelector('.pagination-bottom');
             const PAGE_SIZE = 10;
-            const API_BASE_URL = (window.localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${window.location.hostname}:3000` : '')).replace(/\/+$/, '');
+            const _glv_h = window.location.hostname;
+            const _glv_apiHost = (_glv_h === '127.0.0.1' || _glv_h === 'localhost' || _glv_h === '') ? 'localhost' : _glv_h;
+            const API_BASE_URL = (window.localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${_glv_apiHost}:3000` : '')).replace(/\/+$/, '');
             const SPARRING_STATE_KEY = 'gloveup_sparring_state';
             let allBoxeadores = [];
             let filteredBoxeadores = [];
@@ -785,14 +787,16 @@
                     const identifierRaw = (boxeador && (boxeador.email || boxeador.dniLicencia) ? (boxeador.email || boxeador.dniLicencia) : '').toString().trim();
                     const identifierEnc = identifierRaw ? encodeURIComponent(identifierRaw) : '';
                     const canViewProfile = Boolean(identifierRaw);
-                    const canChallenge = canViewProfile;
-                    const nameEnc = boxeador && boxeador.nombre ? encodeURIComponent(String(boxeador.nombre)) : '';
+                    const isMe = identifierRaw.toLowerCase() === (localStorage.getItem('gloveup_user_email') || '').toLowerCase();
+                    const challengeLabel = isMe ? 'Tú' : 'Retar';
+                    const canChallenge = canViewProfile && !isMe;
+
                     card.innerHTML = `
                         <div class="card-rank"><span>#${globalIndex}</span>${globalIndex === 1 ? '<i class="fas fa-crown"></i>' : ''}</div>
                         <div class="card-flag">${imgHtml}</div>
                         <div class="card-name">
                             <span class="main-name">${boxeador.nombre}</span>
-                            <span class="alias">${boxeador.alias ? '@' + boxeador.alias.replace(/\\s+/g, '').toLowerCase() : ''}</span>
+                            <span class="alias">${boxeador.alias ? '@' + boxeador.alias.replace(/\s+/g, '').toLowerCase() : ''}</span>
                         </div>
                         <div class="card-stars">
                             ${starsHtml}
@@ -804,7 +808,7 @@
                         </div>
                         <div class="card-action">
                             <button class="view-profile-button" ${canViewProfile ? `data-identifier-enc="${identifierEnc}"` : 'disabled'}>${canViewProfile ? 'Ver Perfil' : 'Sin perfil'}</button>
-                            <button class="challenge-button" ${canChallenge && !isCoachRole ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>Retar</button>
+                            <button class="challenge-button" ${canChallenge && !isCoachRole ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>${challengeLabel}</button>
                         </div>
                     `;
 

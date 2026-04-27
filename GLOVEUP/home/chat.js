@@ -2,7 +2,9 @@
 (function () {
     'use strict';
 
-    const API = (localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${window.location.hostname}:3000` : '')).replace(/\/+$/, '');
+    const _glv_h = window.location.hostname;
+    const _glv_apiHost = (_glv_h === '127.0.0.1' || _glv_h === 'localhost' || _glv_h === '') ? 'localhost' : _glv_h;
+    const API = (localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${_glv_apiHost}:3000` : '')).replace(/\/+$/, '');
     const me = () => (localStorage.getItem('gloveup_user_email') || '').trim().toLowerCase();
 
     let activeContact = null;
