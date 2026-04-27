@@ -333,6 +333,7 @@ function CoachCalendar({
     const [formLoading, setFormLoading] = useState(false);
     const [formError, setFormError] = useState('');
     const [filters, setFilters] = useState({ sparring: true, inscripcion: true, recordatorio: true, personalizado: true });
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const toggleFilter = (key) => setFilters(prev => ({ ...prev, [key]: !prev[key] }));
 
@@ -371,6 +372,7 @@ function CoachCalendar({
         setShowModal(false);
         setEditingEvent(null);
         setFormError('');
+        setShowDeleteConfirm(false);
     };
 
     const saveEvent = async () => {
@@ -412,7 +414,6 @@ function CoachCalendar({
 
     const deleteEvent = async () => {
         if (!editingEvent) return;
-        if (!window.confirm('Eliminar este evento?')) return;
         setFormLoading(true);
         try {
             await requestJson(`/api/entrenadores/me/calendar-events/${editingEvent.id}?email=${encodeURIComponent(email)}`, {
@@ -617,7 +618,7 @@ function CoachCalendar({
                 editingEvent ? h('button', {
                     className: 'btn btn-secondary',
                     disabled: formLoading,
-                    onClick: deleteEvent,
+                    onClick: () => { setFormError(''); setShowDeleteConfirm(true); },
                     style: { flex: 1, padding: '12px', fontSize: '.9rem', color: '#ef4444', borderColor: '#ef4444', borderRadius: 12 }
                 },
                     h('i', { className: 'fas fa-trash', style: { marginRight: 6 } }),
@@ -627,10 +628,44 @@ function CoachCalendar({
         )
     ) : null;
 
+    const deleteConfirmModal = showDeleteConfirm ? h('div', {
+        style: {
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', zIndex: 10000
+        },
+        onClick: (e) => { if (!formLoading && e.target === e.currentTarget) setShowDeleteConfirm(false); }
+    },
+        h('div', {
+            style: {
+                backgroundColor: '#fff', borderRadius: '16px', padding: '24px',
+                maxWidth: 400, width: '90%', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+            }
+        },
+            h('i', { className: 'fas fa-exclamation-triangle', style: { fontSize: '3rem', color: '#ef4444', marginBottom: '16px', display: 'block' } }),
+            h('h3', { style: { margin: '0 0 12px 0', fontSize: '1.25rem', fontWeight: 800, color: '#111827' } }, '¿Eliminar este evento?'),
+            h('p', { style: { margin: '0 0 24px 0', fontSize: '0.95rem', color: '#6b7280' } }, 'Esta acción no se puede deshacer.'),
+            formError ? h('div', { style: { padding: '10px', borderRadius: 12, backgroundColor: '#fee2e2', color: '#b91c1c', fontSize: '.85rem', fontWeight: 600, marginBottom: 16 } }, formError) : null,
+            h('div', { style: { display: 'flex', gap: 12, justifyContent: 'center' } },
+                h('button', {
+                    onClick: () => { if (!formLoading) setShowDeleteConfirm(false); },
+                    disabled: formLoading,
+                    style: { padding: '10px 20px', borderRadius: 10, border: '1px solid #d1d5db', background: '#fff', color: '#374151', fontWeight: 700, cursor: formLoading ? 'not-allowed' : 'pointer', flex: 1, minHeight: '44px' }
+                }, 'Cancelar'),
+                h('button', {
+                    onClick: deleteEvent,
+                    disabled: formLoading,
+                    style: { padding: '10px 20px', borderRadius: 10, border: 'none', background: '#ef4444', color: '#fff', fontWeight: 700, cursor: formLoading ? 'not-allowed' : 'pointer', flex: 1, minHeight: '44px' }
+                }, formLoading ? 'Eliminando...' : 'Eliminar')
+            )
+        )
+    ) : null;
+
     return h(
         React.Fragment,
         null,
         modalOverlay,
+        deleteConfirmModal,
         h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 } },
             h('div', { className: 'coach-calendar-legend', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
                 h('span', { 
@@ -1074,40 +1109,64 @@ function CoachManagement() {
         );
     };
 
+    const hasGym = Boolean(coach.gimnasio);
+
+    if (loading && !coach.gimnasio && !gymInput) {
+        return h('div', { style: { padding: 40, textAlign: 'center', opacity: 0.5 } }, 'Cargando panel...');
+    }
+
     return h(React.Fragment, null,
-        h('div', { className: 'dashboard-panel' },
-            h('h2', null, 'Mi gimnasio'),
-            h('div', { style: { display: 'grid', gap: 12, marginTop: 18 } },
-                h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 } },
-                    h('div', { style: { padding: 14, borderRadius: 14, border: '1px solid #e5e7eb' } },
-                        h('label', null, 'Gimnasio'),
-                        h('input', { value: gymInput, onChange: (e) => setGymInput(e.target.value), style: { width: '100%', padding: 12, borderRadius: 12, border: '1px solid #e5e7eb' } }),
-                        h('button', { className: 'btn btn-secondary', onClick: saveGym, style: { marginTop: 10 } }, 'Guardar')
+        h('div', { className: 'dashboard-panel', style: !hasGym ? { border: '2px dashed #e5e7eb', backgroundColor: '#f9fafb', padding: '40px 20px' } : {} },
+            !hasGym ? h('div', { style: { textAlign: 'center', marginBottom: '30px' } },
+                h('h2', { style: { fontSize: '2rem', color: '#111827', marginBottom: '10px' } }, 'Crea tu Gimnasio ✨'),
+                h('p', { style: { color: '#6b7280', fontSize: '1.05rem', maxWidth: '600px', margin: '0 auto' } }, 'Aún no tienes un centro registrado. Completa la información de tu gimnasio para empezar a invitar y gestionar a tus boxeadores.')
+            ) : h('h2', null, 'Mi gimnasio'),
+            
+            h('div', { style: { display: 'grid', gap: '20px', marginTop: hasGym ? '24px' : '0' } },
+                h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' } },
+                    h('div', { style: { display: 'flex', flexDirection: 'column', gap: '16px' } },
+                        h('div', { style: { padding: '20px', borderRadius: '20px', border: '1px solid #f3f4f6', backgroundColor: '#fff', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '12px' } },
+                            h('label', { style: { fontSize: '.85rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '0.05em' } }, 'Nombre del Gimnasio'),
+                            h('input', { value: gymInput, onChange: (e) => setGymInput(e.target.value), placeholder: '¿Cómo se llama tu gimnasio?', style: { width: '100%', padding: '14px 16px', borderRadius: '14px', border: '1px solid #e5e7eb', fontSize: '1rem', transition: 'border-color 0.2s', outline: 'none', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' })
+                        ),
+                        h('div', { style: { padding: '20px', borderRadius: '20px', border: '1px solid #f3f4f6', backgroundColor: '#fff', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '12px', flexGrow: 1 } },
+                            h('label', { style: { fontSize: '.85rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '0.05em' } }, 'Biografía'),
+                            h('textarea', { value: bioInput, onChange: (e) => setBioInput(e.target.value), rows: 5, placeholder: 'Describe tu gimnasio, filosofía, etc.', style: { width: '100%', padding: '14px 16px', borderRadius: '14px', border: '1px solid #e5e7eb', fontSize: '1rem', fontFamily: 'inherit', resize: 'vertical', transition: 'border-color 0.2s', outline: 'none', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' })
+                        )
                     ),
-                    h('div', { style: { padding: 14, borderRadius: 14, border: '1px solid #e5e7eb' } },
-                        h('label', null, 'Bio'),
-                        h('textarea', { value: bioInput, onChange: (e) => setBioInput(e.target.value), rows: 4, style: { width: '100%', padding: 12, borderRadius: 12, border: '1px solid #e5e7eb' } }),
-                        h('input', { type: 'file', multiple: true, onChange: onPickFotos, style: { marginTop: 10 } }),
-                        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 8, marginTop: 10 } },
-                            fotos.map((src, idx) => h('div', { key: idx, style: { position: 'relative' } },
-                                h('img', { src, style: { width: '100%', height: 60, objectFit: 'cover', borderRadius: 8 } }),
-                                h('button', { onClick: () => setFotos(prev => prev.filter((_, i) => i !== idx)), style: { position: 'absolute', top: 0, right: 0, background: 'red', color: 'white', border: 'none', borderRadius: '50%', cursor: 'pointer' } }, '×')
-                            ))
+                    h('div', { style: { padding: '20px', borderRadius: '20px', border: '1px solid #f3f4f6', backgroundColor: '#fff', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '16px' } },
+                        h('label', { style: { fontSize: '.85rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '0.05em' } }, 'Galería de Imágenes'),
+                        h('p', { style: { fontSize: '.85rem', color: '#6b7280', margin: '-8px 0 0 0' } }, 'Sube fotos de tus instalaciones con el recuadro inferior.'),
+                        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '14px' } },
+                            fotos.map((src, idx) => h('div', { key: idx, style: { position: 'relative', borderRadius: '14px', overflow: 'hidden', height: '100px', border: '1px solid #e5e7eb', cursor: 'default' }, onMouseEnter: e => e.currentTarget.lastChild.style.opacity = 1, onMouseLeave: e => e.currentTarget.lastChild.style.opacity = 0 },
+                                h('img', { src, style: { width: '100%', height: '100%', objectFit: 'cover' } }),
+                                h('div', { style: { position: 'absolute', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.65)', opacity: 0, transition: 'opacity 0.2s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backdropFilter: 'blur(2px)' } },
+                                    h('button', { title: 'Eliminar imagen', type: 'button', onClick: () => setFotos(prev => prev.filter((_, i) => i !== idx)), style: { background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.1s' } }, h('i', { className: 'fas fa-trash-alt', style: { fontSize: '1rem' } }))
+                                )
+                            )),
+                            h('label', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #cbd5e1', borderRadius: '14px', height: '100px', cursor: 'pointer', color: '#64748b', transition: 'all 0.2s', backgroundColor: '#f8fafc' }, onMouseEnter: e => { e.currentTarget.style.borderColor = '#111827'; e.currentTarget.style.color = '#111827'; e.currentTarget.style.backgroundColor = '#f3f4f6'; }, onMouseLeave: e => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.backgroundColor = '#f8fafc'; } },
+                                h('i', { className: 'fas fa-plus', style: { fontSize: '1.5rem', marginBottom: '8px', opacity: 0.8 } }),
+                                h('span', { style: { fontSize: '.8rem', fontWeight: 700 } }, 'Añadir Foto'),
+                                h('input', { type: 'file', accept: 'image/*', multiple: true, onChange: onPickFotos, style: { display: 'none' } })
+                            )
                         )
                     )
                 ),
-                message && h('div', { style: { color: message.kind === 'error' ? 'red' : 'green' } }, message.text)
+                h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: !hasGym ? 'center' : 'flex-start', marginTop: '12px' } },
+                    h('button', { className: 'btn btn-primary', onClick: saveGym, style: { padding: '14px 28px', borderRadius: '14px', fontWeight: 800, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', width: !hasGym ? '100%' : 'auto', justifyContent: 'center' } }, h('i', { className: hasGym ? 'fas fa-save' : 'fas fa-plus-circle' }), hasGym ? 'Guardar Perfil de Gimnasio' : 'Crear Gimnasio Ahora'),
+                    message ? h('div', { style: { marginTop: '12px', padding: '10px 16px', borderRadius: '10px', fontWeight: 600, fontSize: '.9rem', backgroundColor: message.kind === 'error' ? '#fee2e2' : '#dcfce7', color: message.kind === 'error' ? '#b91c1c' : '#065f46' } }, message.text) : null
+                )
             )
         ),
 
-        h('div', { className: 'dashboard-panel' },
+        hasGym && h('div', { className: 'dashboard-panel' },
             h('h2', null, 'Tus boxeadores'),
-            h('div', { className: 'coach-boxers-toolbar' },
-                h('input', { value: search, onChange: (e) => setSearch(e.target.value), placeholder: 'Buscar...' }),
-                h('div', { className: 'coach-boxers-assign' },
-                    h('input', { value: assignEmail, onChange: (e) => setAssignEmail(e.target.value), placeholder: 'Email o DNI' }),
-                    h('button', { className: 'submit-button', onClick: addBoxer }, 'Añadir'),
-                    h('button', { className: 'submit-button coach-remove-button', onClick: removeBoxer }, 'Quitar')
+            h('div', { className: 'coach-boxers-toolbar', style: { display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' } },
+                h('input', { value: search, onChange: (e) => setSearch(e.target.value), placeholder: 'Buscar boxeador...', style: { flex: 1, minWidth: '200px', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
+                h('div', { className: 'coach-boxers-assign', style: { display: 'flex', gap: '8px', flex: 1, minWidth: '300px' } },
+                    h('input', { value: assignEmail, onChange: (e) => setAssignEmail(e.target.value), placeholder: 'Email o DNI para asignar', style: { flex: 1, padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
+                    h('button', { className: 'btn btn-primary', onClick: addBoxer, style: { padding: '12px 20px', borderRadius: '12px', fontWeight: 700 } }, 'Añadir'),
+                    h('button', { className: 'btn btn-secondary', onClick: removeBoxer, style: { padding: '12px 20px', borderRadius: '12px', fontWeight: 700, color: '#ef4444', borderColor: '#ef4444' } }, 'Quitar')
                 )
             ),
             h('div', { className: 'sparring-list', style: { marginTop: 15 } },
@@ -1119,16 +1178,18 @@ function CoachManagement() {
                         h('div', { className: 'card-stars' }, ...renderStars(levelScore(b.nivel))),
                         h('div', { className: 'card-action' }, h('button', { className: 'view-profile-button', onClick: () => selectForEdit(b) }, 'Editar'))
                     ),
-                    editId === (b._id || b.email) && h('div', { style: { padding: 15, border: '1px solid #f97316', borderRadius: 10, marginTop: 10 } },
-                        h('input', { value: editName, onChange: (e) => setEditName(e.target.value), placeholder: 'Nombre' }),
-                        h('input', { value: editDni, onChange: (e) => setEditDni(e.target.value), placeholder: 'DNI' }),
-                        h('select', { value: editLevel, onChange: (e) => setEditLevel(e.target.value) },
-                            h('option', { value: 'Principiante' }, 'Principiante'), h('option', { value: 'Intermedio' }, 'Intermedio'), h('option', { value: 'Avanzado' }, 'Avanzado'), h('option', { value: 'Amateur' }, 'Amateur'), h('option', { value: 'Profesional' }, 'Profesional')
+                    editId === (b._id || b.email) && h('div', { style: { padding: '20px', border: '1px solid #e5e7eb', backgroundColor: '#f8fafc', borderRadius: '16px', marginTop: '12px', display: 'grid', gap: '12px' } },
+                        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' } },
+                            h('input', { value: editName, onChange: (e) => setEditName(e.target.value), placeholder: 'Nombre del boxeador', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
+                            h('input', { value: editDni, onChange: (e) => setEditDni(e.target.value), placeholder: 'DNI o Licencia', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
+                            h('select', { value: editLevel, onChange: (e) => setEditLevel(e.target.value), style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box', backgroundColor: '#fff', cursor: 'pointer' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' },
+                                h('option', { value: 'Principiante' }, 'Principiante'), h('option', { value: 'Intermedio' }, 'Intermedio'), h('option', { value: 'Avanzado' }, 'Avanzado'), h('option', { value: 'Amateur' }, 'Amateur'), h('option', { value: 'Profesional' }, 'Profesional')
+                            )
                         ),
-                        h('div', { style: { marginTop: 10, display: 'flex', gap: 10 } },
-                            h('button', { className: 'submit-button', onClick: saveEdit }, 'Guardar'),
-                            h('button', { className: 'submit-button', style: { background: 'red' }, onClick: deleteEdit }, 'Eliminar'),
-                            h('button', { onClick: () => setEditId('') }, 'Cancelar')
+                        h('div', { style: { display: 'flex', gap: '10px', marginTop: '4px' } },
+                            h('button', { className: 'btn btn-primary', onClick: saveEdit, style: { padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '.9rem' } }, 'Guardar cambios'),
+                            h('button', { className: 'btn btn-secondary', onClick: deleteEdit, style: { padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '.9rem', color: '#ef4444', borderColor: '#ef4444' } }, 'Dar de baja'),
+                            h('button', { className: 'btn btn-secondary', onClick: () => setEditId(''), style: { padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '.9rem', color: '#6b7280', borderColor: '#d1d5db', marginLeft: 'auto' } }, 'Cancelar')
                         )
                     )
                 ))
@@ -1322,12 +1383,12 @@ function CoachFinance() {
             className: 'dashboard-panel'
         },
             h('h2', null, 'Precio mensual'),
+            h('p', { className: 'muted', style: { fontSize: '.9rem', margin: '-4px 0 16px 0' } }, 'Define el precio para el cálculo estimado de ingresos.'),
             h(
                 'div', {
                 style: {
-                    display: 'grid',
-                    gap: 10,
-                    marginTop: 12,
+                    display: 'flex',
+                    gap: '12px',
                     maxWidth: 420
                 }
             },
@@ -1337,18 +1398,26 @@ function CoachFinance() {
                     type: 'number',
                     min: 0,
                     step: '0.01',
+                    placeholder: '0.00 €',
                     style: {
-                        width: '100%',
-                        padding: 12,
-                        borderRadius: 12,
-                        border: '1px solid #e5e7eb'
-                    }
+                        flex: 1,
+                        padding: '14px 16px',
+                        borderRadius: '12px',
+                        border: '1px solid #e5e7eb',
+                        fontSize: '1rem',
+                        outline: 'none',
+                        transition: 'border-color 0.2s',
+                        boxSizing: 'border-box'
+                    },
+                    onFocus: e => e.target.style.borderColor = '#3b82f6',
+                    onBlur: e => e.target.style.borderColor = '#e5e7eb'
                 }),
                 h('button', {
-                    className: 'btn btn-secondary',
+                    className: 'btn btn-primary',
                     type: 'button',
-                    onClick: savePrice
-                }, 'Guardar precio')
+                    onClick: savePrice,
+                    style: { padding: '14px 24px', borderRadius: '12px', fontWeight: 800, fontSize: '.95rem' }
+                }, 'Guardar')
             )
         ),
         h(

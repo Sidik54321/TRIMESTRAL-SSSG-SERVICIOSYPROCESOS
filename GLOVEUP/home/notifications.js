@@ -172,7 +172,7 @@
 
         if (me()) {
             updateBadge();
-            setInterval(updateBadge, 30000);
+            setInterval(updateBadge, 120000);
         }
     });
 })();

@@ -130,7 +130,7 @@
         fetchMessages(true);
     }
 
-    function startPolling() { stopPolling(); pollId = setInterval(() => fetchMessages(false), 3000); }
+    function startPolling() { stopPolling(); pollId = setInterval(() => fetchMessages(false), 15000); }
     function stopPolling() { if (pollId) { clearInterval(pollId); pollId = null; } }
 
     /* ── Badge ────────────────────────────────────── */
@@ -199,6 +199,6 @@
         if (inputEl) inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
 
         // Badge
-        if (me()) { updateBadge(); setInterval(updateBadge, 30000); }
+        if (me()) { updateBadge(); setInterval(updateBadge, 120000); }
     });
 })();
