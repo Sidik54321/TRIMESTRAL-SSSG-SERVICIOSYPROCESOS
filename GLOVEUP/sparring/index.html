@@ -788,6 +788,7 @@
                     const identifierEnc = identifierRaw ? encodeURIComponent(identifierRaw) : '';
                     const canViewProfile = Boolean(identifierRaw);
                     const isMe = identifierRaw.toLowerCase() === (localStorage.getItem('gloveup_user_email') || '').toLowerCase();
+                    const nameEnc = boxeador && boxeador.nombre ? encodeURIComponent(String(boxeador.nombre)) : '';
                     const challengeLabel = isMe ? 'Tú' : 'Retar';
                     const canChallenge = canViewProfile && !isMe;
 
@@ -1109,13 +1110,17 @@
 
             try {
                 // Fetch de la API
+                console.log('[GloveUp] API_BASE_URL =', API_BASE_URL);
+                console.log('[GloveUp] Fetching:', `${API_BASE_URL}/api/boxeadores`);
                 const response = await fetch(`${API_BASE_URL}/api/boxeadores`);
+                console.log('[GloveUp] Response status:', response.status, response.ok);
 
                 if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
+                    throw new Error('Error en la respuesta del servidor: ' + response.status);
                 }
 
                 allBoxeadores = await response.json();
+                console.log('[GloveUp] Boxeadores recibidos:', allBoxeadores.length);
                 filteredBoxeadores = Array.isArray(allBoxeadores) ? allBoxeadores.slice() : [];
                 if (savedState) {
                     if (filterLevelEl && typeof savedState.level === 'string') filterLevelEl.value = savedState.level;
