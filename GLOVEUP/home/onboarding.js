@@ -11,7 +11,7 @@
     const LS_ROLE        = 'gloveup_user_role';
     const LS_DONE_PREFIX = 'gloveup_onboarding_done_';
 
-    const API = () => (localStorage.getItem('gloveup_api_base_url') || 'http://localhost:3000').replace(/\/+$/, '');
+    const API = () => (localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${window.location.hostname}:3000` : '')).replace(/\/+$/, '');
 
     // ── Pasos por rol ────────────────────────────────────────────────────────
     const STEPS_BOXEADOR = [

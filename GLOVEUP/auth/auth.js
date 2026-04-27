@@ -7,7 +7,7 @@ const STORED_USERNAME_KEY = 'gloveup_user_name';
 const STORED_USER_ID_KEY = 'gloveup_user_id';
 const STORED_USER_ROLE_KEY = 'gloveup_user_role';
 const STORED_USER_DNI_KEY = 'gloveup_user_dni';
-const API_BASE_URL = (window.localStorage.getItem('gloveup_api_base_url') || 'http://localhost:3000').replace(/\/+$/, '');
+const API_BASE_URL = (window.localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${window.location.hostname}:3000` : '')).replace(/\/+$/, '');
 
 // Eliminado: lógica BoxRec ID (no se requiere)
 

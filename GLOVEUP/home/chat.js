@@ -2,7 +2,7 @@
 (function () {
     'use strict';
 
-    const API = (localStorage.getItem('gloveup_api_base_url') || 'http://localhost:3000').replace(/\/+$/, '');
+    const API = (localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${window.location.hostname}:3000` : '')).replace(/\/+$/, '');
     const me = () => (localStorage.getItem('gloveup_user_email') || '').trim().toLowerCase();
 
     let activeContact = null;

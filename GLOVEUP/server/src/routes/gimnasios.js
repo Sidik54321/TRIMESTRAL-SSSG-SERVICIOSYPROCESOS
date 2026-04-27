@@ -83,35 +83,52 @@ router.post('/', async (req, res) => {
         if (horario) update.horario = horario;
         if (nombreEntrenador) update.nombreEntrenador = nombreEntrenador;
 
-        const query = creadoPorEmail ? { creadoPorEmail } : { key };
-        const oldGym = await Gimnasio.findOne(query).lean();
-        const oldName = oldGym ? oldGym.nombre : null;
+        // Improved finding logic:
+        let gym = null;
+        if (creadoPorEmail) {
+            gym = await Gimnasio.findOne({ creadoPorEmail });
+        }
 
-        const gym = await Gimnasio.findOneAndUpdate(
-            query, 
-            {
-                $set: update,
-                $setOnInsert: {
-                    createdAt: new Date()
+        // If not found by email, check if name (key) exists
+        if (!gym) {
+            const existingByKey = await Gimnasio.findOne({ key });
+            if (existingByKey) {
+                // If it belongs to someone else, we can't take it
+                if (existingByKey.creadoPorEmail && existingByKey.creadoPorEmail !== creadoPorEmail) {
+                    return res.status(400).json({ error: 'El nombre de este gimnasio ya está registrado por otro entrenador.' });
                 }
-            }, 
-            {
-                new: true,
-                upsert: true
-            }
-        ).lean();
-
-        // If name changed, update all boxers associated with the old name
-        if (oldName && oldName !== nombre) {
-            try {
-                const Boxeador = mongoose.model('Boxeador');
-                await Boxeador.updateMany({ gimnasio: oldName }, { $set: { gimnasio: nombre } });
-            } catch (boxerErr) {
-                console.error("Error syncing boxers gym name:", boxerErr);
+                // If it has no owner, or it's the same owner, we update it
+                gym = existingByKey;
             }
         }
 
-        return res.status(201).json(gym);
+        if (gym) {
+            // Update existing
+            const oldName = gym.nombre;
+            Object.assign(gym, update);
+            if (creadoPorEmail) gym.creadoPorEmail = creadoPorEmail; // Claim it if it was ownerless
+            await gym.save();
+
+            // If name changed, update all boxers associated with the old name
+            if (oldName && oldName !== nombre) {
+                try {
+                    const Boxeador = mongoose.model('Boxeador');
+                    await Boxeador.updateMany({ gimnasio: oldName }, { $set: { gimnasio: nombre } });
+                } catch (boxerErr) {
+                    console.error("Error syncing boxers gym name:", boxerErr);
+                }
+            }
+        } else {
+            // Create new
+            gym = await Gimnasio.create({
+                ...update,
+                creadoPorEmail,
+                createdAt: new Date()
+            });
+        }
+
+        const gymObj = gym.toObject ? gym.toObject() : gym;
+        return res.status(201).json(gymObj);
     } catch (err) {
         return res.status(400).json({
             error: err.message

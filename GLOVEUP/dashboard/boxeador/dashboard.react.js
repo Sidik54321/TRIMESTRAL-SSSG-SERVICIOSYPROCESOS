@@ -9,7 +9,7 @@ const h = React.createElement;
 
 const STORED_EMAIL_KEY = 'gloveup_user_email';
 const STORED_USER_ROLE_KEY = 'gloveup_user_role';
-const API_BASE_URL = (window.localStorage.getItem('gloveup_api_base_url') || 'http://localhost:3000').replace(/\/+$/, '');
+const API_BASE_URL = (localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${window.location.hostname}:3000` : '')).replace(/\/+$/, '');
 
 const requestJson = (path) => {
     return fetch(`${API_BASE_URL}${path}`, {

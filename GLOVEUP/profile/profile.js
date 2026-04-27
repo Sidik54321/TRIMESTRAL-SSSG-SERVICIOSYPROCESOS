@@ -2,8 +2,8 @@ const STORED_USERNAME_KEY = 'gloveup_user_name';
 const STORED_EMAIL_KEY = 'gloveup_user_email';
 const STORED_ROLE_KEY = 'gloveup_user_role';
 const SESSION_MAINTAINED_KEY = 'gloveup_session_maintained';
-const API_ORIGIN = (window.localStorage.getItem('gloveup_api_base_url') || 'http://localhost:3000').replace(/\/+$/, '');
-const API_BASE_URL = `${API_ORIGIN}/api`;
+const API_ORIGIN = (window.localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${window.location.hostname}:3000` : '')).replace(/\/+$/, '');
+const API_BASE_URL = API_ORIGIN ? `${API_ORIGIN}/api` : '/api';
 const DEFAULT_PHOTO = '../assets/images/unnamed-removebg-preview.png';
 
 let profileState = {

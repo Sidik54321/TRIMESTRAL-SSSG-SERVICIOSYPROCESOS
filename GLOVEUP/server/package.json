@@ -4,7 +4,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "start": "C:\\Progra~1\\nodejs\\node.exe --env-file=.env src/index.js",
+        "start": "node --env-file=.env src/index.js",
         "dev": "nodemon --exec \"node --env-file=.env\" src/index.js",
         "seed:boxeadores": "node --env-file=.env src/seed/seedBoxeadores.js"
     },

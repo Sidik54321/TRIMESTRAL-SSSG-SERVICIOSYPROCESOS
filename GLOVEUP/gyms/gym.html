@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <script src="../assets/js/auth-guard.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GloveUp - Detalle Gimnasio</title>
     <link rel="stylesheet" href="../home/styles.css">
@@ -191,6 +192,9 @@
             color: var(--color-text-light);
             margin: 0;
             white-space: pre-line;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-word;
         }
 
         /* Lightbox Modal */
@@ -542,7 +546,7 @@
             }
 
             // === Load Gym Detail ===
-            const API_BASE_URL = (localStorage.getItem('gloveup_api_base_url') || 'http://localhost:3000').replace(/\/+$/, '');
+            const API_BASE_URL = (localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${window.location.hostname}:3000` : '')).replace(/\/+$/, '');
             const params = new URLSearchParams(window.location.search);
             const gymKey = params.get('key') || '';
 
@@ -573,25 +577,9 @@
                     return k === gymKey;
                 });
 
-                // Fallback: hardcoded gyms
+                // Fallback: disabled
                 if (!gym) {
-                    const defaultGyms = [
-                        { nombre: 'Amado Family Boxeo', ubicacion: 'Extramurs, Valencia' },
-                        { nombre: 'Club Boxeo Sanapa', ubicacion: 'Patraix, Valencia' },
-                        { nombre: 'Club Boxeo Sedaví', ubicacion: 'Sedaví, Área Metropolitana de Valencia' },
-                        { nombre: 'Morales Box Valencia', ubicacion: "L'Eixample (Cánovas), Valencia" },
-                        { nombre: 'Escuela de Boxeo Tsubox', ubicacion: 'El Cabanyal, Valencia' },
-                        { nombre: 'Deportivo Shaolin', ubicacion: 'Xirivella, Área Metropolitana de Valencia' },
-                        { nombre: 'Brooklyn Fitboxing Mestalla', ubicacion: 'Mestalla, Valencia' },
-                        { nombre: 'Brooklyn Fitboxing Abastos', ubicacion: 'Arrancapins (Abastos), Valencia' },
-                        { nombre: 'Brooklyn Fitboxing Ruzafa', ubicacion: 'Russafa, Valencia' },
-                        { nombre: 'The Boxer Club Arena', ubicacion: 'Arena Multiespacio, Orriols (Valencia)' },
-                        { nombre: 'Club Boxeo Monteolivete', ubicacion: 'Montolivet, Valencia' },
-                        { nombre: 'Training Unit', ubicacion: 'Alboraya, Área Metropolitana de Valencia' },
-                        { nombre: 'Boxing Unitres', ubicacion: 'Picanya, Área Metropolitana de Valencia' },
-                        { nombre: 'Gimnasio Do Chang', ubicacion: 'Benimaclet, Valencia' },
-                        { nombre: 'Cosmobox', ubicacion: 'Campanar, Valencia' }
-                    ];
+                    const defaultGyms = [];
                     gym = defaultGyms.find(g => normalizeGymKey(g.nombre) === gymKey);
                 }
 
@@ -612,7 +600,6 @@
 
                 document.getElementById('gym-name').textContent = gymName;
                 document.getElementById('gym-location').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${gymCity || 'Ubicación no indicada'}`;
-                if (gymBio) document.getElementById('gym-bio').textContent = gymBio;
                 document.title = `GloveUp - ${gymName}`;
 
                 // New fields: trainer and hours

@@ -7,7 +7,7 @@ const STORED_USER_ROLE_KEY = 'gloveup_user_role';
 const STORED_USER_DNI_KEY = 'gloveup_user_dni';
 const SESSION_MAINTAINED_KEY = 'gloveup_session_maintained';
 const REGISTERED_KEY = 'gloveup_is_registered';
-const API_BASE_URL = (window.localStorage.getItem('gloveup_api_base_url') || 'http://localhost:3000').replace(/\/+$/, '');
+const API_BASE_URL = (localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${window.location.hostname}:3000` : '')).replace(/\/+$/, '');
 
 const getChartsStore = () => {
     const w = window;

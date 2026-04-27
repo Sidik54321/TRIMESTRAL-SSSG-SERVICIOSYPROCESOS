@@ -1,94 +1,4 @@
-const defaultGyms = [{
-        name: 'Amado Family Boxeo',
-        city: 'Extramurs, Valencia',
-        lat: 39.4708608,
-        lng: -0.3881723
-    },
-    {
-        name: 'Club Boxeo Sanapa',
-        city: 'Patraix, Valencia',
-        lat: 39.4590529,
-        lng: -0.4008047
-    },
-    {
-        name: 'Club Boxeo Sedaví',
-        city: 'Sedaví, Área Metropolitana de Valencia',
-        lat: 39.4247119,
-        lng: -0.3834581
-    },
-    {
-        name: 'Morales Box Valencia',
-        city: "L'Eixample (Cánovas), Valencia",
-        lat: 39.4643613,
-        lng: -0.3693972
-    },
-    {
-        name: 'Escuela de Boxeo Tsubox',
-        city: 'El Cabanyal, Valencia',
-        lat: 39.4719889,
-        lng: -0.3286803
-    },
-    {
-        name: 'Deportivo Shaolin',
-        city: 'Xirivella, Área Metropolitana de Valencia',
-        lat: 39.4655723,
-        lng: -0.4307834
-    },
-    {
-        name: 'Brooklyn Fitboxing Mestalla',
-        city: 'Mestalla, Valencia',
-        lat: 39.4745279,
-        lng: -0.3581566
-    },
-    {
-        name: 'Brooklyn Fitboxing Abastos',
-        city: 'Arrancapins (Abastos), Valencia',
-        lat: 39.4642207,
-        lng: -0.3842555
-    },
-    {
-        name: 'Brooklyn Fitboxing Ruzafa',
-        city: 'Russafa, Valencia',
-        lat: 39.462278,
-        lng: -0.3720713
-    },
-    {
-        name: 'The Boxer Club Arena',
-        city: 'Arena Multiespacio, Orriols (Valencia)',
-        lat: 39.4931495,
-        lng: -0.3675178
-    },
-    {
-        name: 'Club Boxeo Monteolivete',
-        city: 'Montolivet, Valencia',
-        lat: 39.4593043,
-        lng: -0.3638668
-    },
-    {
-        name: 'Training Unit',
-        city: 'Alboraya, Área Metropolitana de Valencia',
-        lat: 39.5010119,
-        lng: -0.3499577
-    },
-    {
-        name: 'Boxing Unitres',
-        city: 'Picanya, Área Metropolitana de Valencia',
-        lat: 39.4353965,
-        lng: -0.4358777
-    },
-    {
-        name: 'Gimnasio Do Chang',
-        city: 'Benimaclet, Valencia',
-        lat: 39.487148,
-        lng: -0.3566225
-    },
-    {
-        name: 'Cosmobox',
-        city: 'Campanar, Valencia',
-        lat: 39.4814422,
-        lng: -0.3946974
-    }
-];
+const defaultGyms = [];
 
 let gyms = defaultGyms.slice();
 
@@ -108,7 +18,7 @@ function normalizeGymKey(text) {
 }
 
 async function requestJson(url, options = {}) {
-    const API_BASE_URL = (window.localStorage.getItem('gloveup_api_base_url') || 'http://localhost:3000').replace(/\/+$/, '');
+    const API_BASE_URL = (window.localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${window.location.hostname}:3000` : '')).replace(/\/+$/, '');
     const path = String(url || '');
     const fullUrl = /^https?:\/\//i.test(path) ? path : `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
     const res = await fetch(fullUrl, {
@@ -364,7 +274,12 @@ function buildGymCard(gym, boxers) {
     details.className = 'gym-details';
     const boxerCount = Array.isArray(boxers) ? boxers.length : 0;
     const bio = gym && typeof gym.bio === 'string' ? gym.bio.trim() : '';
-    details.textContent = bio || (boxerCount ? `${boxerCount} boxeador(es) registrado(s) en este gimnasio.` : 'Sin boxeadores registrados todavía.');
+    let bioShort = bio;
+    const MAX_BIO = 140;
+    if (bioShort.length > MAX_BIO) {
+        bioShort = bioShort.substring(0, MAX_BIO) + '...';
+    }
+    details.textContent = bioShort || (boxerCount ? `${boxerCount} boxeador(es) registrado(s) en este gimnasio.` : 'Sin boxeadores registrados todavía.');
 
     const footer = document.createElement('div');
     footer.className = 'gym-footer';

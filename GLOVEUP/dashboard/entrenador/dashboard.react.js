@@ -10,7 +10,7 @@ const h = React.createElement;
 
 const STORED_EMAIL_KEY = 'gloveup_user_email';
 const STORED_USER_ROLE_KEY = 'gloveup_user_role';
-const API_BASE_URL = (window.localStorage.getItem('gloveup_api_base_url') || 'http://localhost:3000').replace(/\/+$/, '');
+const API_BASE_URL = (localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${window.location.hostname}:3000` : '')).replace(/\/+$/, '');
 
 const requestJson = (path, options = {}) => {
     const method = options.method || 'GET';
@@ -962,6 +962,9 @@ function CoachManagement() {
     const [lng, setLng] = useState(null);
     const [isGeocoding, setIsGeocoding] = useState(false);
     const [horario, setHorario] = useState('');
+    const [horaApertura, setHoraApertura] = useState('08:00');
+    const [horaCierre, setHoraCierre] = useState('22:00');
+    const [selectedDays, setSelectedDays] = useState([true, true, true, true, true, false, false]); // L M X J V S D
     const [nombreEntrenador, setNombreEntrenador] = useState('');
     const mapRef = useRef(null);
     const markerRef = useRef(null);
@@ -1007,7 +1010,31 @@ function CoachManagement() {
                 setUbicacion(gymInfo?.ubicacion || '');
                 setLat(gymInfo?.lat || null);
                 setLng(gymInfo?.lng || null);
-                setHorario(gymInfo?.horario || '');
+                const rawHorario = gymInfo?.horario || '';
+                setHorario(rawHorario);
+                if (rawHorario.includes('|')) {
+                    const [diasStr, horas] = rawHorario.split('|').map(s => s.trim());
+                    // Analizar días
+                    const dayMap = { 'L': 0, 'M': 1, 'X': 2, 'J': 3, 'V': 4, 'S': 5, 'D': 6 };
+                    const nextDays = [false, false, false, false, false, false, false];
+                    
+                    if (diasStr.toUpperCase().includes('L-V')) [0, 1, 2, 3, 4].forEach(i => nextDays[i] = true);
+                    else if (diasStr.toUpperCase().includes('L-S')) [0, 1, 2, 3, 4, 5].forEach(i => nextDays[i] = true);
+                    else if (diasStr.toUpperCase().includes('TODOS')) [0, 1, 2, 3, 4, 5, 6].forEach(i => nextDays[i] = true);
+                    else {
+                        diasStr.split(',').forEach(d => {
+                            const trimmed = d.trim().toUpperCase()[0];
+                            if (dayMap[trimmed] !== undefined) nextDays[dayMap[trimmed]] = true;
+                        });
+                    }
+                    setSelectedDays(nextDays);
+                    
+                    if (horas && horas.includes('-')) {
+                        const [ini, fin] = horas.split('-').map(s => s.trim());
+                        if (ini) setHoraApertura(ini);
+                        if (fin) setHoraCierre(fin);
+                    }
+                }
                 setNombreEntrenador(gymInfo?.nombreEntrenador || '');
             } else {
                 // Si es la primera vez, intentar poner el nombre del localstorage
@@ -1143,26 +1170,38 @@ function CoachManagement() {
                 method: 'PUT',
                 body: { gimnasio: gymInput }
             });
-            if (gymInput.trim()) {
-                await requestJson('/api/gimnasios', {
-                    method: 'POST',
-                    body: { 
-                        nombre: gymInput, 
-                        creadoPorEmail: email, 
-                        bio: bioInput, 
-                        fotos,
-                        fotoPerfil,
-                        correoContacto: emailContacto,
-                        telefono,
-                        direccion,
-                        ubicacion,
-                        lat,
-                        lng,
-                        horario,
-                        nombreEntrenador
-                    }
-                });
-            }
+                        const dayTags = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+                        const selectedNames = dayTags.filter((_, i) => selectedDays[i]);
+                        let diasSummary = selectedNames.length ? selectedNames.join(', ') : 'L-V';
+                        
+                        // Reconocimiento de rangos comunes
+                        const isLV = selectedDays.every((v, i) => i < 5 ? v : !v);
+                        const isLS = selectedDays.every((v, i) => i < 6 ? v : !v);
+                        const isAll = selectedDays.every(v => v);
+                        
+                        if (isAll) diasSummary = 'Todos los días';
+                        else if (isLS) diasSummary = 'L-S';
+                        else if (isLV) diasSummary = 'L-V';
+
+                        const payload = {
+                            nombre: gymInput, 
+                            creadoPorEmail: email, 
+                            bio: bioInput, 
+                            fotos,
+                            fotoPerfil,
+                            correoContacto: emailContacto,
+                            telefono,
+                            direccion,
+                            ubicacion,
+                            lat,
+                            lng,
+                            horario: `${diasSummary} | ${horaApertura} - ${horaCierre}`,
+                            nombreEntrenador
+                        };
+                        await requestJson('/api/gimnasios', {
+                            method: 'POST',
+                            body: payload
+                        });
             setMessage({ kind: 'ok', text: hasGym ? 'Información del gimnasio guardada correctamente.' : '¡Enhorabuena! Gimnasio creado con éxito.' });
             refreshAll();
         } catch (err) {
@@ -1304,8 +1343,33 @@ function CoachManagement() {
                                 h('input', { value: nombreEntrenador, onChange: (e) => setNombreEntrenador(e.target.value), placeholder: 'Nombre del entrenador', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem' } })
                             ]),
                             h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, [
-                                h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Horario / Apertura'),
-                                h('input', { value: horario, onChange: (e) => setHorario(e.target.value), placeholder: 'Ej: L-V 08:00 - 22:00', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem' } })
+                                h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Días de Apertura'),
+                                h('div', { style: { display: 'flex', gap: '6px' } }, ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day, i) => (
+                                    h('button', { 
+                                        type: 'button',
+                                        key: day,
+                                        onClick: () => {
+                                            const next = [...selectedDays];
+                                            next[i] = !next[i];
+                                            setSelectedDays(next);
+                                        },
+                                        style: {
+                                            width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #e5e7eb',
+                                            backgroundColor: selectedDays[i] ? '#6366f1' : '#fff',
+                                            color: selectedDays[i] ? '#fff' : '#4b5563',
+                                            fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                                            boxShadow: selectedDays[i] ? '0 4px 10px rgba(99, 102, 241, 0.3)' : 'none'
+                                        }
+                                    }, day)
+                                )))
+                            ]),
+                            h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, [
+                                h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Rango de Horas'),
+                                h('div', { style: { display: 'flex', gap: '8px', alignItems: 'center' } }, [
+                                    h('input', { type: 'time', value: horaApertura, onChange: (e) => setHoraApertura(e.target.value), style: { flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #e5e7eb' } }),
+                                    h('span', { style: { color: '#666' } }, '-'),
+                                    h('input', { type: 'time', value: horaCierre, onChange: (e) => setHoraCierre(e.target.value), style: { flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #e5e7eb' } })
+                                ])
                             ])
                         ])
                     ]),
