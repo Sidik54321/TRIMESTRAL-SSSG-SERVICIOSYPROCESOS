@@ -206,3 +206,70 @@ body.theme-dark .challenge-button { background: linear-gradient(135deg, var(--co
 body.theme-dark .modal-card { background: var(--color-bg-elevated); border-color: var(--color-border); }
 body.theme-dark .modal-header h3 { color: var(--color-text-main); }
 body.theme-dark .field input, body.theme-dark .field select, body.theme-dark .field textarea { background: var(--color-bg-card); border-color: var(--color-border); color: var(--color-text-main); }
+
+/* CTA SECTION FOR TRAINERS */
+.trainer-cta-section { margin-top: 60px; margin-bottom: 20px; }
+.cta-card {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    padding: 40px;
+    border-radius: var(--radius-xl);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-xl);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.cta-card::before {
+    content: '';
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+    top: -50px;
+    right: -50px;
+    pointer-events: none;
+}
+.cta-text h3 {
+    font-family: var(--font-heading);
+    color: #fff;
+    font-size: 1.8rem;
+    margin: 0 0 10px 0;
+    font-weight: 800;
+}
+.cta-text p {
+    color: #94a3b8;
+    font-size: 1.1rem;
+    margin: 0;
+    max-width: 600px;
+}
+.cta-button {
+    background: #fff;
+    color: #0f172a;
+    padding: 16px 32px;
+    border-radius: var(--radius-full);
+    text-decoration: none;
+    font-weight: 800;
+    font-family: var(--font-heading);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all var(--transition-base);
+    white-space: nowrap;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.cta-button:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(255,255,255,0.15);
+}
+.cta-button i { font-size: 1.2rem; }
+
+@media (max-width: 768px) {
+    .cta-card { flex-direction: column; text-align: center; padding: 30px 20px; }
+    .cta-text h3 { font-size: 1.5rem; }
+    .cta-button { width: 100%; justify-content: center; }
+}
+
+body.theme-dark .cta-card { background: linear-gradient(135deg, #020617, #0f172a); border: 1px solid var(--color-border); }

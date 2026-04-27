@@ -139,7 +139,12 @@ async function loadGymsFromApi() {
             _id: g && g._id ? String(g._id) : '',
             key: g && g.key ? String(g.key) : normalizeGymKey(g && g.nombre ? String(g.nombre) : ''),
             bio: g && typeof g.bio === 'string' ? g.bio : '',
-            fotos: Array.isArray(g && g.fotos) ? g.fotos.filter((f) => typeof f === 'string' && f.trim()).slice(0, 12) : []
+            fotos: Array.isArray(g && g.fotos) ? g.fotos.filter((f) => typeof f === 'string' && f.trim()).slice(0, 12) : [],
+            fotoPerfil: g && g.fotoPerfil ? String(g.fotoPerfil) : '',
+            correoContacto: g && g.correoContacto ? String(g.correoContacto) : '',
+            telefono: g && g.telefono ? String(g.telefono) : '',
+            horario: g && g.horario ? String(g.horario) : '',
+            nombreEntrenador: g && g.nombreEntrenador ? String(g.nombreEntrenador) : ''
         })).filter((g) => g.name);
         return mapped;
     } catch {
@@ -295,8 +300,8 @@ function buildGymCard(gym, boxers) {
     const image = document.createElement('div');
     image.className = 'gym-image';
     const fallbackImage = "../assets/images/Sparring_Club_Collection-Link-Image.jpg";
-    const foto = Array.isArray(gym.fotos) && gym.fotos.length ? gym.fotos[0] : '';
-    image.style.backgroundImage = `url('${foto || fallbackImage}')`;
+    const mainFoto = gym.fotoPerfil || (Array.isArray(gym.fotos) && gym.fotos.length ? gym.fotos[0] : '');
+    image.style.backgroundImage = `url('${mainFoto || fallbackImage}')`;
     image.style.backgroundSize = 'cover';
     image.style.backgroundPosition = 'center';
 
@@ -330,6 +335,30 @@ function buildGymCard(gym, boxers) {
     locIcon.className = 'fas fa-map-marker-alt';
     location.appendChild(locIcon);
     location.appendChild(document.createTextNode(` ${gym.city || 'Ubicación no indicada'}`));
+    
+    // Gym Meta Tags (Trainer & Hours)
+    const metaTags = document.createElement('div');
+    metaTags.style.display = 'flex';
+    metaTags.style.flexWrap = 'wrap';
+    metaTags.style.gap = '12px';
+    metaTags.style.marginTop = '8px';
+    metaTags.style.marginBottom = '8px';
+    metaTags.style.fontSize = '0.8rem';
+    metaTags.style.color = 'var(--color-text-lighter)';
+
+    if (gym.nombreEntrenador) {
+        const tag = document.createElement('span');
+        tag.innerHTML = `<i class="fas fa-user-tie" style="color:var(--color-accent);margin-right:4px;"></i> ${gym.nombreEntrenador}`;
+        metaTags.appendChild(tag);
+    }
+    if (gym.horario) {
+        const tag = document.createElement('span');
+        tag.innerHTML = `<i class="fas fa-clock" style="color:var(--color-accent);margin-right:4px;"></i> ${gym.horario}`;
+        metaTags.appendChild(tag);
+    }
+    if (metaTags.hasChildNodes()) {
+        info.appendChild(metaTags);
+    }
 
     const details = document.createElement('p');
     details.className = 'gym-details';

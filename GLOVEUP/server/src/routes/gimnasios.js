@@ -59,7 +59,12 @@ router.post('/', async (req, res) => {
             .filter(Boolean)
             .slice(0, 12) :
             undefined;
+        const fotoPerfil = (payload.fotoPerfil || '').toString().trim();
+        const correoContacto = (payload.correoContacto || '').toString().trim().toLowerCase();
+        const telefono = (payload.telefono || '').toString().trim();
         const creadoPorEmail = (payload.creadoPorEmail || payload.email || '').toString().trim().toLowerCase();
+        const horario = (payload.horario || '').toString().trim();
+        const nombreEntrenador = (payload.nombreEntrenador || '').toString().trim();
 
         const update = {
             nombre,
@@ -71,19 +76,40 @@ router.post('/', async (req, res) => {
         if (Number.isFinite(lng)) update.lng = lng;
         if (bio !== undefined) update.bio = bio;
         if (fotos !== undefined) update.fotos = fotos;
+        if (fotoPerfil !== undefined) update.fotoPerfil = fotoPerfil;
+        if (correoContacto) update.correoContacto = correoContacto;
+        if (telefono) update.telefono = telefono;
         if (creadoPorEmail) update.creadoPorEmail = creadoPorEmail;
+        if (horario) update.horario = horario;
+        if (nombreEntrenador) update.nombreEntrenador = nombreEntrenador;
 
-        const gym = await Gimnasio.findOneAndUpdate({
-            key
-        }, {
-            $set: update,
-            $setOnInsert: {
-                createdAt: new Date()
+        const query = creadoPorEmail ? { creadoPorEmail } : { key };
+        const oldGym = await Gimnasio.findOne(query).lean();
+        const oldName = oldGym ? oldGym.nombre : null;
+
+        const gym = await Gimnasio.findOneAndUpdate(
+            query, 
+            {
+                $set: update,
+                $setOnInsert: {
+                    createdAt: new Date()
+                }
+            }, 
+            {
+                new: true,
+                upsert: true
             }
-        }, {
-            new: true,
-            upsert: true
-        }).lean();
+        ).lean();
+
+        // If name changed, update all boxers associated with the old name
+        if (oldName && oldName !== nombre) {
+            try {
+                const Boxeador = mongoose.model('Boxeador');
+                await Boxeador.updateMany({ gimnasio: oldName }, { $set: { gimnasio: nombre } });
+            } catch (boxerErr) {
+                console.error("Error syncing boxers gym name:", boxerErr);
+            }
+        }
 
         return res.status(201).json(gym);
     } catch (err) {

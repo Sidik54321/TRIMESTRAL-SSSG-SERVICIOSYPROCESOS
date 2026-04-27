@@ -71,9 +71,199 @@
         }
 
         .gym-detail-content {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 0 auto;
             padding: 40px 20px 60px;
+        }
+        .gym-layout-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 40px;
+            align-items: flex-start;
+        }
+        .gym-sidebar {
+            position: sticky;
+            top: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        .gallery-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+        .gallery-card h3 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin: 0 0 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .gallery-card h3 i { color: var(--color-accent); }
+        
+        /* Carousel Styles */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1.2;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+        }
+        .carousel-track {
+            display: flex;
+            height: 100%;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .carousel-slide {
+            flex: 0 0 100%;
+            width: 100%;
+            height: 100%;
+        }
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .carousel-nav {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .carousel-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: background 0.2s;
+            backdrop-filter: blur(4px);
+        }
+        .carousel-btn:hover { background: rgba(0,0,0,0.8); }
+        .carousel-btn i { font-size: 0.8rem; }
+        .carousel-container { cursor: zoom-in; }
+
+        /* Description/Bio style */
+        .info-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+        .info-card h3 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin: 0 0 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-card h3 i { color: var(--color-accent); }
+        .info-card p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--color-text-light);
+            margin: 0;
+            white-space: pre-line;
+        }
+
+        /* Lightbox Modal */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+            cursor: zoom-out;
+        }
+        .lightbox.active { display: flex; }
+        .lightbox-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease;
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            backdrop-filter: blur(10px);
+        }
+        .lightbox-close:hover { background: rgba(255,255,255,0.2); }
+        
+        .carousel-dots {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 5;
+        }
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .dot.active {
+            background: #fff;
+            width: 16px;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 1024px) {
+            .gym-layout-grid {
+                grid-template-columns: 1fr;
+            }
+            .gym-sidebar {
+                position: static;
+                order: 2;
+            }
         }
         .boxers-section-header {
             display: flex;
@@ -235,22 +425,50 @@
             <div class="gym-meta">
                 <span id="gym-location"><i class="fas fa-map-marker-alt"></i> —</span>
                 <span id="gym-boxer-count"><i class="fas fa-users"></i> — boxeadores</span>
+                <span id="gym-trainer" style="display: none;"><i class="fas fa-user-tie"></i> <span>—</span></span>
+                <span id="gym-hours" style="display: none;"><i class="fas fa-clock"></i> <span>—</span></span>
             </div>
-            <p class="gym-bio" id="gym-bio"></p>
         </div>
     </section>
 
-    <!-- MAIN CONTENT: BOXERS -->
+    <!-- MAIN CONTENT -->
     <div class="gym-detail-content">
-        <div class="boxers-section-header">
-            <h2>Boxeadores del gimnasio</h2>
-            <span class="boxers-count" id="boxers-count-badge">0 boxeadores</span>
-        </div>
-        <div class="boxers-list" id="boxers-list">
-            <div class="empty-state">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>Cargando boxeadores…</p>
-            </div>
+        <div class="gym-layout-grid">
+            <!-- Sidebar -->
+            <aside class="gym-sidebar">
+                <!-- Gallery -->
+                <div class="gallery-card" id="gallery-card" style="display: none;">
+                    <h3><i class="fas fa-images"></i> Galería</h3>
+                    <div class="carousel-container" id="carousel-main">
+                        <div class="carousel-track" id="carousel-track"></div>
+                        <div class="carousel-nav">
+                            <button class="carousel-btn" id="carousel-prev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
+                            <button class="carousel-btn" id="carousel-next" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                        <div class="carousel-dots" id="carousel-dots"></div>
+                    </div>
+                </div>
+
+                <!-- Biography -->
+                <div class="info-card" id="gym-bio-card" style="display: none;">
+                    <h3><i class="fas fa-info-circle"></i> Sobre nosotros</h3>
+                    <p id="gym-bio-text"></p>
+                </div>
+            </aside>
+
+            <!-- Main area: Boxers -->
+            <main class="gym-main">
+                <div class="boxers-section-header">
+                    <h2>Boxeadores del gimnasio</h2>
+                    <span class="boxers-count" id="boxers-count-badge">0 boxeadores</span>
+                </div>
+                <div class="boxers-list" id="boxers-list">
+                    <div class="empty-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Cargando boxeadores…</p>
+                    </div>
+                </div>
+            </main>
         </div>
     </div>
 
@@ -396,6 +614,99 @@
                 document.getElementById('gym-location').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${gymCity || 'Ubicación no indicada'}`;
                 if (gymBio) document.getElementById('gym-bio').textContent = gymBio;
                 document.title = `GloveUp - ${gymName}`;
+
+                // New fields: trainer and hours
+                const trainerEl = document.getElementById('gym-trainer');
+                const hoursEl = document.getElementById('gym-hours');
+                
+                if (gym.nombreEntrenador) {
+                    trainerEl.style.display = '';
+                    trainerEl.querySelector('span').textContent = gym.nombreEntrenador;
+                }
+                if (gym.horario) {
+                    hoursEl.style.display = '';
+                    hoursEl.querySelector('span').textContent = gym.horario;
+                }
+
+                // Info / Bio
+                const bioCard = document.getElementById('gym-bio-card');
+                const bioText = document.getElementById('gym-bio-text');
+                if (bioCard && bioText && gymBio) {
+                    bioCard.style.display = 'block';
+                    bioText.textContent = gymBio;
+                }
+
+                // Gallery logic (Carousel)
+                const galleryCard = document.getElementById('gallery-card');
+                const carouselMain = document.getElementById('carousel-main');
+                const track = document.getElementById('carousel-track');
+                const dotsContainer = document.getElementById('carousel-dots');
+                const prevBtn = document.getElementById('carousel-prev');
+                const nextBtn = document.getElementById('carousel-next');
+
+                if (galleryCard && track && Array.isArray(gym.fotos) && gym.fotos.length > 0) {
+                    galleryCard.style.display = 'block';
+                    const photos = gym.fotos.filter(f => f);
+                    let currentIndex = 0;
+
+                    // Generate slides
+                    track.innerHTML = photos.map(foto => `
+                        <div class="carousel-slide">
+                            <img src="${foto}" alt="Gym Photo" loading="lazy">
+                        </div>
+                    `).join('');
+
+                    // Generate dots
+                    dotsContainer.innerHTML = photos.map((_, i) => `
+                        <div class="dot ${i === 0 ? 'active' : ''}" data-index="${i}"></div>
+                    `).join('');
+
+                    const updateCarousel = () => {
+                        track.style.transform = `translateX(-${currentIndex * 100}%)`;
+                        dotsContainer.querySelectorAll('.dot').forEach((dot, i) => {
+                            dot.classList.toggle('active', i === currentIndex);
+                        });
+                    };
+
+                    nextBtn.onclick = (e) => {
+                        if (e) e.stopPropagation();
+                        currentIndex = (currentIndex + 1) % photos.length;
+                        updateCarousel();
+                    };
+                    prevBtn.onclick = (e) => {
+                        if (e) e.stopPropagation();
+                        currentIndex = (currentIndex - 1 + photos.length) % photos.length;
+                        updateCarousel();
+                    };
+
+                    dotsContainer.onclick = (e) => {
+                        e.stopPropagation();
+                        const dot = e.target.closest('.dot');
+                        if (dot) {
+                            currentIndex = parseInt(dot.dataset.index);
+                            updateCarousel();
+                        }
+                    };
+
+                    // Lightbox logic
+                    const lightbox = document.getElementById('lightbox');
+                    const lightboxImg = document.getElementById('lightbox-img');
+                    carouselMain.onclick = () => {
+                        const imgUrl = photos[currentIndex];
+                        lightboxImg.src = imgUrl;
+                        lightbox.classList.add('active');
+                        document.body.style.overflow = 'hidden';
+                    };
+                    lightbox.onclick = () => {
+                        lightbox.classList.remove('active');
+                        document.body.style.overflow = '';
+                    };
+
+                    // Auto-advance
+                    let autoTimer = setInterval(() => nextBtn.onclick(), 5000);
+                    galleryCard.onmouseenter = () => clearInterval(autoTimer);
+                    galleryCard.onmouseleave = () => autoTimer = setInterval(() => nextBtn.onclick(), 5000);
+                }
 
                 // Filter boxers for this gym
                 const gymKeyNorm = normalizeGymKey(gymName);
@@ -547,6 +858,13 @@
     </div>
     <script src="../home/chat.js"></script>
     <script src="../home/notifications.js"></script>
+    <script src="../home/sidebar.js"></script>
 </body>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="lightbox">
+        <button class="lightbox-close"><i class="fas fa-times"></i></button>
+        <img id="lightbox-img" class="lightbox-content" src="" alt="Zoomed view">
+    </div>
 
 </html>

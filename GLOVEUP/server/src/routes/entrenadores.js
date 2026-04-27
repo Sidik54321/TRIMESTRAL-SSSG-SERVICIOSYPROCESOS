@@ -196,8 +196,17 @@ router.put('/me', async (req, res) => {
             update.email = emailToSave;
         }
 
+        const oldGym = coach.gimnasio;
         coach.set(update);
         await coach.save();
+
+        // Si el gimnasio cambió, actualizarlo en todos sus boxeadores
+        if (update.gimnasio !== undefined && update.gimnasio !== oldGym) {
+            await Boxeador.updateMany(
+                { entrenadorId: coach._id },
+                { $set: { gimnasio: update.gimnasio || '' } }
+            );
+        }
 
         return res.json(coach.toObject());
     } catch (err) {

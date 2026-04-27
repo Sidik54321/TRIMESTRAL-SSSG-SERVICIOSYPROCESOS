@@ -553,6 +553,77 @@ body.with-sidebar {
 
 /* Mobile Sidebar */
 
+/* Collapsible Sidebar Logic */
+.main-sidebar.collapsed {
+    width: 76px;
+    min-width: 76px;
+    max-width: 76px;
+}
+.main-sidebar.collapsed .sidebar-header .app-name,
+.main-sidebar.collapsed .sidebar-nav li a span,
+.main-sidebar.collapsed .sidebar-footer .sidebar-btn span,
+.main-sidebar.collapsed .sidebar-manuals span,
+.main-sidebar.collapsed .sidebar-manuals h4 {
+    display: none;
+}
+.main-sidebar.collapsed .sidebar-header {
+    justify-content: center;
+    margin-right: 0;
+}
+.main-sidebar.collapsed .sidebar-header img {
+    margin-right: 0;
+    width: 42px;
+    height: 42px;
+}
+.main-sidebar.collapsed .sidebar-nav li a,
+.main-sidebar.collapsed .sidebar-footer .sidebar-btn {
+    justify-content: center;
+    padding: 12px;
+}
+.main-sidebar.collapsed .sidebar-nav li a i,
+.main-sidebar.collapsed .sidebar-footer .sidebar-btn i {
+    margin-right: 0;
+    font-size: 1.25rem;
+}
+.main-sidebar.collapsed .sidebar-manuals {
+    padding: 12px 10px;
+    align-items: center;
+}
+.main-sidebar.collapsed .manual-box h4 { display: none; }
+.main-sidebar.collapsed .manual-btn span { display: none; }
+.main-sidebar.collapsed .manual-btn { width: 32px; padding: 6px; }
+
+body.with-sidebar.sidebar-collapsed {
+    padding-left: 76px;
+}
+
+/* Toggle Button */
+.sidebar-toggle {
+    position: absolute;
+    top: 20px;
+    right: -15px;
+    width: 30px;
+    height: 30px;
+    background: var(--color-accent);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    z-index: 1001;
+    transition: all 0.3s;
+}
+.sidebar-toggle:hover {
+    transform: scale(1.1);
+    background: var(--color-accent-hover);
+}
+.main-sidebar.collapsed .sidebar-toggle {
+    right: -12px;
+}
+
 @media (max-width: 900px) {
     .main-sidebar {
         width: 76px;
@@ -597,6 +668,7 @@ body.with-sidebar {
     body.with-sidebar {
         padding-left: 76px;
     }
+    .sidebar-toggle { display: none; }
 }
 
 .nav a:hover {

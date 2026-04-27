@@ -953,6 +953,19 @@ function CoachManagement() {
     const [editDni, setEditDni] = useState('');
     const [editLevel, setEditLevel] = useState('Amateur');
 
+    const [fotoPerfil, setFotoPerfil] = useState('');
+    const [emailContacto, setEmailContacto] = useState('');
+    const [telefono, setTelefono] = useState('');
+    const [direccion, setDireccion] = useState('');
+    const [ubicacion, setUbicacion] = useState('');
+    const [lat, setLat] = useState(null);
+    const [lng, setLng] = useState(null);
+    const [isGeocoding, setIsGeocoding] = useState(false);
+    const [horario, setHorario] = useState('');
+    const [nombreEntrenador, setNombreEntrenador] = useState('');
+    const mapRef = useRef(null);
+    const markerRef = useRef(null);
+
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
 
     const refreshAll = async () => {
@@ -987,6 +1000,19 @@ function CoachManagement() {
                 const gymInfo = await requestJson(`/api/gimnasios/lookup?nombre=${encodeURIComponent(coachInfo.gimnasio)}`).catch(() => null);
                 setBioInput(gymInfo?.bio || '');
                 setFotos(Array.isArray(gymInfo?.fotos) ? gymInfo.fotos.filter(f => f).slice(0, 12) : []);
+                setFotoPerfil(gymInfo?.fotoPerfil || '');
+                setEmailContacto(gymInfo?.correoContacto || '');
+                setTelefono(gymInfo?.telefono || '');
+                setDireccion(gymInfo?.direccion || '');
+                setUbicacion(gymInfo?.ubicacion || '');
+                setLat(gymInfo?.lat || null);
+                setLng(gymInfo?.lng || null);
+                setHorario(gymInfo?.horario || '');
+                setNombreEntrenador(gymInfo?.nombreEntrenador || '');
+            } else {
+                // Si es la primera vez, intentar poner el nombre del localstorage
+                const savedName = localStorage.getItem('gloveup_user_name') || '';
+                setNombreEntrenador(savedName);
             }
             setMessage(null);
         } catch (err) {
@@ -995,6 +1021,80 @@ function CoachManagement() {
             setLoading(false);
         }
     };
+
+    // Inicializar Mapa de Ubicación
+    useEffect(() => {
+        if (loading) return;
+        
+        const container = document.getElementById('gym-location-map');
+        if (!container || !window.L) return;
+
+        // Si ya hay un mapa, actualizar marcador
+        if (mapRef.current) {
+            if (lat && lng) {
+                const pos = [lat, lng];
+                mapRef.current.setView(pos, 15);
+                if (markerRef.current) {
+                    markerRef.current.setLatLng(pos);
+                } else {
+                    markerRef.current = window.L.marker(pos, { draggable: true }).addTo(mapRef.current);
+                    markerRef.current.on('dragend', () => {
+                        const newPos = markerRef.current.getLatLng();
+                        setLat(newPos.lat);
+                        setLng(newPos.lng);
+                    });
+                }
+            }
+            // Importante: Leaflet necesita redibujar si el contenedor era display:none
+            setTimeout(() => mapRef.current.invalidateSize(), 200);
+            return;
+        }
+
+        const initialPos = lat && lng ? [lat, lng] : [40.4168, -3.7038]; // Madrid por defecto
+        const map = window.L.map('gym-location-map').setView(initialPos, lat && lng ? 15 : 6);
+        mapRef.current = map;
+
+        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        if (lat && lng) {
+            markerRef.current = window.L.marker([lat, lng], { draggable: true }).addTo(map);
+            markerRef.current.on('dragend', () => {
+                const newPos = markerRef.current.getLatLng();
+                setLat(newPos.lat);
+                setLng(newPos.lng);
+            });
+        }
+
+        map.on('click', (e) => {
+            const { lat, lng } = e.latlng;
+            setLat(lat);
+            setLng(lng);
+            if (markerRef.current) {
+                markerRef.current.setLatLng([lat, lng]);
+            } else {
+                markerRef.current = window.L.marker([lat, lng], { draggable: true }).addTo(map);
+                markerRef.current.on('dragend', () => {
+                    const newPos = markerRef.current.getLatLng();
+                    setLat(newPos.lat);
+                    setLng(newPos.lng);
+                });
+            }
+        });
+
+        // Detectar cambios de hash para invalidar tamaño (cuando se muestra la pestaña)
+        const handleHash = () => {
+            if (window.location.hash === '#coach-gym') {
+                setTimeout(() => map.invalidateSize(), 300);
+            }
+        };
+        window.addEventListener('hashchange', handleHash);
+        
+        return () => {
+            window.removeEventListener('hashchange', handleHash);
+        };
+    }, [loading, lat === null, lng === null]);
 
     useEffect(() => { refreshAll(); }, []);
 
@@ -1008,7 +1108,34 @@ function CoachManagement() {
         );
     }, [boxers, search]);
 
+    const hasGym = Boolean(coach.gimnasio);
 
+    const geocodeAddress = async () => {
+        if (!direccion.trim()) return;
+        setIsGeocoding(true);
+        try {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccion)}&limit=1`;
+            const res = await fetch(url, { headers: { 'User-Agent': 'GloveUp-App' } });
+            const data = await res.json();
+            if (data && data.length > 0) {
+                const first = data[0];
+                setLat(Number(first.lat));
+                setLng(Number(first.lon));
+                // Extraer ciudad si es posible
+                if (first.address) {
+                    const city = first.address.city || first.address.town || first.address.village || first.address.county || '';
+                    setUbicacion(city);
+                } else if (first.display_name) {
+                    const parts = first.display_name.split(',');
+                    setUbicacion(parts[0].trim());
+                }
+            }
+        } catch (err) {
+            console.error('Geocoding error:', err);
+        } finally {
+            setIsGeocoding(false);
+        }
+    };
 
     const saveGym = async () => {
         try {
@@ -1019,14 +1146,36 @@ function CoachManagement() {
             if (gymInput.trim()) {
                 await requestJson('/api/gimnasios', {
                     method: 'POST',
-                    body: { nombre: gymInput, creadoPorEmail: email, bio: bioInput, fotos }
+                    body: { 
+                        nombre: gymInput, 
+                        creadoPorEmail: email, 
+                        bio: bioInput, 
+                        fotos,
+                        fotoPerfil,
+                        correoContacto: emailContacto,
+                        telefono,
+                        direccion,
+                        ubicacion,
+                        lat,
+                        lng,
+                        horario,
+                        nombreEntrenador
+                    }
                 });
             }
-            setMessage({ kind: 'ok', text: 'Gimnasio actualizado.' });
+            setMessage({ kind: 'ok', text: hasGym ? 'Información del gimnasio guardada correctamente.' : '¡Enhorabuena! Gimnasio creado con éxito.' });
             refreshAll();
         } catch (err) {
             setMessage({ kind: 'error', text: err.message });
         }
+    };
+
+    const onPickFotoPerfil = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => setFotoPerfil(reader.result);
+        reader.readAsDataURL(file);
     };
 
     const onPickFotos = async (e) => {
@@ -1101,7 +1250,6 @@ function CoachManagement() {
         if (n.includes('profesional')) return 5;
         return 3;
     };
-
     const renderStars = (v) => {
         const filled = Math.max(0, Math.min(5, Number(v) || 0));
         return Array.from({ length: 5 }, (_, i) =>
@@ -1109,99 +1257,146 @@ function CoachManagement() {
         );
     };
 
-    const hasGym = Boolean(coach.gimnasio);
 
     if (loading && !coach.gimnasio && !gymInput) {
         return h('div', { style: { padding: 40, textAlign: 'center', opacity: 0.5 } }, 'Cargando panel...');
     }
 
-    return h(React.Fragment, null,
-        h('div', { className: 'dashboard-panel', style: !hasGym ? { border: '2px dashed #e5e7eb', backgroundColor: '#f9fafb', padding: '40px 20px' } : {} },
-            !hasGym ? h('div', { style: { textAlign: 'center', marginBottom: '30px' } },
-                h('h2', { style: { fontSize: '2rem', color: '#111827', marginBottom: '10px' } }, 'Crea tu Gimnasio ✨'),
-                h('p', { style: { color: '#6b7280', fontSize: '1.05rem', maxWidth: '600px', margin: '0 auto' } }, 'Aún no tienes un centro registrado. Completa la información de tu gimnasio para empezar a invitar y gestionar a tus boxeadores.')
-            ) : h('h2', null, 'Mi gimnasio'),
+    return h(React.Fragment, null, [
+        h('div', { key: 'main-panel', className: 'dashboard-panel', style: !hasGym ? { border: '2px dashed #e5e7eb', backgroundColor: '#f9fafb', padding: '40px 20px' } : {} }, [
+            (!hasGym ? 
+                h('div', { style: { textAlign: 'center', marginBottom: '30px' } }, [
+                    h('h2', { style: { fontSize: '2rem', color: '#111827', marginBottom: '10px' } }, 'Crea tu Gimnasio ✨'),
+                    h('p', { style: { color: '#6b7280', fontSize: '1.05rem', maxWidth: '600px', margin: '0 auto' } }, 'Aún no tienes un centro registrado. Completa la información de tu gimnasio para empezar a invitar y gestionar a tus boxeadores.')
+                ]) 
+                : h('h2', null, 'Mi gimnasio')
+            ),
             
-            h('div', { style: { display: 'grid', gap: '20px', marginTop: hasGym ? '24px' : '0' } },
-                h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' } },
-                    h('div', { style: { display: 'flex', flexDirection: 'column', gap: '16px' } },
-                        h('div', { style: { padding: '20px', borderRadius: '20px', border: '1px solid #f3f4f6', backgroundColor: '#fff', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '12px' } },
-                            h('label', { style: { fontSize: '.85rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '0.05em' } }, 'Nombre del Gimnasio'),
-                            h('input', { value: gymInput, onChange: (e) => setGymInput(e.target.value), placeholder: '¿Cómo se llama tu gimnasio?', style: { width: '100%', padding: '14px 16px', borderRadius: '14px', border: '1px solid #e5e7eb', fontSize: '1rem', transition: 'border-color 0.2s', outline: 'none', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' })
-                        ),
-                        h('div', { style: { padding: '20px', borderRadius: '20px', border: '1px solid #f3f4f6', backgroundColor: '#fff', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '12px', flexGrow: 1 } },
-                            h('label', { style: { fontSize: '.85rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '0.05em' } }, 'Biografía'),
-                            h('textarea', { value: bioInput, onChange: (e) => setBioInput(e.target.value), rows: 5, placeholder: 'Describe tu gimnasio, filosofía, etc.', style: { width: '100%', padding: '14px 16px', borderRadius: '14px', border: '1px solid #e5e7eb', fontSize: '1rem', fontFamily: 'inherit', resize: 'vertical', transition: 'border-color 0.2s', outline: 'none', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' })
-                        )
-                    ),
-                    h('div', { style: { padding: '20px', borderRadius: '20px', border: '1px solid #f3f4f6', backgroundColor: '#fff', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '16px' } },
-                        h('label', { style: { fontSize: '.85rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '0.05em' } }, 'Galería de Imágenes'),
-                        h('p', { style: { fontSize: '.85rem', color: '#6b7280', margin: '-8px 0 0 0' } }, 'Sube fotos de tus instalaciones con el recuadro inferior.'),
-                        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '14px' } },
-                            fotos.map((src, idx) => h('div', { key: idx, style: { position: 'relative', borderRadius: '14px', overflow: 'hidden', height: '100px', border: '1px solid #e5e7eb', cursor: 'default' }, onMouseEnter: e => e.currentTarget.lastChild.style.opacity = 1, onMouseLeave: e => e.currentTarget.lastChild.style.opacity = 0 },
-                                h('img', { src, style: { width: '100%', height: '100%', objectFit: 'cover' } }),
-                                h('div', { style: { position: 'absolute', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.65)', opacity: 0, transition: 'opacity 0.2s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backdropFilter: 'blur(2px)' } },
-                                    h('button', { title: 'Eliminar imagen', type: 'button', onClick: () => setFotos(prev => prev.filter((_, i) => i !== idx)), style: { background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.1s' } }, h('i', { className: 'fas fa-trash-alt', style: { fontSize: '1rem' } }))
-                                )
-                            )),
-                            h('label', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #cbd5e1', borderRadius: '14px', height: '100px', cursor: 'pointer', color: '#64748b', transition: 'all 0.2s', backgroundColor: '#f8fafc' }, onMouseEnter: e => { e.currentTarget.style.borderColor = '#111827'; e.currentTarget.style.color = '#111827'; e.currentTarget.style.backgroundColor = '#f3f4f6'; }, onMouseLeave: e => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.backgroundColor = '#f8fafc'; } },
-                                h('i', { className: 'fas fa-plus', style: { fontSize: '1.5rem', marginBottom: '8px', opacity: 0.8 } }),
-                                h('span', { style: { fontSize: '.8rem', fontWeight: 700 } }, 'Añadir Foto'),
-                                h('input', { type: 'file', accept: 'image/*', multiple: true, onChange: onPickFotos, style: { display: 'none' } })
-                            )
-                        )
-                    )
-                ),
-                h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: !hasGym ? 'center' : 'flex-start', marginTop: '12px' } },
-                    h('button', { className: 'btn btn-primary', onClick: saveGym, style: { padding: '14px 28px', borderRadius: '14px', fontWeight: 800, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', width: !hasGym ? '100%' : 'auto', justifyContent: 'center' } }, h('i', { className: hasGym ? 'fas fa-save' : 'fas fa-plus-circle' }), hasGym ? 'Guardar Perfil de Gimnasio' : 'Crear Gimnasio Ahora'),
-                    message ? h('div', { style: { marginTop: '12px', padding: '10px 16px', borderRadius: '10px', fontWeight: 600, fontSize: '.9rem', backgroundColor: message.kind === 'error' ? '#fee2e2' : '#dcfce7', color: message.kind === 'error' ? '#b91c1c' : '#065f46' } }, message.text) : null
-                )
-            )
-        ),
+            h('div', { style: { display: 'grid', gap: '20px', marginTop: hasGym ? '24px' : '0' } }, [
+                h('div', { style: { display: 'flex', flexDirection: 'column', gap: '20px' } }, [
+                    h('div', { style: { padding: '24px', borderRadius: '24px', border: '1px solid #f3f4f6', backgroundColor: '#fff', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', gap: '20px' } }, [
+                        h('div', { style: { display: 'flex', alignItems: 'center', gap: '20px' } }, [
+                            h('div', { style: { position: 'relative', width: '90px', height: '90px', borderRadius: '24px', backgroundColor: '#f3f4f6', overflow: 'hidden', border: '2px solid #e5e7eb', flexShrink: 0 } }, [
+                                (fotoPerfil ? h('img', { src: fotoPerfil, style: { width: '100%', height: '100%', objectFit: 'cover' } }) : h('div', { style: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' } }, [h('i', { className: 'fas fa-image', style: { fontSize: '1.5rem' } })])),
+                                h('label', { style: { position: 'absolute', inset: 0, cursor: 'pointer', backgroundColor: 'rgba(0,0,0,0.3)', opacity: 0, transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }, onMouseEnter: e => e.currentTarget.style.opacity = 1, onMouseLeave: e => e.currentTarget.style.opacity = 0 }, [
+                                    h('i', { className: 'fas fa-camera' }),
+                                    h('input', { type: 'file', accept: 'image/*', onChange: onPickFotoPerfil, style: { display: 'none' } })
+                                ])
+                            ]),
+                            h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' } }, [
+                                h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Nombre del Gimnasio'),
+                                h('input', { value: gymInput, onChange: (e) => setGymInput(e.target.value), placeholder: 'Ej: Boxing Club Valencia', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '1rem', transition: 'border-color 0.2s', outline: 'none' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' })
+                            ])
+                        ]),
+                        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' } }, [
+                            h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, [
+                                h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Correo de Contacto'),
+                                h('input', { value: emailContacto, onChange: (e) => setEmailContacto(e.target.value), placeholder: 'info@gimnasio.com', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem' } })
+                            ]),
+                            h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, [
+                                h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Teléfono'),
+                                h('input', { value: telefono, onChange: (e) => setTelefono(e.target.value), placeholder: '+34 600 000 000', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem' } })
+                            ])
+                        ]),
+                        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' } }, [
+                            h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, [
+                                h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Dueño / Instructor Principal'),
+                                h('input', { value: nombreEntrenador, onChange: (e) => setNombreEntrenador(e.target.value), placeholder: 'Nombre del entrenador', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem' } })
+                            ]),
+                            h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, [
+                                h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Horario / Apertura'),
+                                h('input', { value: horario, onChange: (e) => setHorario(e.target.value), placeholder: 'Ej: L-V 08:00 - 22:00', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem' } })
+                            ])
+                        ])
+                    ]),
+                    h('div', { style: { padding: '24px', borderRadius: '24px', border: '1px solid #f3f4f6', backgroundColor: '#fff', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', gap: '12px' } }, [
+                        h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Dirección y Mapa'),
+                        h('div', { style: { position: 'relative' } }, [
+                            h('input', { value: direccion, onChange: (e) => setDireccion(e.target.value), onBlur: geocodeAddress, placeholder: 'Av. del Cid, 10, Valencia', style: { width: '100%', padding: '12px 16px', paddingRight: '40px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem' } }),
+                            (isGeocoding && h('i', { className: 'fas fa-spinner fa-spin', style: { position: 'absolute', right: '14px', top: '14px', color: '#6366f1' } })),
+                            (!isGeocoding && lat && h('i', { className: 'fas fa-check-circle', style: { position: 'absolute', right: '14px', top: '14px', color: '#10b981' }, title: 'Ubicación encontrada' }))
+                        ]),
+                        h('div', { id: 'gym-location-map', style: { height: '300px', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden', backgroundColor: '#f9fafb' } }),
+                        h('p', { style: { fontSize: '.75rem', color: '#6b7280', margin: 0 } }, [h('i', { className: 'fas fa-info-circle', style: { marginRight: '4px' } }), 'Haz clic en el mapa para ajustar tu ubicación exacta.'])
+                    ]),
+                    h('div', { style: { padding: '24px', borderRadius: '24px', border: '1px solid #f3f4f6', backgroundColor: '#fff', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', gap: '12px' } }, [
+                        h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Biografía'),
+                        h('textarea', { value: bioInput, onChange: (e) => setBioInput(e.target.value), rows: 3, placeholder: 'Describe tu gimnasio, filosofía...', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', resize: 'vertical' } })
+                    ])
+                ]),
+                h('div', { style: { padding: '24px', borderRadius: '24px', border: '1px solid #f3f4f6', backgroundColor: '#fff', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', gap: '16px' } }, [
+                    h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Galería del Gimnasio'),
+                    h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '12px' } }, [
+                        ...fotos.map((src, idx) => h('div', { key: idx, style: { position: 'relative', borderRadius: '16px', overflow: 'hidden', height: '110px', border: '1px solid #e5e7eb' }, onMouseEnter: e => e.currentTarget.lastChild.style.opacity = 1, onMouseLeave: e => e.currentTarget.lastChild.style.opacity = 0 }, [
+                            h('img', { src, style: { width: '100%', height: '100%', objectFit: 'cover' } }),
+                            h('div', { style: { position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', opacity: 0, transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, [
+                                h('button', { onClick: () => setFotos(prev => prev.filter((_, i) => i !== idx)), style: { background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer' } }, [h('i', { className: 'fas fa-trash-alt' })])
+                            ])
+                        ])),
+                        h('label', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #cbd5e1', borderRadius: '16px', height: '110px', cursor: 'pointer', color: '#64748b', backgroundColor: '#f8fafc' } }, [
+                            h('i', { className: 'fas fa-plus', style: { fontSize: '1.2rem', marginBottom: '4px' } }),
+                            h('span', { style: { fontSize: '.75rem', fontWeight: 700 } }, 'Añadir'),
+                            h('input', { type: 'file', accept: 'image/*', multiple: true, onChange: onPickFotos, style: { display: 'none' } })
+                        ])
+                    ])
+                ])
+            ]),
+            
+            h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: !hasGym ? 'center' : 'stretch', marginTop: '12px' } }, [
+                h('button', { className: 'btn btn-primary', onClick: saveGym, style: { padding: '16px 32px', borderRadius: '16px', fontWeight: 800, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center', boxShadow: '0 4px 14px rgba(59,130,246,0.4)' } }, [
+                    h('i', { className: hasGym ? 'fas fa-save' : 'fas fa-plus' }), 
+                    (hasGym ? 'Guardar Cambios del Perfil' : 'Dar de alta Gimnasio Ahora')
+                ]),
+                (message ? h('div', { style: { marginTop: '16px', padding: '12px 20px', borderRadius: '12px', fontWeight: 600, textAlign: 'center', backgroundColor: message.kind === 'error' ? '#fee2e2' : '#dcfce7', color: message.kind === 'error' ? '#b91c1c' : '#065f46' } }, message.text) : null)
+            ])
+        ]),
 
-        hasGym && h('div', { className: 'dashboard-panel' },
+        (hasGym ? h('div', { key: 'boxers-panel', className: 'dashboard-panel' }, [
             h('h2', null, 'Tus boxeadores'),
-            h('div', { className: 'coach-boxers-toolbar', style: { display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' } },
+            h('div', { className: 'coach-boxers-toolbar', style: { display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' } }, [
                 h('input', { value: search, onChange: (e) => setSearch(e.target.value), placeholder: 'Buscar boxeador...', style: { flex: 1, minWidth: '200px', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
-                h('div', { className: 'coach-boxers-assign', style: { display: 'flex', gap: '8px', flex: 1, minWidth: '300px' } },
+                h('div', { className: 'coach-boxers-assign', style: { display: 'flex', gap: '8px', flex: 1, minWidth: '300px' } }, [
                     h('input', { value: assignEmail, onChange: (e) => setAssignEmail(e.target.value), placeholder: 'Email o DNI para asignar', style: { flex: 1, padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
                     h('button', { className: 'btn btn-primary', onClick: addBoxer, style: { padding: '12px 20px', borderRadius: '12px', fontWeight: 700 } }, 'Añadir'),
                     h('button', { className: 'btn btn-secondary', onClick: removeBoxer, style: { padding: '12px 20px', borderRadius: '12px', fontWeight: 700, color: '#ef4444', borderColor: '#ef4444' } }, 'Quitar')
-                )
-            ),
-            h('div', { className: 'sparring-list', style: { marginTop: 15 } },
-                filteredBoxers.length === 0 ? h('p', null, 'No hay boxeadores.') :
-                filteredBoxers.map((b, i) => h(React.Fragment, { key: b._id || b.email },
-                    h('div', { className: 'sparring-card' },
-                        h('div', { className: 'card-rank' }, h('span', null, `#${i + 1}`)),
-                        h('div', { className: 'card-name' }, h('span', { className: 'main-name' }, b.nombre), h('span', null, b.email)),
-                        h('div', { className: 'card-stars' }, ...renderStars(levelScore(b.nivel))),
-                        h('div', { className: 'card-action' }, h('button', { className: 'view-profile-button', onClick: () => selectForEdit(b) }, 'Editar'))
-                    ),
-                    editId === (b._id || b.email) && h('div', { style: { padding: '20px', border: '1px solid #e5e7eb', backgroundColor: '#f8fafc', borderRadius: '16px', marginTop: '12px', display: 'grid', gap: '12px' } },
-                        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' } },
+                ])
+            ]),
+            h('div', { className: 'sparring-list', style: { marginTop: 15 } }, [
+                (filteredBoxers.length === 0 ? h('p', null, 'No hay boxeadores.') :
+                filteredBoxers.map((b, i) => h(React.Fragment, { key: b._id || b.email }, [
+                    h('div', { className: 'sparring-card' }, [
+                        h('div', { className: 'card-rank' }, [h('span', null, `#${i + 1}`)]),
+                        h('div', { className: 'card-name' }, [h('span', { className: 'main-name' }, b.nombre), h('span', null, b.email)]),
+                        h('div', { className: 'card-stars' }, renderStars(levelScore(b.nivel))),
+                        h('div', { className: 'card-action' }, [h('button', { className: 'view-profile-button', onClick: () => selectForEdit(b) }, 'Editar')])
+                    ]),
+                    (editId === (b._id || b.email) ? h('div', { style: { padding: '20px', border: '1px solid #e5e7eb', backgroundColor: '#f8fafc', borderRadius: '16px', marginTop: '12px', display: 'grid', gap: '12px' } }, [
+                        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' } }, [
                             h('input', { value: editName, onChange: (e) => setEditName(e.target.value), placeholder: 'Nombre del boxeador', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
                             h('input', { value: editDni, onChange: (e) => setEditDni(e.target.value), placeholder: 'DNI o Licencia', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
-                            h('select', { value: editLevel, onChange: (e) => setEditLevel(e.target.value), style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box', backgroundColor: '#fff', cursor: 'pointer' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' },
+                            h('select', { value: editLevel, onChange: (e) => setEditLevel(e.target.value), style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box', backgroundColor: '#fff', cursor: 'pointer' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }, [
                                 h('option', { value: 'Principiante' }, 'Principiante'), h('option', { value: 'Intermedio' }, 'Intermedio'), h('option', { value: 'Avanzado' }, 'Avanzado'), h('option', { value: 'Amateur' }, 'Amateur'), h('option', { value: 'Profesional' }, 'Profesional')
-                            )
-                        ),
-                        h('div', { style: { display: 'flex', gap: '10px', marginTop: '4px' } },
+                            ])
+                        ]),
+                        h('div', { style: { display: 'flex', gap: '10px', marginTop: '4px' } }, [
                             h('button', { className: 'btn btn-primary', onClick: saveEdit, style: { padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '.9rem' } }, 'Guardar cambios'),
                             h('button', { className: 'btn btn-secondary', onClick: deleteEdit, style: { padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '.9rem', color: '#ef4444', borderColor: '#ef4444' } }, 'Dar de baja'),
                             h('button', { className: 'btn btn-secondary', onClick: () => setEditId(''), style: { padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '.9rem', color: '#6b7280', borderColor: '#d1d5db', marginLeft: 'auto' } }, 'Cancelar')
-                        )
-                    )
-                ))
-            )
-        ),
-        h('div', { className: 'dashboard-panel' },
-            h('h2', null, 'Resumen'),
-            h('p', null, 'Cobros registrados: ', h('strong', null, formatCurrency(cobrosTotal)))
-        )
-    );
-}
+                        ])
+                    ]) : null)
+                ])) )
+            ]),
+        ]) : null),
 
+        h('div', { key: 'revenue-panel', className: 'dashboard-panel' }, [
+            h('h2', null, 'Resumen'),
+            h('p', null, [
+                'Cobros registrados: ', 
+                h('strong', null, formatCurrency(cobrosTotal))
+            ])
+        ])
+    ]);
+}
 function CoachFinance() {
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState(null);

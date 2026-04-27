@@ -135,6 +135,9 @@
                 if (coachGymNavItem) coachGymNavItem.style.display = role === 'entrenador' ? '' : 'none';
                 if (sparringsNavItem) sparringsNavItem.style.display = role === 'entrenador' ? 'none' : '';
                 if (buscarSparringNavItem) buscarSparringNavItem.style.display = '';
+
+                const trainerCta = document.getElementById('trainer-cta');
+                if (trainerCta) trainerCta.style.display = role === 'entrenador' ? 'block' : 'none';
             });
         </script>
     </aside>
@@ -242,6 +245,19 @@
                 <p>Encuentra gimnasios cerca de tu ubicación actual</p>
             </div>
             <div id="gyms-map" class="gyms-map-modern"></div>
+        </section>
+
+        <!-- CTA para entrenadores -->
+        <section id="trainer-cta" class="trainer-cta-section" style="display: none;">
+            <div class="cta-card">
+                <div class="cta-text">
+                    <h3>¿Eres entrenador y no ves tu gimnasio?</h3>
+                    <p>Registra tu centro ahora para aparecer en el buscador y empezar a gestionar tus boxeadores.</p>
+                </div>
+                <a href="../dashboard/entrenador/dashboard.html#coach-gym" class="cta-button">
+                    <i class="fas fa-plus-circle"></i> Añadir mi gimnasio
+                </a>
+            </div>
         </section>
     </main>
 
@@ -386,6 +402,7 @@
     </div>
     <script src="../home/chat.js"></script>
     <script src="../home/notifications.js"></script>
+    <script src="../home/sidebar.js"></script>
 </body>
 
 </html>

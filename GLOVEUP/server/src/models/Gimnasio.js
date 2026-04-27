@@ -41,10 +41,35 @@ const GimnasioSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
+    fotoPerfil: {
+        type: String,
+        default: ''
+    },
+    correoContacto: {
+        type: String,
+        trim: true,
+        lowercase: true,
+        default: ''
+    },
+    telefono: {
+        type: String,
+        trim: true,
+        default: ''
+    },
     creadoPorEmail: {
         type: String,
         trim: true,
         lowercase: true,
+        default: ''
+    },
+    horario: {
+        type: String,
+        trim: true,
+        default: ''
+    },
+    nombreEntrenador: {
+        type: String,
+        trim: true,
         default: ''
     }
 }, {
