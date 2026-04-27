@@ -2,9 +2,33 @@ import mongoose from 'mongoose';
 import Usuario from '../models/Usuario.js';
 import Boxeador from '../models/Boxeador.js';
 import Entrenador from '../models/Entrenador.js';
+import Gimnasio from '../models/Gimnasio.js';
 import { encrypt } from '../utils/crypto.js';
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/gloveup';
+
+const testGyms = [
+    {
+        nombre: 'Club La Furia',
+        key: 'club-la-furia',
+        ubicacion: 'Madrid',
+        direccion: 'Calle del Combate 12',
+        bio: 'El club más legendario de la capital.',
+        fotoPerfil: 'https://images.unsplash.com/photo-1544033527-b192daee1f5b?auto=format&fit=crop&q=80',
+        correoContacto: 'contacto@lafuria.com',
+        creadoPorEmail: 'entrenador1@test.com'
+    },
+    {
+        nombre: 'Gimnasio Olimpico',
+        key: 'gimnasio-olimpico',
+        ubicacion: 'Barcelona',
+        direccion: 'Avenida del Deporte 45',
+        bio: 'Formando campeones desde 1992.',
+        fotoPerfil: 'https://images.unsplash.com/photo-1574673130244-c747e7480735?auto=format&fit=crop&q=80',
+        correoContacto: 'info@olimpico.com',
+        creadoPorEmail: 'entrenador2@test.com'
+    }
+];
 
 const testUsers = [
     {
@@ -13,7 +37,7 @@ const testUsers = [
         password: 'password123',
         dni: '12345678A',
         rol: 'boxeador',
-        extra: { nivel: 'Amateur', disciplina: 'Boxeo' }
+        extra: { nivel: 'Amateur', disciplina: 'Boxeo', gimnasio: 'Club La Furia' }
     },
     {
         nombre: 'Maria Boxeadora (Pro)',
@@ -21,7 +45,7 @@ const testUsers = [
         password: 'password123',
         dni: '87654321B',
         rol: 'boxeador',
-        extra: { nivel: 'Profesional', disciplina: 'Boxeo' }
+        extra: { nivel: 'Profesional', disciplina: 'Boxeo', gimnasio: 'Gimnasio Olimpico' }
     },
     {
         nombre: 'Carlos Entrenador (Elite)',
@@ -43,19 +67,26 @@ const testUsers = [
 
 async function seed() {
     try {
-        console.log('⏳ Creando usuarios de prueba...');
+        console.log('⏳ Conectando a MongoDB...');
         await mongoose.connect(MONGO_URI);
 
+        console.log('🧹 Limpiando base de datos...');
+        await Usuario.deleteMany({});
+        await Boxeador.deleteMany({});
+        await Entrenador.deleteMany({});
+        await Gimnasio.deleteMany({});
+
+        console.log('🏟️ Creando gimnasios de prueba...');
+        for (const gym of testGyms) {
+            await Gimnasio.create(gym);
+            console.log(`✅ Gimnasio ${gym.nombre} creado.`);
+        }
+
+        console.log('👤 Creando usuarios de prueba...');
         for (const user of testUsers) {
             console.log(`👤 Procesando ${user.email}...`);
             
-            // Cifrar DNI para el modelo Usuario (solo si hay clave)
             const encryptedDni = encrypt(user.dni);
-
-            // Eliminar si ya existe para evitar errores de duplicado
-            await Usuario.deleteOne({ email: user.email });
-            await Boxeador.deleteOne({ email: user.email });
-            await Entrenador.deleteOne({ email: user.email });
 
             const usuario = await Usuario.create({
                 nombre: user.nombre,
