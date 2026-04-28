@@ -864,4 +864,76 @@ router.post('/me/challenges/respond', async (req, res) => {
     }
 });
 
+router.post('/me/challenges/complete', async (req, res) => {
+    try {
+        const coach = await requireCoachByEmail(req.query.email);
+        const { challengeId, stars, note } = req.body || {};
+
+        if (!challengeId) return res.status(400).json({ error: 'challengeId requerido' });
+        
+        const myBoxers = await Boxeador.find({ entrenadorId: coach._id }).lean();
+        let foundChallenge = null;
+
+        for (const boxer of myBoxers) {
+            const received = Array.isArray(boxer.sparringChallengesReceived) ? boxer.sparringChallengesReceived : [];
+            const c = received.find(x => x && String(x.id) === challengeId);
+            if (c) { foundChallenge = c; break; }
+
+            const sent = Array.isArray(boxer.sparringChallengesSent) ? boxer.sparringChallengesSent : [];
+            const s = sent.find(x => x && String(x.id) === challengeId);
+            if (s) { foundChallenge = s; break; }
+        }
+
+        if (!foundChallenge) {
+            return res.status(404).json({ error: 'Reto no encontrado' });
+        }
+
+        if (foundChallenge.status !== 'accepted') {
+            return res.status(400).json({ error: 'Solo se pueden completar retos que hayan sido aceptados.' });
+        }
+
+        const completedAt = new Date().toISOString();
+        const rating = Number(stars) || 5;
+
+        // Actualizar el estado a 'completed' y añadir valoración
+        await Boxeador.updateMany(
+            { 'sparringChallengesReceived.id': challengeId },
+            { $set: {
+                'sparringChallengesReceived.$[elem].status': 'completed',
+                'sparringChallengesReceived.$[elem].rating': rating,
+                'sparringChallengesReceived.$[elem].completedNote': note || '',
+                'sparringChallengesReceived.$[elem].completedAt': completedAt
+            }},
+            { arrayFilters: [{ 'elem.id': challengeId }] }
+        );
+        await Boxeador.updateMany(
+            { 'sparringChallengesSent.id': challengeId },
+            { $set: {
+                'sparringChallengesSent.$[elem].status': 'completed',
+                'sparringChallengesSent.$[elem].rating': rating,
+                'sparringChallengesSent.$[elem].completedNote': note || '',
+                'sparringChallengesSent.$[elem].completedAt': completedAt
+            }},
+            { arrayFilters: [{ 'elem.id': challengeId }] }
+        );
+
+        // Notificar a los boxeadores
+        const notifyEmails = [foundChallenge.fromEmail, foundChallenge.toEmail];
+        for (const email of notifyEmails) {
+            await crearNotificacion({
+                para: email,
+                tipo: 'sparring',
+                titulo: '🥊 Sparring Completado',
+                cuerpo: `El sparring de ${foundChallenge.preset} ha sido marcado como completado con una valoración de ${stars} estrellas.`,
+                de: coach.email
+            });
+        }
+
+        res.json({ success: true, status: 'completed' });
+    } catch (err) {
+        console.error('Error completing challenge:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 export default router;

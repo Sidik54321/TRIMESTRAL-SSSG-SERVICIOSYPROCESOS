@@ -806,6 +806,35 @@ body.theme-dark .coach-item:hover {
     flex-shrink: 0;
 }
 
+.coach-checkbox-custom {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-border-hover);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-card);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+
+.coach-checkbox-custom i {
+    font-size: 0.75rem;
+    color: #fff;
+    transform: scale(0);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.coach-checkbox-custom.checked {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+.coach-checkbox-custom.checked i {
+    transform: scale(1);
+}
+
 .coach-info {
     display: flex;
     flex-direction: column;

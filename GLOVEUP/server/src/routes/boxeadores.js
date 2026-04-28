@@ -227,7 +227,12 @@ router.post('/challenges', async (req, res) => {
         if (fromBoxerForCoach && fromBoxerForCoach.entrenadorId) {
             const fromCoach = await Entrenador.findById(fromBoxerForCoach.entrenadorId).select('email').lean();
             if (fromCoach) coachFromEmail = (fromCoach.email || '').toLowerCase();
+        } else {
+            // Si no es un boxeador, ver si es un entrenador directamente
+            const isCoach = await Entrenador.findOne({ email: fromEmail }).select('email').lean();
+            if (isCoach) coachFromEmail = fromEmail.toLowerCase();
         }
+
         const toBoxerForCoach = await Boxeador.findOne({ email: toEmailNorm }).select('entrenadorId').lean();
         if (toBoxerForCoach && toBoxerForCoach.entrenadorId) {
             const toCoach = await Entrenador.findById(toBoxerForCoach.entrenadorId).select('email').lean();
@@ -322,7 +327,7 @@ router.post('/challenges', async (req, res) => {
             de: fromEmail
         });
 
-        // Notify the first coach who should approve (coachTo first, then coachFrom)
+        // Notify both coaches since both approvals are necessary
         if (coachToEmail) {
             await crearNotificacion({
                 para: coachToEmail,
@@ -331,7 +336,8 @@ router.post('/challenges', async (req, res) => {
                 cuerpo: `${record.fromNombre} ha retado a tu boxeador ${record.toNombre}. Tu aprobación es necesaria.`,
                 de: fromEmail
             });
-        } else if (coachFromEmail) {
+        }
+        if (coachFromEmail) {
             await crearNotificacion({
                 para: coachFromEmail,
                 tipo: 'sparring',

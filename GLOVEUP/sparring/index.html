@@ -620,32 +620,53 @@
             };
 
             let currentModalCoaches = [];
+            let selectedCoachIds = new Set();
 
             const renderCoachChecklist = (coaches) => {
                 const checklist = document.getElementById('coach-checklist');
                 if (!checklist) return;
-                checklist.innerHTML = coaches.length ? '' : '<p style="padding:10px;font-size:0.8rem;opacity:0.6;">No se encontraron entrenadores</p>';
+                
+                checklist.innerHTML = '';
+                if (!coaches || coaches.length === 0) {
+                    checklist.innerHTML = '<p style="padding:20px;font-size:0.85rem;opacity:0.6;text-align:center;">No se encontraron entrenadores</p>';
+                    return;
+                }
+
                 coaches.forEach(c => {
                     const id = c && c._id ? String(c._id) : '';
                     const name = c && c.nombre ? String(c.nombre) : 'Entrenador';
-                    const gym = c && c.gimnasio ? String(c.gimnasio) : 'Sin gym';
+                    const gym = c && c.gimnasio ? String(c.gimnasio) : 'Sin gimnasio';
+                    const isSelected = selectedCoachIds.has(id);
                     
                     const item = document.createElement('div');
-                    item.className = 'coach-item';
+                    item.className = `coach-item ${isSelected ? 'selected' : ''}`;
+                    item.dataset.id = id;
                     item.innerHTML = `
-                        <input type="checkbox" value="${encodeURIComponent(id)}" class="coach-cb">
+                        <div class="coach-checkbox-custom ${isSelected ? 'checked' : ''}">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <input type="checkbox" value="${encodeURIComponent(id)}" class="coach-cb" ${isSelected ? 'checked' : ''} style="display:none">
                         <div class="coach-info">
                             <span class="coach-name">${name}</span>
-                            <span class="coach-gym">${gym}</span>
+                            <span class="coach-gym"><i class="fas fa-building" style="font-size:0.7rem;margin-right:4px;opacity:0.5"></i>${gym}</span>
                         </div>
                     `;
+
                     item.addEventListener('click', (e) => {
-                        if (e.target.tagName !== 'INPUT') {
-                            const cb = item.querySelector('input');
-                            cb.checked = !cb.checked;
-                            item.classList.toggle('selected', cb.checked);
+                        e.preventDefault();
+                        const cb = item.querySelector('.coach-cb');
+                        const customCb = item.querySelector('.coach-checkbox-custom');
+                        
+                        if (selectedCoachIds.has(id)) {
+                            selectedCoachIds.delete(id);
+                            cb.checked = false;
+                            item.classList.remove('selected');
+                            customCb.classList.remove('checked');
                         } else {
-                            item.classList.toggle('selected', e.target.checked);
+                            selectedCoachIds.add(id);
+                            cb.checked = true;
+                            item.classList.add('selected');
+                            customCb.classList.add('checked');
                         }
                     });
                     checklist.appendChild(item);
@@ -658,9 +679,11 @@
                 try {
                     const coaches = await loadCoaches();
                     currentModalCoaches = coaches;
+                    // Reset selection when opening the modal for a new challenge
+                    selectedCoachIds.clear();
                     renderCoachChecklist(coaches);
                 } catch (err) {
-                    checklist.innerHTML = '<p style="padding:10px;font-size:0.8rem;color:red;">Error al cargar</p>';
+                    checklist.innerHTML = '<p style="padding:10px;font-size:0.8rem;color:var(--color-error, #ef4444);">Error al cargar entrenadores</p>';
                 }
             };
 
@@ -810,7 +833,7 @@
                         </div>
                         <div class="card-action">
                             <button class="view-profile-button" ${canViewProfile ? `data-identifier-enc="${identifierEnc}"` : 'disabled'}>${canViewProfile ? 'Ver Perfil' : 'Sin perfil'}</button>
-                            <button class="challenge-button" ${canChallenge && !isCoachRole ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>${challengeLabel}</button>
+                            <button class="challenge-button" ${canChallenge ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>${challengeLabel}</button>
                         </div>
                     `;
 
@@ -1036,11 +1059,7 @@
                         alert('Selecciona una fecha y hora');
                         return;
                     }
-                    const role = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();
-                    let finalTarget = challengeTargetIdentifier;
-                    if (role === 'entrenador' && coachIds.length > 0) {
-                        finalTarget = coachIds[0];
-                    }
+                    const finalTarget = challengeTargetIdentifier;
 
                     try {
                         const res = await fetch(`${API_BASE_URL}/api/boxeadores/challenges`, {
