@@ -4,6 +4,7 @@
 
 /* Floating Bubble */
 .glovebot-bubble {
+    display: none !important;
     position: fixed;
     bottom: 24px;
     right: 24px;
