@@ -19,13 +19,7 @@
 
     // ---- Inject HTML ----
     function injectWidget() {
-        // Bubble button
-        const bubble = document.createElement('button');
-        bubble.className = 'glovebot-bubble';
-        bubble.id = 'glovebot-bubble';
-        bubble.setAttribute('aria-label', 'Abrir asistente GloveBot');
-        bubble.innerHTML = '🥊';
-        document.body.appendChild(bubble);
+        // Panel (Bubble is removed as requested to avoid overlap)
 
         // Panel
         const panel = document.createElement('div');
@@ -184,14 +178,18 @@
 
         if (isOpen) {
             panel.classList.add('visible');
-            bubble.classList.add('open');
-            bubble.innerHTML = '✕';
+            if (bubble) {
+                bubble.classList.add('open');
+                bubble.innerHTML = '✕';
+            }
             const input = document.getElementById('glovebot-input');
             if (input) setTimeout(() => input.focus(), 100);
         } else {
             panel.classList.remove('visible');
-            bubble.classList.remove('open');
-            bubble.innerHTML = '🥊';
+            if (bubble) {
+                bubble.classList.remove('open');
+                bubble.innerHTML = '🥊';
+            }
         }
     }
 
