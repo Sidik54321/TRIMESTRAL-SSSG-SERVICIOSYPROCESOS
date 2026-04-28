@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker exec *)",
+      "Bash(docker compose *)",
+      "Bash(docker stop *)",
+      "Bash(docker rm *)",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"demo.entrenador01@gloveup.com\\\\\",\\\\\"password\\\\\":\\\\\"Coach01#2026\\\\\"}\")"
+    ]
+  }
+}
