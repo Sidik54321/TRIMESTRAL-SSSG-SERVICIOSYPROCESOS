@@ -3,6 +3,5 @@ node_modules/
 .git/
 .vscode/
 *.md
-Dockerfile
-docker-compose.yml
+docker/
 scratch/

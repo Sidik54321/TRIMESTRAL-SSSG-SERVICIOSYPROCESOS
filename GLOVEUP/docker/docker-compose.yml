@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+
+  # ── Base de Datos ──────────────────────────────────────────────
+  db:
+    image: mongo:latest
+    container_name: gloveup-mongodb
+    restart: always
+    ports:
+      - "27018:27017"   # 27018 en el host para no chocar con MongoDB local
+    volumes:
+      - mongo_data:/data/db
+
+  # ── API Node.js ────────────────────────────────────────────────
+  api:
+    build:
+      context: ../server
+      dockerfile: ../docker/api/Dockerfile
+    container_name: gloveup-api
+    restart: always
+    ports:
+      - "3000:3000"
+    # Todas las variables de entorno se declaran aquí — sin env_file
+    # para evitar que el .env local sobreescriba MONGO_URI
+    environment:
+      - PORT=3000
+      - MONGO_URI=mongodb://db:27017/gloveup
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+    depends_on:
+      - db   # Node.js tiene reintentos propios, no necesita healthcheck
+
+  # ── Frontend Nginx ─────────────────────────────────────────────
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/frontend/Dockerfile
+    container_name: gloveup-frontend
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  mongo_data:
+    driver: local

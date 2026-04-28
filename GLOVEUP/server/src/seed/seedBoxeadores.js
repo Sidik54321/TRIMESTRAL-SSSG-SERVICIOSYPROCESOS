@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import mongoose from 'mongoose';
 import Boxeador from '../models/Boxeador.js';
 import Entrenador from '../models/Entrenador.js';

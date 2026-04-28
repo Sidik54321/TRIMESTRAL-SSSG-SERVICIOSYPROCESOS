@@ -7,6 +7,7 @@ import authRouter from './routes/auth.js';
 import usuariosRouter from './routes/usuarios.js';
 import chatRouter from './routes/chat.js';
 import notificacionesRouter from './routes/notificaciones.js';
+import aiRouter from './routes/ai.js';
 
 const app = express();
 
@@ -81,13 +82,24 @@ app.use((req, res, next) => {
 });
 // ========================================
 
-// 🔥 Conexión a MongoDB
+// 🔥 Conexión a MongoDB con reintentos
 const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/gloveup';
 
-mongoose
-    .connect(uri)
-    .then(() => console.log("✅ Conectado a MongoDB"))
-    .catch((err) => console.log("❌ Error de conexión:", err));
+const connectWithRetry = (attempts = 0) => {
+    mongoose.connect(uri).then(() => {
+        console.log("✅ Conectado a MongoDB:", uri);
+    }).catch((err) => {
+        if (attempts < 10) {
+            console.log(`⏳ MongoDB no disponible, reintentando (${attempts + 1}/10)...`);
+            setTimeout(() => connectWithRetry(attempts + 1), 3000);
+        } else {
+            console.error("❌ No se pudo conectar a MongoDB:", err.message);
+            process.exit(1);
+        }
+    });
+};
+
+connectWithRetry();
 
 // Ruta de prueba
 app.get("/", (req, res) => {
@@ -110,6 +122,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/usuarios', usuariosRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/notificaciones', notificacionesRouter);
+app.use('/api/ai', aiRouter);
 
 // Puerto
 const PORT = process.env.PORT || 3000;
