@@ -185,9 +185,6 @@
                     <option>...</option>
                 </select>
                 <button class="submit-button" id="sparring-apply-filters">Buscar</button>
-                <button class="submit-button ai-button" id="ai-matchmaking-btn" style="background: linear-gradient(135deg, #6366f1, #a855f7); color: white; border: none; margin-left: 10px;">
-                    <i class="fas fa-robot"></i> Sugerencias IA
-                </button>
             </div>
         </section>
 
@@ -408,26 +405,7 @@
         </div>
     </dialog>
     
-    <dialog class="modal" id="ai-matchmaking-modal">
-        <div class="modal-card" style="max-width: 600px;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #6366f1, #a855f7); color: white;">
-                <h3>🤖 Sugerencias Matchmaking IA</h3>
-                <button class="icon-btn" id="close-ai-modal" style="color: white;">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" id="ai-matchmaking-results">
-                <div class="loading-ai" style="text-align: center; padding: 40px;">
-                    <i class="fas fa-robot fa-spin fa-3x" style="color: #6366f1;"></i>
-                    <p style="margin-top: 15px; font-weight: 500;">Calculando tus mejores oponentes...</p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="btn-ai-modal-close">Cerrar</button>
-            </div>
-        </div>
-    </dialog>
-
+    
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const listContainer = document.getElementById('sparring-list-container');
@@ -1203,119 +1181,6 @@
                 `;
             }
             
-            // ============================================
-            // AI Matchmaking Logic
-            // ============================================
-            const aiMatchmakingBtn = document.getElementById('ai-matchmaking-btn');
-            const aiMatchmakingModal = document.getElementById('ai-matchmaking-modal');
-            const aiMatchmakingResults = document.getElementById('ai-matchmaking-results');
-            const closeAiModal = document.getElementById('close-ai-modal');
-            const btnAiModalClose = document.getElementById('btn-ai-modal-close');
-
-            if (aiMatchmakingBtn) {
-                aiMatchmakingBtn.addEventListener('click', async () => {
-                    const email = getEmail();
-                    if (!email) {
-                        window.location.href = '../auth/index.html?from=sparring';
-                        return;
-                    }
-
-                    if (aiMatchmakingModal) aiMatchmakingModal.showModal();
-                    if (aiMatchmakingResults) {
-                        aiMatchmakingResults.innerHTML = `
-                            <div class="loading-ai" style="text-align: center; padding: 40px;">
-                                <i class="fas fa-robot fa-spin fa-3x" style="color: #6366f1;"></i>
-                                <p style="margin-top: 15px; font-weight: 500;">Calculando tus mejores oponentes...</p>
-                            </div>
-                        `;
-                    }
-
-                    try {
-                        const res = await fetch(`${API_BASE_URL}/api/ai/matchmaking`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ email })
-                        });
-                        const data = await res.json().catch(() => ({}));
-
-                        if (!res.ok) throw new Error(data.error || 'No se pudieron obtener recomendaciones');
-
-                        if (!data.matches || data.matches.length === 0) {
-                            if (aiMatchmakingResults) aiMatchmakingResults.innerHTML = '<p style="text-align: center; padding: 20px;">No se encontraron recomendaciones ideales en este momento.</p>';
-                            return;
-                        }
-
-                        let html = '<div class="match-list" style="display: flex; flex-direction: column; gap: 15px;">';
-                        data.matches.forEach(match => {
-                            let imgHtml = `<i class="fas fa-user-circle" style="font-size: 3em; color: #ccc;"></i>`;
-                            if (match.foto) {
-                                const imgSrc = match.foto.startsWith('/') ? '..' + match.foto : match.foto;
-                                imgHtml = `<img src="${imgSrc}" alt="${match.nombre}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">`;
-                            }
-
-                            html += `
-                                <div class="match-card" style="display: flex; align-items: center; gap: 15px; padding: 15px; border-radius: 12px; background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05);">
-                                    <div class="match-avatar">${imgHtml}</div>
-                                    <div class="match-info" style="flex: 1;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                                            <strong style="font-size: 1.1rem;">${match.nombre}</strong>
-                                            <span style="background: #22c55e; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">${match.score}% Match</span>
-                                        </div>
-                                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 5px;">${match.nivel} • ${match.peso} • ${match.ubicacion}</div>
-                                        <div style="display: flex; flex-wrap: wrap; gap: 5px;">
-                                            ${match.reasons.map(r => `<span style="font-size: 0.75rem; background: rgba(99, 102, 241, 0.1); color: #6366f1; padding: 2px 6px; border-radius: 4px;">${r}</span>`).join('')}
-                                        </div>
-                                    </div>
-                                    <button class="btn btn-primary btn-sm ai-challenge-btn" 
-                                            data-email="${match.email}" 
-                                            data-name="${match.nombre}"
-                                            style="padding: 8px 16px; font-size: 0.85rem;">
-                                        Retar
-                                    </button>
-                                </div>
-                            `;
-                        });
-                        html += '</div>';
-                        if (aiMatchmakingResults) aiMatchmakingResults.innerHTML = html;
-
-                        // Binding Retar buttons inside AI modal
-                        aiMatchmakingResults.querySelectorAll('.ai-challenge-btn').forEach(btn => {
-                            btn.addEventListener('click', () => {
-                                const email = btn.dataset.email;
-                                const name = btn.dataset.name;
-                                if (aiMatchmakingModal) aiMatchmakingModal.close();
-                                
-                                // Reset and open challenge modal
-                                if (challengeTitle) challengeTitle.textContent = `Retar a ${name}`;
-                                challengeTargetIdentifier = email;
-                                if (challengePreset) challengePreset.value = '';
-                                if (challengeNote) challengeNote.value = '';
-                                if (challengeDatetime) {
-                                    challengeDatetime.value = '';
-                                    if (challengeDatetime.dataset) challengeDatetime.dataset.iso = '';
-                                }
-
-                                document.querySelectorAll('.glv-selection-card').forEach(c => c.classList.remove('selected'));
-                                document.querySelectorAll('.coach-item').forEach(i => {
-                                    i.classList.remove('selected');
-                                    const input = i.querySelector('input');
-                                    if (input) input.checked = false;
-                                });
-
-                                if (typeof ensureCoachOptions === 'function') ensureCoachOptions();
-                                if (typeof ensureGymOptions === 'function') ensureGymOptions();
-                                if (challengeModal) challengeModal.showModal();
-                            });
-                        });
-
-                    } catch (err) {
-                        if (aiMatchmakingResults) aiMatchmakingResults.innerHTML = `<p style="color: red; text-align: center; padding: 20px;">Error: ${err.message}</p>`;
-                    }
-                });
-            }
-
-            if (closeAiModal) closeAiModal.addEventListener('click', () => aiMatchmakingModal.close());
-            if (btnAiModalClose) btnAiModalClose.addEventListener('click', () => aiMatchmakingModal.close());
         });
     </script>
     <!-- 🔔 Notificaciones -->
