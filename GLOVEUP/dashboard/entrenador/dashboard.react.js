@@ -670,25 +670,25 @@ function CoachCalendar({
         deleteConfirmModal,
         h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 } },
             h('div', { className: 'coach-calendar-legend', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
-                h('span', { 
+                h('span', {
                     className: 'coach-calendar-pill coach-calendar-pill--sparring',
                     onClick: () => toggleFilter('sparring'),
                     style: { cursor: 'pointer', opacity: filters.sparring ? 1 : 0.4, transition: 'opacity 0.2s', userSelect: 'none' }
                 }, 'Sparring'),
-                h('span', { 
+                h('span', {
                     className: 'coach-calendar-pill coach-calendar-pill--inscripcion',
                     onClick: () => toggleFilter('inscripcion'),
                     style: { cursor: 'pointer', opacity: filters.inscripcion ? 1 : 0.4, transition: 'opacity 0.2s', userSelect: 'none' }
                 }, 'Inscripcion'),
-                h('span', { 
+                h('span', {
                     className: 'coach-calendar-pill coach-calendar-pill--recordatorio',
                     onClick: () => toggleFilter('recordatorio'),
                     style: { cursor: 'pointer', opacity: filters.recordatorio ? 1 : 0.4, transition: 'opacity 0.2s', userSelect: 'none' }
                 }, 'Recordatorio'),
-                h('span', { 
-                    className: 'coach-calendar-pill', 
+                h('span', {
+                    className: 'coach-calendar-pill',
                     onClick: () => toggleFilter('personalizado'),
-                    style: { backgroundColor: '#3b82f6', color: '#fff', cursor: 'pointer', opacity: filters.personalizado ? 1 : 0.4, transition: 'opacity 0.2s', userSelect: 'none' } 
+                    style: { backgroundColor: '#3b82f6', color: '#fff', cursor: 'pointer', opacity: filters.personalizado ? 1 : 0.4, transition: 'opacity 0.2s', userSelect: 'none' }
                 }, 'Personalizado')
             ),
             h('button', {
@@ -844,13 +844,13 @@ function CoachStatsDashboard() {
                 requestJson(`/api/entrenadores/me?email=${encodeURIComponent(email)}`).catch(() => ({})),
                 requestJson(`/api/entrenadores/me/calendar-events?email=${encodeURIComponent(email)}`).catch(() => [])
             ]);
-            
+
             const precioMensual = metricsInfo && typeof metricsInfo.precioMensual === 'number' ?
                 metricsInfo.precioMensual :
                 (coachInfo && typeof coachInfo.precioMensual === 'number' ? coachInfo.precioMensual : 0);
             const gimnasio = metricsInfo && metricsInfo.gimnasio ? String(metricsInfo.gimnasio) :
                 (coachInfo && coachInfo.gimnasio ? String(coachInfo.gimnasio) : '');
-            
+
             setMetricas({
                 boxeadoresActivos: metricsInfo && typeof metricsInfo.boxeadoresActivos === 'number' ? metricsInfo.boxeadoresActivos : 0,
                 inscripcionesMes: metricsInfo && typeof metricsInfo.inscripcionesMes === 'number' ? metricsInfo.inscripcionesMes : 0,
@@ -903,7 +903,7 @@ function CoachStatsDashboard() {
     return h(
         React.Fragment,
         null,
-        h('header', { 
+        h('header', {
             className: 'dashboard-header',
             style: { marginBottom: 24 }
         },
@@ -912,7 +912,7 @@ function CoachStatsDashboard() {
                 h('p', { style: { opacity: 0.8 } }, 'Resumen de actividad y gestion de boxeadores.')
             )
         ),
-        
+
         message ? h('div', {
             style: {
                 fontWeight: 600,
@@ -1019,7 +1019,7 @@ function CoachManagement() {
                     // Analizar días
                     const dayMap = { 'L': 0, 'M': 1, 'X': 2, 'J': 3, 'V': 4, 'S': 5, 'D': 6 };
                     const nextDays = [false, false, false, false, false, false, false];
-                    
+
                     if (diasStr.toUpperCase().includes('L-V')) [0, 1, 2, 3, 4].forEach(i => nextDays[i] = true);
                     else if (diasStr.toUpperCase().includes('L-S')) [0, 1, 2, 3, 4, 5].forEach(i => nextDays[i] = true);
                     else if (diasStr.toUpperCase().includes('TODOS')) [0, 1, 2, 3, 4, 5, 6].forEach(i => nextDays[i] = true);
@@ -1030,7 +1030,7 @@ function CoachManagement() {
                         });
                     }
                     setSelectedDays(nextDays);
-                    
+
                     if (horas && horas.includes('-')) {
                         const [ini, fin] = horas.split('-').map(s => s.trim());
                         if (ini) setHoraApertura(ini);
@@ -1054,7 +1054,7 @@ function CoachManagement() {
     // Inicializar Mapa de Ubicación
     useEffect(() => {
         if (loading) return;
-        
+
         const container = document.getElementById('gym-location-map');
         if (!container || !window.L) return;
 
@@ -1119,7 +1119,7 @@ function CoachManagement() {
             }
         };
         window.addEventListener('hashchange', handleHash);
-        
+
         return () => {
             window.removeEventListener('hashchange', handleHash);
         };
@@ -1130,9 +1130,9 @@ function CoachManagement() {
     const filteredBoxers = useMemo(() => {
         const q = search.trim().toLowerCase();
         if (!q) return boxers;
-        return boxers.filter(b => 
-            (b.nombre || '').toLowerCase().includes(q) || 
-            (b.email || '').toLowerCase().includes(q) || 
+        return boxers.filter(b =>
+            (b.nombre || '').toLowerCase().includes(q) ||
+            (b.email || '').toLowerCase().includes(q) ||
             (b.dniLicencia || '').toLowerCase().includes(q)
         );
     }, [boxers, search]);
@@ -1172,38 +1172,38 @@ function CoachManagement() {
                 method: 'PUT',
                 body: { gimnasio: gymInput }
             });
-                        const dayTags = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-                        const selectedNames = dayTags.filter((_, i) => selectedDays[i]);
-                        let diasSummary = selectedNames.length ? selectedNames.join(', ') : 'L-V';
-                        
-                        // Reconocimiento de rangos comunes
-                        const isLV = selectedDays.every((v, i) => i < 5 ? v : !v);
-                        const isLS = selectedDays.every((v, i) => i < 6 ? v : !v);
-                        const isAll = selectedDays.every(v => v);
-                        
-                        if (isAll) diasSummary = 'Todos los días';
-                        else if (isLS) diasSummary = 'L-S';
-                        else if (isLV) diasSummary = 'L-V';
+            const dayTags = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+            const selectedNames = dayTags.filter((_, i) => selectedDays[i]);
+            let diasSummary = selectedNames.length ? selectedNames.join(', ') : 'L-V';
 
-                        const payload = {
-                            nombre: gymInput, 
-                            creadoPorEmail: email, 
-                            bio: bioInput, 
-                            fotos,
-                            fotoPerfil,
-                            correoContacto: emailContacto,
-                            telefono,
-                            direccion,
-                            ubicacion,
-                            lat,
-                            lng,
-                            horario: `${diasSummary} | ${horaApertura} - ${horaCierre}`,
-                            nombreEntrenador
-                        };
-                        await requestJson('/api/gimnasios', {
-                            method: 'POST',
-                            body: payload
-                        });
+            // Reconocimiento de rangos comunes
+            const isLV = selectedDays.every((v, i) => i < 5 ? v : !v);
+            const isLS = selectedDays.every((v, i) => i < 6 ? v : !v);
+            const isAll = selectedDays.every(v => v);
+
+            if (isAll) diasSummary = 'Todos los días';
+            else if (isLS) diasSummary = 'L-S';
+            else if (isLV) diasSummary = 'L-V';
+
+            const payload = {
+                nombre: gymInput,
+                creadoPorEmail: email,
+                bio: bioInput,
+                fotos,
+                fotoPerfil,
+                correoContacto: emailContacto,
+                telefono,
+                direccion,
+                ubicacion,
+                lat,
+                lng,
+                horario: `${diasSummary} | ${horaApertura} - ${horaCierre}`,
+                nombreEntrenador
+            };
+            await requestJson('/api/gimnasios', {
+                method: 'POST',
+                body: payload
+            });
             setMessage({ kind: 'ok', text: hasGym ? 'Información del gimnasio guardada correctamente.' : '¡Enhorabuena! Gimnasio creado con éxito.' });
             refreshAll();
         } catch (err) {
@@ -1305,14 +1305,14 @@ function CoachManagement() {
 
     return h(React.Fragment, null, [
         h('div', { key: 'main-panel', className: 'dashboard-panel', style: !hasGym ? { border: '2px dashed #e5e7eb', backgroundColor: '#f9fafb', padding: '40px 20px' } : {} }, [
-            (!hasGym ? 
+            (!hasGym ?
                 h('div', { style: { textAlign: 'center', marginBottom: '30px' } }, [
                     h('h2', { style: { fontSize: '2rem', color: '#111827', marginBottom: '10px' } }, 'Crea tu Gimnasio ✨'),
                     h('p', { style: { color: '#6b7280', fontSize: '1.05rem', maxWidth: '600px', margin: '0 auto' } }, 'Aún no tienes un centro registrado. Completa la información de tu gimnasio para empezar a invitar y gestionar a tus boxeadores.')
-                ]) 
+                ])
                 : h('h2', null, 'Mi gimnasio')
             ),
-            
+
             h('div', { style: { display: 'grid', gap: '20px', marginTop: hasGym ? '24px' : '0' } }, [
                 h('div', { style: { display: 'flex', flexDirection: 'column', gap: '20px' } }, [
                     h('div', { style: { padding: '24px', borderRadius: '24px', border: '1px solid #f3f4f6', backgroundColor: '#fff', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', gap: '20px' } }, [
@@ -1347,7 +1347,7 @@ function CoachManagement() {
                             h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, [
                                 h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Días de Apertura'),
                                 h('div', { style: { display: 'flex', gap: '6px' } }, ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day, i) => (
-                                    h('button', { 
+                                    h('button', {
                                         type: 'button',
                                         key: day,
                                         onClick: () => {
@@ -1407,10 +1407,10 @@ function CoachManagement() {
                     ])
                 ])
             ]),
-            
+
             h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: !hasGym ? 'center' : 'stretch', marginTop: '12px' } }, [
                 h('button', { className: 'btn btn-primary', onClick: saveGym, style: { padding: '16px 32px', borderRadius: '16px', fontWeight: 800, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center', boxShadow: '0 4px 14px rgba(59,130,246,0.4)' } }, [
-                    h('i', { className: hasGym ? 'fas fa-save' : 'fas fa-plus' }), 
+                    h('i', { className: hasGym ? 'fas fa-save' : 'fas fa-plus' }),
                     (hasGym ? 'Guardar Cambios del Perfil' : 'Dar de alta Gimnasio Ahora')
                 ]),
                 (message ? h('div', { style: { marginTop: '16px', padding: '12px 20px', borderRadius: '12px', fontWeight: 600, textAlign: 'center', backgroundColor: message.kind === 'error' ? '#fee2e2' : '#dcfce7', color: message.kind === 'error' ? '#b91c1c' : '#065f46' } }, message.text) : null)
@@ -1429,35 +1429,35 @@ function CoachManagement() {
             ]),
             h('div', { className: 'sparring-list', style: { marginTop: 15 } }, [
                 (filteredBoxers.length === 0 ? h('p', null, 'No hay boxeadores.') :
-                filteredBoxers.map((b, i) => h(React.Fragment, { key: b._id || b.email }, [
-                    h('div', { className: 'sparring-card' }, [
-                        h('div', { className: 'card-rank' }, [h('span', null, `#${i + 1}`)]),
-                        h('div', { className: 'card-name' }, [h('span', { className: 'main-name' }, b.nombre), h('span', null, b.email)]),
-                        h('div', { className: 'card-stars' }, renderStars(levelScore(b.nivel))),
-                        h('div', { className: 'card-action' }, [h('button', { className: 'view-profile-button', onClick: () => selectForEdit(b) }, 'Editar')])
-                    ]),
-                    (editId === (b._id || b.email) ? h('div', { style: { padding: '20px', border: '1px solid #e5e7eb', backgroundColor: '#f8fafc', borderRadius: '16px', marginTop: '12px', display: 'grid', gap: '12px' } }, [
-                        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' } }, [
-                            h('input', { value: editName, onChange: (e) => setEditName(e.target.value), placeholder: 'Nombre del boxeador', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
-                            h('input', { value: editDni, onChange: (e) => setEditDni(e.target.value), placeholder: 'DNI o Licencia', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
-                            h('select', { value: editLevel, onChange: (e) => setEditLevel(e.target.value), style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box', backgroundColor: '#fff', cursor: 'pointer' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }, [
-                                h('option', { value: 'Principiante' }, 'Principiante'), h('option', { value: 'Intermedio' }, 'Intermedio'), h('option', { value: 'Avanzado' }, 'Avanzado'), h('option', { value: 'Amateur' }, 'Amateur'), h('option', { value: 'Profesional' }, 'Profesional')
-                            ])
+                    filteredBoxers.map((b, i) => h(React.Fragment, { key: b._id || b.email }, [
+                        h('div', { className: 'sparring-card' }, [
+                            h('div', { className: 'card-rank' }, [h('span', null, `#${i + 1}`)]),
+                            h('div', { className: 'card-name' }, [h('span', { className: 'main-name' }, b.nombre), h('span', null, b.email)]),
+                            h('div', { className: 'card-stars' }, renderStars(levelScore(b.nivel))),
+                            h('div', { className: 'card-action' }, [h('button', { className: 'view-profile-button', onClick: () => selectForEdit(b) }, 'Editar')])
                         ]),
-                        h('div', { style: { display: 'flex', gap: '10px', marginTop: '4px' } }, [
-                            h('button', { className: 'btn btn-primary', onClick: saveEdit, style: { padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '.9rem' } }, 'Guardar cambios'),
-                            h('button', { className: 'btn btn-secondary', onClick: deleteEdit, style: { padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '.9rem', color: '#ef4444', borderColor: '#ef4444' } }, 'Dar de baja'),
-                            h('button', { className: 'btn btn-secondary', onClick: () => setEditId(''), style: { padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '.9rem', color: '#6b7280', borderColor: '#d1d5db', marginLeft: 'auto' } }, 'Cancelar')
-                        ])
-                    ]) : null)
-                ])) )
+                        (editId === (b._id || b.email) ? h('div', { style: { padding: '20px', border: '1px solid #e5e7eb', backgroundColor: '#f8fafc', borderRadius: '16px', marginTop: '12px', display: 'grid', gap: '12px' } }, [
+                            h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' } }, [
+                                h('input', { value: editName, onChange: (e) => setEditName(e.target.value), placeholder: 'Nombre del boxeador', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
+                                h('input', { value: editDni, onChange: (e) => setEditDni(e.target.value), placeholder: 'DNI o Licencia', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
+                                h('select', { value: editLevel, onChange: (e) => setEditLevel(e.target.value), style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box', backgroundColor: '#fff', cursor: 'pointer' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }, [
+                                    h('option', { value: 'Principiante' }, 'Principiante'), h('option', { value: 'Intermedio' }, 'Intermedio'), h('option', { value: 'Avanzado' }, 'Avanzado'), h('option', { value: 'Amateur' }, 'Amateur'), h('option', { value: 'Profesional' }, 'Profesional')
+                                ])
+                            ]),
+                            h('div', { style: { display: 'flex', gap: '10px', marginTop: '4px' } }, [
+                                h('button', { className: 'btn btn-primary', onClick: saveEdit, style: { padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '.9rem' } }, 'Guardar cambios'),
+                                h('button', { className: 'btn btn-secondary', onClick: deleteEdit, style: { padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '.9rem', color: '#ef4444', borderColor: '#ef4444' } }, 'Dar de baja'),
+                                h('button', { className: 'btn btn-secondary', onClick: () => setEditId(''), style: { padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '.9rem', color: '#6b7280', borderColor: '#d1d5db', marginLeft: 'auto' } }, 'Cancelar')
+                            ])
+                        ]) : null)
+                    ])))
             ]),
         ]) : null),
 
         h('div', { key: 'revenue-panel', className: 'dashboard-panel' }, [
             h('h2', null, 'Resumen'),
             h('p', null, [
-                'Cobros registrados: ', 
+                'Cobros registrados: ',
                 h('strong', null, formatCurrency(cobrosTotal))
             ])
         ])
@@ -1708,7 +1708,7 @@ function CoachChallenges() {
     useEffect(() => {
         const stored = localStorage.getItem('gloveup_trainer_archived');
         if (stored) {
-            try { setArchivedIds(JSON.parse(stored)); } catch(e) {}
+            try { setArchivedIds(JSON.parse(stored)); } catch (e) { }
         }
     }, []);
 
@@ -1726,17 +1726,21 @@ function CoachChallenges() {
 
     const isPendingStatus = (s) => !s || s === 'pending' || s === 'pending_coach_to' || s === 'pending_coach_from';
 
+    const hasIApproved = (c) => {
+        if (c.direction === 'inbound') return c.coachToApproval === true;
+        if (c.direction === 'outbound') return c.coachFromApproval === true;
+        return false;
+    };
+
     const filteredChallenges = useMemo(() => {
-        if (filter === 'archived') {
-            return challenges.filter(c => archivedIds.includes(c.id));
+        if (filter === 'history') {
+            return challenges.filter(c => c.status === 'completed' || archivedIds.includes(c.id));
         }
-        // En cualquier otra pestaña, ocultamos lo archivado
-        const visible = challenges.filter(c => !archivedIds.includes(c.id));
-        
-        if (filter === 'all') return visible;
-        if (filter === 'pending') return visible.filter(c => isPendingStatus(c.status));
-        if (filter === 'accepted') return visible.filter(c => c.status === 'accepted');
-        if (filter === 'completed') return visible.filter(c => c.status === 'completed');
+        // En cualquier otra pestaña, ocultamos lo completado y lo archivado
+        const visible = challenges.filter(c => c.status !== 'completed' && !archivedIds.includes(c.id));
+
+        if (filter === 'pending') return visible.filter(c => isPendingStatus(c.status) && !hasIApproved(c));
+        if (filter === 'accepted') return visible.filter(c => c.status === 'accepted' || (isPendingStatus(c.status) && hasIApproved(c)));
         if (filter === 'declined') return visible.filter(c => c.status === 'declined');
         return visible;
     }, [challenges, filter, archivedIds]);
@@ -1783,6 +1787,7 @@ function CoachChallenges() {
                 kind: 'ok',
                 text: `Reto ${action === 'accept' ? 'aprobado' : 'rechazado'} correctamente.`
             });
+            if (action === 'accept') setFilter('accepted');
             load();
         } catch (err) {
             setMessage({
@@ -1797,10 +1802,10 @@ function CoachChallenges() {
         try {
             await requestJson(`/api/entrenadores/me/challenges/complete?email=${encodeURIComponent(email)}`, {
                 method: 'POST',
-                body: { 
-                    challengeId: completingChallengeId, 
-                    stars: completionRating, 
-                    note: completionNote 
+                body: {
+                    challengeId: completingChallengeId,
+                    stars: completionRating,
+                    note: completionNote
                 }
             });
             setMessage({
@@ -1855,17 +1860,18 @@ function CoachChallenges() {
                 }
             },
                 [
-                    { key: 'all',       label: 'Todos',        icon: 'fa-list' },
-                    { key: 'pending',   label: 'Pendientes',   icon: 'fa-clock' },
-                    { key: 'accepted',  label: 'Concretados',  icon: 'fa-calendar-check' },
-                    { key: 'completed', label: 'Completados',  icon: 'fa-check-double' },
-                    { key: 'declined',  label: 'Rechazados',   icon: 'fa-times-circle' },
-                    { key: 'archived',  label: 'Historial',    icon: 'fa-archive' }
+                    { key: 'pending', label: 'En curso', icon: 'fa-spinner fa-spin' },
+                    { key: 'accepted', label: 'Aceptado', icon: 'fa-check-circle' },
+                    { key: 'declined', label: 'Rechazado', icon: 'fa-times-circle' },
+                    { key: 'history', label: 'Historial', icon: 'fa-history' }
                 ].map(tab => {
-                    const count = tab.key === 'archived' ? archivedIds.length
-                        : tab.key === 'all' ? challenges.filter(c => !archivedIds.includes(c.id)).length
-                        : tab.key === 'pending' ? challenges.filter(c => isPendingStatus(c.status) && !archivedIds.includes(c.id)).length
-                        : challenges.filter(c => c.status === tab.key && !archivedIds.includes(c.id)).length;
+                    const count = tab.key === 'history' 
+                        ? challenges.filter(c => c.status === 'completed' || archivedIds.includes(c.id)).length
+                        : tab.key === 'pending' 
+                            ? challenges.filter(c => isPendingStatus(c.status) && c.status !== 'completed' && !archivedIds.includes(c.id) && !hasIApproved(c)).length
+                        : tab.key === 'accepted'
+                            ? challenges.filter(c => (c.status === 'accepted' || (isPendingStatus(c.status) && hasIApproved(c))) && !archivedIds.includes(c.id)).length
+                            : challenges.filter(c => c.status === tab.key && !archivedIds.includes(c.id)).length;
                     const isActive = filter === tab.key;
                     return h('button', {
                         key: tab.key,
@@ -1970,26 +1976,26 @@ function CoachChallenges() {
                                         const otherApp = isToCoach ? c.coachFromApproval : c.coachToApproval;
 
                                         let label, bg, color;
-                                        if (s === 'accepted') { label = 'Confirmado'; bg = '#dcfce7'; color = '#166534'; }
+                                        if (s === 'accepted') { label = 'Aceptado'; bg = '#dcfce7'; color = '#166534'; }
                                         else if (s === 'declined') { label = 'Rechazado'; bg = '#fee2e2'; color = '#991b1b'; }
-                                        else if (s === 'completed') { label = 'Completado'; bg = '#f0f9ff'; color = '#0369a1'; }
+                                        else if (s === 'completed') { label = 'Finalizado'; bg = '#f0f9ff'; color = '#0369a1'; }
                                         else {
-                                            if (myApp === null && otherApp === null) {
+                                            if (hasIApproved(c)) {
+                                                label = 'Esperando al rival';
+                                                bg = '#f3f4f6'; color = '#64748b';
+                                            } else if (myApp === null && otherApp === null) {
                                                 label = isToCoach ? 'Tu aprobación necesaria' : 'Debes aprobar tu reto';
                                                 bg = '#fffbeb'; color = '#d97706';
-                                            } else if (myApp !== null && otherApp === null) {
-                                                label = 'Esperando al entrenador rival';
-                                                bg = '#f3f4f6'; color = '#64748b';
                                             } else if (myApp === null && otherApp !== null) {
                                                 label = '¡Tu aprobación necesaria!';
                                                 bg = '#fffbeb'; color = '#92400e';
                                             } else {
-                                                label = 'Pendiente'; bg = '#f3f4f6'; color = '#374151';
+                                                label = 'En curso'; bg = '#f3f4f6'; color = '#374151';
                                             }
                                         }
                                         return h('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
                                             h('div', { style: { padding: '4px 12px', borderRadius: 20, fontSize: '.7rem', fontWeight: 800, textTransform: 'uppercase', backgroundColor: bg, color } }, label),
-                                            filter === 'archived' ? 
+                                            filter === 'history' ?
                                                 h('button', {
                                                     onClick: () => unarchiveChallenge(c.id),
                                                     title: 'Restaurar',
@@ -2105,7 +2111,7 @@ function CoachChallenges() {
                                     const dir = c.direction || 'inbound';
                                     const isToCoach = dir === 'inbound';
                                     const myApproval = isToCoach ? c.coachToApproval : c.coachFromApproval;
-                                    
+
                                     // Turn to approve
                                     const canAct = (s !== 'accepted' && s !== 'declined' && s !== 'completed') && (myApproval == null);
                                     if (canAct) {
@@ -2134,22 +2140,22 @@ function CoachChallenges() {
                                         return h('div', { style: { display: 'flex', gap: '20px', marginTop: 12, justifyContent: 'center' } },
                                             h('button', {
                                                 className: 'glv-btn-primary',
-                                                style: { 
-                                                    padding: '12px 24px', 
-                                                    borderRadius: '12px', 
-                                                    border: 'none', 
-                                                    backgroundColor: 'var(--color-accent, #f97316)', 
-                                                    color: '#fff', 
-                                                    fontWeight: 700, 
-                                                    fontSize: '.9rem', 
-                                                    cursor: 'pointer', 
-                                                    display: 'flex', 
-                                                    alignItems: 'center', 
+                                                style: {
+                                                    padding: '12px 24px',
+                                                    borderRadius: '12px',
+                                                    border: 'none',
+                                                    backgroundColor: 'var(--color-accent, #f97316)',
+                                                    color: '#fff',
+                                                    fontWeight: 700,
+                                                    fontSize: '.9rem',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
                                                     gap: 10,
                                                     boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)'
                                                 },
                                                 onClick: () => setCompletingChallengeId(c.id)
-                                            }, 
+                                            },
                                                 h('i', { className: 'fas fa-flag-checkered' }),
                                                 'Finalizar y Valorar'
                                             )
@@ -2160,8 +2166,8 @@ function CoachChallenges() {
                                     if (s === 'completed') {
                                         return h('div', { style: { marginTop: 12, textAlign: 'center', padding: '8px', backgroundColor: '#f0f9ff', borderRadius: '12px', border: '1px solid #e0f2fe' } },
                                             h('div', { style: { fontSize: '.75rem', color: '#0369a1', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 } }, 'Sparring Finalizado'),
-                                            h('div', { style: { color: '#fbbf24', fontSize: '1rem' } }, 
-                                                ...Array.from({length: 5}).map((_, i) => h('i', { className: i < (c.rating || 0) ? 'fas fa-star' : 'far fa-star', key: i }))
+                                            h('div', { style: { color: '#fbbf24', fontSize: '1rem' } },
+                                                ...Array.from({ length: 5 }).map((_, i) => h('i', { className: i < (c.rating || 0) ? 'fas fa-star' : 'far fa-star', key: i }))
                                             ),
                                             c.completedNote ? h('div', { style: { fontSize: '.8rem', color: '#64748b', fontStyle: 'italic', marginTop: 4 } }, `"${c.completedNote}"`) : null
                                         );
@@ -2185,7 +2191,7 @@ function CoachChallenges() {
                     justifyContent: 'center',
                     padding: 20
                 }
-            }, 
+            },
                 h('div', {
                     style: {
                         backgroundColor: '#fff',
@@ -2199,10 +2205,10 @@ function CoachChallenges() {
                 },
                     h('h3', { style: { fontSize: '1.5rem', fontWeight: 900, marginBottom: 8, textAlign: 'center' } }, 'Finalizar Sparring'),
                     h('p', { style: { fontSize: '.9rem', color: '#6b7280', textAlign: 'center', marginBottom: 24 } }, '¿Cómo fue el desempeño? Tu valoración ayudará a mejorar la comunidad.'),
-                    
+
                     // Estrellas
                     h('div', { style: { display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 24 } },
-                        ...[1,2,3,4,5].map(star => h('i', {
+                        ...[1, 2, 3, 4, 5].map(star => h('i', {
                             key: star,
                             className: star <= completionRating ? 'fas fa-star' : 'far fa-star',
                             style: { fontSize: '2rem', color: star <= completionRating ? '#fbbf24' : '#d1d5db', cursor: 'pointer', transition: 'transform 0.15s' },

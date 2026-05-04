@@ -749,11 +749,11 @@ router.post('/me/challenges/respond', async (req, res) => {
         // Compatibilidad con retos antiguos: 'pending' se trata como 'pending_coach_to'
         const effectiveStatus = curStatus === 'pending' ? 'pending_coach_to' : curStatus;
 
-        // Validar que este entrenador no haya respondido ya
-        if (isToCoach && foundChallenge.coachToApproval !== null) {
+        // Validar que este entrenador no haya respondido ya (usa == para capturar null y undefined)
+        if (isToCoach && foundChallenge.coachToApproval != null) {
             return res.status(400).json({ error: 'Ya has respondido a este reto como el entrenador del retado.' });
         }
-        if (!isToCoach && foundChallenge.coachFromApproval !== null) {
+        if (!isToCoach && foundChallenge.coachFromApproval != null) {
             return res.status(400).json({ error: 'Ya has respondido a este reto como el entrenador del retador.' });
         }
         if (curStatus === 'accepted') return res.status(400).json({ error: 'Este sparring ya está confirmado.' });

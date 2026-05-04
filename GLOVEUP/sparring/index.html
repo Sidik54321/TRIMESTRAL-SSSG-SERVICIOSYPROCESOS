@@ -814,7 +814,7 @@
                     const isMe = identifierRaw.toLowerCase() === (localStorage.getItem('gloveup_user_email') || '').toLowerCase();
                     const nameEnc = boxeador && boxeador.nombre ? encodeURIComponent(String(boxeador.nombre)) : '';
                     const challengeLabel = isMe ? 'Tú' : 'Retar';
-                    const canChallenge = canViewProfile && !isMe;
+                    const canChallenge = !isCoachRole && canViewProfile && !isMe;
 
                     card.innerHTML = `
                         <div class="card-rank"><span>#${globalIndex}</span>${globalIndex === 1 ? '<i class="fas fa-crown"></i>' : ''}</div>
@@ -862,6 +862,7 @@
                     }
                     const challengeBtn = e.target && e.target.closest ? e.target.closest('.challenge-button') : null;
                     if (!challengeBtn || !challengeModal) return;
+                    if (isCoachRole) return;
                     const identifierEnc = challengeBtn.dataset && challengeBtn.dataset.identifierEnc ? String(challengeBtn.dataset.identifierEnc) : '';
                     const nameEnc = challengeBtn.dataset && challengeBtn.dataset.nameEnc ? String(challengeBtn.dataset.nameEnc) : '';
                     const identifier = identifierEnc ? decodeURIComponent(identifierEnc) : '';
@@ -1154,7 +1155,7 @@
 
                 // Auto-trigger challenge modal if coming from gyms
                 const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('action') === 'challenge') {
+                if (urlParams.get('action') === 'challenge' && !isCoachRole) {
                     const encId = urlParams.get('id');
                     const encName = urlParams.get('name');
                     if (encId && challengeModal && typeof ensureGymOptions === 'function') {
