@@ -1733,8 +1733,11 @@ function CoachChallenges() {
     };
 
     const filteredChallenges = useMemo(() => {
+        if (filter === 'completed') {
+            return challenges.filter(c => c.status === 'completed' && !archivedIds.includes(c.id));
+        }
         if (filter === 'history') {
-            return challenges.filter(c => c.status === 'completed' || archivedIds.includes(c.id));
+            return challenges.filter(c => archivedIds.includes(c.id));
         }
         // En cualquier otra pestaña, ocultamos lo completado y lo archivado
         const visible = challenges.filter(c => c.status !== 'completed' && !archivedIds.includes(c.id));
@@ -1812,6 +1815,7 @@ function CoachChallenges() {
                 kind: 'ok',
                 text: 'Sparring completado y valorado correctamente.'
             });
+            setFilter('completed');
             setCompletingChallengeId(null);
             setCompletionNote('');
             setCompletionRating(5);
@@ -1863,11 +1867,14 @@ function CoachChallenges() {
                     { key: 'pending', label: 'En curso', icon: 'fa-spinner fa-spin' },
                     { key: 'accepted', label: 'Aceptado', icon: 'fa-check-circle' },
                     { key: 'declined', label: 'Rechazado', icon: 'fa-times-circle' },
+                    { key: 'completed', label: 'Completados', icon: 'fa-flag-checkered' },
                     { key: 'history', label: 'Historial', icon: 'fa-history' }
                 ].map(tab => {
-                    const count = tab.key === 'history' 
-                        ? challenges.filter(c => c.status === 'completed' || archivedIds.includes(c.id)).length
-                        : tab.key === 'pending' 
+                    const count = tab.key === 'completed'
+                        ? challenges.filter(c => c.status === 'completed' && !archivedIds.includes(c.id)).length
+                        : tab.key === 'history'
+                        ? challenges.filter(c => archivedIds.includes(c.id)).length
+                        : tab.key === 'pending'
                             ? challenges.filter(c => isPendingStatus(c.status) && c.status !== 'completed' && !archivedIds.includes(c.id) && !hasIApproved(c)).length
                         : tab.key === 'accepted'
                             ? challenges.filter(c => (c.status === 'accepted' || (isPendingStatus(c.status) && hasIApproved(c))) && !archivedIds.includes(c.id)).length
@@ -2164,12 +2171,21 @@ function CoachChallenges() {
 
                                     // Completed -> Show Rating
                                     if (s === 'completed') {
-                                        return h('div', { style: { marginTop: 12, textAlign: 'center', padding: '8px', backgroundColor: '#f0f9ff', borderRadius: '12px', border: '1px solid #e0f2fe' } },
-                                            h('div', { style: { fontSize: '.75rem', color: '#0369a1', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 } }, 'Sparring Finalizado'),
-                                            h('div', { style: { color: '#fbbf24', fontSize: '1rem' } },
-                                                ...Array.from({ length: 5 }).map((_, i) => h('i', { className: i < (c.rating || 0) ? 'fas fa-star' : 'far fa-star', key: i }))
+                                        const ratingVal = c.rating || 0;
+                                        return h('div', { style: { marginTop: 12, textAlign: 'center', padding: '16px 20px', backgroundColor: '#f0f9ff', borderRadius: '16px', border: '1px solid #bae6fd' } },
+                                            h('div', { style: { fontSize: '.75rem', color: '#0369a1', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 } },
+                                                h('i', { className: 'fas fa-flag-checkered' }),
+                                                'Sparring Finalizado'
                                             ),
-                                            c.completedNote ? h('div', { style: { fontSize: '.8rem', color: '#64748b', fontStyle: 'italic', marginTop: 4 } }, `"${c.completedNote}"`) : null
+                                            h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 8 } },
+                                                ...Array.from({ length: 5 }).map((_, i) => h('i', {
+                                                    key: i,
+                                                    className: i < ratingVal ? 'fas fa-star' : 'far fa-star',
+                                                    style: { fontSize: '1.6rem', color: i < ratingVal ? '#f59e0b' : '#d1d5db' }
+                                                })),
+                                                h('span', { style: { fontSize: '1rem', fontWeight: 800, color: '#374151', marginLeft: 10 } }, `${ratingVal}/5`)
+                                            ),
+                                            c.completedNote ? h('div', { style: { fontSize: '.85rem', color: '#475569', fontStyle: 'italic', marginTop: 6, padding: '8px 14px', backgroundColor: '#fff', borderRadius: '10px', border: '1px solid #e0f2fe' } }, `"${c.completedNote}"`) : null
                                         );
                                     }
                                     return null;
