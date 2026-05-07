@@ -25,8 +25,49 @@
         if (_role === 'entrenador') document.body.classList.add('theme-entrenador');
         const _savedTheme = localStorage.getItem('gloveup_theme');
         if (_savedTheme === 'dark') document.body.classList.add('theme-dark');
-        const _glvPalette = localStorage.getItem('gloveup_palette');
-        if (_glvPalette) document.body.classList.add('palette-' + _glvPalette);
+
+        const _glvCustomBg = localStorage.getItem('gloveup_custom_bg');
+        if (_glvCustomBg) {
+            try {
+                const parsed = JSON.parse(_glvCustomBg);
+                if (parsed && parsed.bgBody) {
+                    document.body.classList.add('bg-custom');
+                    if (parsed.bgBody) document.body.style.setProperty('--glv-bg-body', parsed.bgBody);
+                    if (parsed.bgLight) document.body.style.setProperty('--glv-bg-light', parsed.bgLight);
+                    if (parsed.bgCard) document.body.style.setProperty('--glv-bg-card', parsed.bgCard);
+                    if (parsed.bgElevated) document.body.style.setProperty('--glv-bg-elevated', parsed.bgElevated);
+                    if (parsed.glassBg) document.body.style.setProperty('--glv-glass-bg', parsed.glassBg);
+                }
+            } catch (_) {}
+        }
+
+        const _glvCustomAccent = localStorage.getItem('gloveup_custom_accent');
+        if (_glvCustomAccent) {
+            try {
+                const parsed = JSON.parse(_glvCustomAccent);
+                if (parsed && parsed.accent) {
+                    document.body.classList.add('accent-custom');
+                    if (parsed.accent) document.body.style.setProperty('--glv-accent', parsed.accent);
+                    if (parsed.accentHover) document.body.style.setProperty('--glv-accent-hover', parsed.accentHover);
+                    if (parsed.accentSoft) document.body.style.setProperty('--glv-accent-soft', parsed.accentSoft);
+                    if (parsed.accentGlow) document.body.style.setProperty('--glv-accent-glow', parsed.accentGlow);
+                    if (parsed.shadowAccent) document.body.style.setProperty('--glv-shadow-accent', parsed.shadowAccent);
+                    if (parsed.shadowAccentLg) document.body.style.setProperty('--glv-shadow-accent-lg', parsed.shadowAccentLg);
+                }
+            } catch (_) {}
+        }
+
+        const _glvCustomPrimary = localStorage.getItem('gloveup_custom_primary');
+        if (_glvCustomPrimary) {
+            try {
+                const parsed = JSON.parse(_glvCustomPrimary);
+                if (parsed && parsed.primary) {
+                    document.body.classList.add('primary-custom');
+                    if (parsed.primary) document.body.style.setProperty('--glv-primary', parsed.primary);
+                    if (parsed.primaryHover) document.body.style.setProperty('--glv-primary-hover', parsed.primaryHover);
+                }
+            } catch (_) {}
+        }
     </script>
     <!-- SIDEBAR VERTICAL -->
     <aside class="main-sidebar">
@@ -301,7 +342,7 @@
         <form method="dialog" class="modal-card" id="challenge-form">
             <div class="modal-header">
                 <h3 id="challenge-title">Retar a sparring</h3>
-                <button class="icon-btn" value="cancel" aria-label="Cerrar">
+                <button class="icon-btn" type="button" id="btn-challenge-close" aria-label="Cerrar">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -376,6 +417,21 @@
         </form>
     </dialog>
 
+    <dialog class="modal" id="challenge-cancel-confirm">
+        <form method="dialog" class="modal-card">
+            <div class="modal-header">
+                <h3>Cancelar sparring</h3>
+            </div>
+            <div class="modal-body">
+                <p style="margin:0;color:var(--color-text-light);">¿Deseas cancelar el sparring? Los cambios realizados no serán guardados.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" value="stay" type="submit">Seguir editando</button>
+                <button class="btn btn-primary" value="confirm" type="submit">Cancelar sparring</button>
+            </div>
+        </form>
+    </dialog>
+
     <dialog class="dt-overlay" id="dt-overlay" aria-label="Seleccionar fecha y hora">
         <div class="dt-panel">
             <div class="dt-header">
@@ -406,8 +462,8 @@
             </div>
         </div>
     </dialog>
-    
-    
+
+
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const listContainer = document.getElementById('sparring-list-container');
@@ -433,6 +489,8 @@
             const challengeNote = document.getElementById('challenge-note');
             const challengeForm = document.getElementById('challenge-form');
             const challengeCancel = document.getElementById('btn-challenge-cancel');
+            const challengeClose = document.getElementById('btn-challenge-close');
+            const challengeCancelConfirm = document.getElementById('challenge-cancel-confirm');
             let challengeTargetIdentifier = '';
             let coachesCache = [];
             const dtOverlay = document.getElementById('dt-overlay');
@@ -627,7 +685,7 @@
             const renderCoachChecklist = (coaches) => {
                 const checklist = document.getElementById('coach-checklist');
                 if (!checklist) return;
-                
+
                 checklist.innerHTML = '';
                 if (!coaches || coaches.length === 0) {
                     checklist.innerHTML = '<p style="padding:20px;font-size:0.85rem;opacity:0.6;text-align:center;">No se encontraron entrenadores</p>';
@@ -639,7 +697,7 @@
                     const name = c && c.nombre ? String(c.nombre) : 'Entrenador';
                     const gym = c && c.gimnasio ? String(c.gimnasio) : 'Sin gimnasio';
                     const isSelected = selectedCoachIds.has(id);
-                    
+
                     const item = document.createElement('div');
                     item.className = `coach-item ${isSelected ? 'selected' : ''}`;
                     item.dataset.id = id;
@@ -658,7 +716,7 @@
                         e.preventDefault();
                         const cb = item.querySelector('.coach-cb');
                         const customCb = item.querySelector('.coach-checkbox-custom');
-                        
+
                         if (selectedCoachIds.has(id)) {
                             selectedCoachIds.delete(id);
                             cb.checked = false;
@@ -926,8 +984,8 @@
             if (coachSearch) {
                 coachSearch.addEventListener('input', (e) => {
                     const term = e.target.value.toLowerCase();
-                    const filtered = currentModalCoaches.filter(c => 
-                        (c.nombre || '').toLowerCase().includes(term) || 
+                    const filtered = currentModalCoaches.filter(c =>
+                        (c.nombre || '').toLowerCase().includes(term) ||
                         (c.gimnasio || '').toLowerCase().includes(term)
                     );
                     renderCoachChecklist(filtered);
@@ -947,10 +1005,42 @@
                 });
             }
 
-            if (challengeCancel && challengeModal) {
+            const askCancelChallenge = () => {
+                return new Promise((resolve) => {
+                    if (!challengeCancelConfirm) return resolve(false);
+                    const onClose = () => {
+                        resolve(challengeCancelConfirm.returnValue === 'confirm');
+                    };
+                    challengeCancelConfirm.addEventListener('close', onClose, { once: true });
+                    challengeCancelConfirm.showModal();
+                });
+            };
+
+            const confirmCloseChallenge = async () => {
+                if (!challengeModal) return;
+                const ok = await askCancelChallenge();
+                if (!ok) return;
+                challengeModal.close();
+            };
+
+            if (challengeCancel) {
                 challengeCancel.addEventListener('click', (e) => {
                     e.preventDefault();
-                    challengeModal.close();
+                    confirmCloseChallenge();
+                });
+            }
+
+            if (challengeClose) {
+                challengeClose.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    confirmCloseChallenge();
+                });
+            }
+
+            if (challengeModal) {
+                challengeModal.addEventListener('cancel', (e) => {
+                    e.preventDefault();
+                    confirmCloseChallenge();
                 });
             }
 
@@ -1186,7 +1276,7 @@
                             });
                         }
                         challengeModal.showModal();
-                        
+
                         // Clean the URL to avoid re-triggering on reload
                         window.history.replaceState({}, document.title, window.location.pathname);
                     }
@@ -1202,7 +1292,7 @@
                     </div>
                 `;
             }
-            
+
         });
     </script>
     <!-- 🔔 Notificaciones -->

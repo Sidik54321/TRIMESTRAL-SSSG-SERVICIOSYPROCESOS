@@ -20,6 +20,7 @@
             position: relative;
             overflow: hidden;
         }
+
         .gym-detail-hero::before {
             content: '';
             position: absolute;
@@ -28,17 +29,19 @@
             opacity: 0.2;
             z-index: 0;
         }
+
         .gym-detail-hero .hero-inner {
             position: relative;
             z-index: 1;
             max-width: 1200px;
             margin: 0 auto;
         }
+
         .gym-detail-hero .back-link {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: rgba(255,255,255,0.7);
+            color: rgba(255, 255, 255, 0.7);
             font-size: 0.88rem;
             font-weight: 600;
             margin-bottom: 20px;
@@ -46,7 +49,11 @@
             cursor: pointer;
             text-decoration: none;
         }
-        .gym-detail-hero .back-link:hover { color: #fff; }
+
+        .gym-detail-hero .back-link:hover {
+            color: #fff;
+        }
+
         .gym-detail-hero h1 {
             font-family: var(--font-heading);
             font-size: clamp(1.8rem, 4vw, 3rem);
@@ -54,19 +61,25 @@
             margin: 0 0 10px;
             letter-spacing: -0.02em;
         }
+
         .gym-detail-hero .gym-meta {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
             align-items: center;
             font-size: 0.95rem;
-            color: rgba(255,255,255,0.8);
+            color: rgba(255, 255, 255, 0.8);
         }
-        .gym-detail-hero .gym-meta i { margin-right: 6px; color: var(--color-accent); }
+
+        .gym-detail-hero .gym-meta i {
+            margin-right: 6px;
+            color: var(--color-accent);
+        }
+
         .gym-detail-hero .gym-bio {
             margin-top: 16px;
             font-size: 0.95rem;
-            color: rgba(255,255,255,0.7);
+            color: rgba(255, 255, 255, 0.7);
             max-width: 700px;
             line-height: 1.65;
         }
@@ -76,12 +89,14 @@
             margin: 0 auto;
             padding: 40px 20px 60px;
         }
+
         .gym-layout-grid {
             display: grid;
             grid-template-columns: 300px 1fr;
             gap: 40px;
             align-items: flex-start;
         }
+
         .gym-sidebar {
             position: sticky;
             top: 40px;
@@ -89,6 +104,7 @@
             flex-direction: column;
             gap: 30px;
         }
+
         .gallery-card {
             background: var(--color-bg-card);
             border: 1px solid var(--color-border);
@@ -96,6 +112,7 @@
             padding: 20px;
             box-shadow: var(--shadow-sm);
         }
+
         .gallery-card h3 {
             font-family: var(--font-heading);
             font-size: 1.1rem;
@@ -107,8 +124,11 @@
             align-items: center;
             gap: 8px;
         }
-        .gallery-card h3 i { color: var(--color-accent); }
-        
+
+        .gallery-card h3 i {
+            color: var(--color-accent);
+        }
+
         /* Carousel Styles */
         .carousel-container {
             position: relative;
@@ -118,22 +138,26 @@
             overflow: hidden;
             border: 1px solid var(--color-border);
         }
+
         .carousel-track {
             display: flex;
             height: 100%;
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
         .carousel-slide {
             flex: 0 0 100%;
             width: 100%;
             height: 100%;
         }
+
         .carousel-slide img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
         }
+
         .carousel-nav {
             position: absolute;
             top: 0;
@@ -147,6 +171,7 @@
             pointer-events: none;
             z-index: 5;
         }
+
         .carousel-btn {
             width: 32px;
             height: 32px;
@@ -162,9 +187,18 @@
             transition: background 0.2s;
             backdrop-filter: blur(4px);
         }
-        .carousel-btn:hover { background: rgba(0,0,0,0.8); }
-        .carousel-btn i { font-size: 0.8rem; }
-        .carousel-container { cursor: zoom-in; }
+
+        .carousel-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .carousel-btn i {
+            font-size: 0.8rem;
+        }
+
+        .carousel-container {
+            cursor: zoom-in;
+        }
 
         /* Description/Bio style */
         .info-card {
@@ -174,6 +208,7 @@
             padding: 24px;
             box-shadow: var(--shadow-sm);
         }
+
         .info-card h3 {
             font-family: var(--font-heading);
             font-size: 1.1rem;
@@ -185,7 +220,11 @@
             align-items: center;
             gap: 8px;
         }
-        .info-card h3 i { color: var(--color-accent); }
+
+        .info-card h3 i {
+            color: var(--color-accent);
+        }
+
         .info-card p {
             font-size: 0.95rem;
             line-height: 1.6;
@@ -201,7 +240,7 @@
         .lightbox {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0, 0, 0, 0.9);
             z-index: 9999;
             display: none;
             align-items: center;
@@ -209,20 +248,25 @@
             backdrop-filter: blur(8px);
             cursor: zoom-out;
         }
-        .lightbox.active { display: flex; }
+
+        .lightbox.active {
+            display: flex;
+        }
+
         .lightbox-content {
             max-width: 90vw;
             max-height: 90vh;
             object-fit: contain;
             border-radius: 8px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
             transition: transform 0.3s ease;
         }
+
         .lightbox-close {
             position: absolute;
             top: 30px;
             right: 30px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             color: #fff;
             border: none;
             width: 44px;
@@ -235,8 +279,11 @@
             font-size: 1.2rem;
             backdrop-filter: blur(10px);
         }
-        .lightbox-close:hover { background: rgba(255,255,255,0.2); }
-        
+
+        .lightbox-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
         .carousel-dots {
             position: absolute;
             bottom: 12px;
@@ -246,14 +293,16 @@
             gap: 6px;
             z-index: 5;
         }
+
         .dot {
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.4);
+            background: rgba(255, 255, 255, 0.4);
             cursor: pointer;
             transition: all 0.2s;
         }
+
         .dot.active {
             background: #fff;
             width: 16px;
@@ -264,11 +313,13 @@
             .gym-layout-grid {
                 grid-template-columns: 1fr;
             }
+
             .gym-sidebar {
                 position: static;
                 order: 2;
             }
         }
+
         .boxers-section-header {
             display: flex;
             justify-content: space-between;
@@ -277,6 +328,7 @@
             flex-wrap: wrap;
             gap: 12px;
         }
+
         .boxers-section-header h2 {
             font-family: var(--font-heading);
             font-size: 1.5rem;
@@ -286,6 +338,7 @@
             letter-spacing: 0.02em;
             text-align: left;
         }
+
         .boxers-count {
             font-size: 0.88rem;
             font-weight: 700;
@@ -294,14 +347,29 @@
             padding: 6px 14px;
             border-radius: var(--radius-full);
         }
-        .boxers-list { display: flex; flex-direction: column; gap: 12px; }
+
+        .boxers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
             color: var(--color-text-light);
         }
-        .empty-state i { font-size: 3rem; margin-bottom: 16px; display: block; opacity: 0.3; }
-        .empty-state p { font-size: 1.05rem; }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            display: block;
+            opacity: 0.3;
+        }
+
+        .empty-state p {
+            font-size: 1.05rem;
+        }
 
         /* Responsive sparring cards inside gym detail */
         @media (max-width: 900px) {
@@ -310,8 +378,14 @@
                 gap: 10px;
                 padding: 14px;
             }
-            .card-division, .card-record, .card-residence { display: none; }
+
+            .card-division,
+            .card-record,
+            .card-residence {
+                display: none;
+            }
         }
+
         @media (max-width: 600px) {
             .sparring-card {
                 grid-template-columns: 1fr;
@@ -319,8 +393,15 @@
                 justify-items: center;
                 gap: 8px;
             }
-            .card-action { width: 100%; flex-direction: column; }
-            .gym-detail-hero { padding: 40px 20px 30px; }
+
+            .card-action {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .gym-detail-hero {
+                padding: 40px 20px 30px;
+            }
         }
     </style>
 </head>
@@ -331,8 +412,49 @@
         if (_role === 'entrenador') document.body.classList.add('theme-entrenador');
         const _savedTheme = localStorage.getItem('gloveup_theme');
         if (_savedTheme === 'dark') document.body.classList.add('theme-dark');
-        const _glvPalette = localStorage.getItem('gloveup_palette');
-        if (_glvPalette) document.body.classList.add('palette-' + _glvPalette);
+
+        const _glvCustomBg = localStorage.getItem('gloveup_custom_bg');
+        if (_glvCustomBg) {
+            try {
+                const parsed = JSON.parse(_glvCustomBg);
+                if (parsed && parsed.bgBody) {
+                    document.body.classList.add('bg-custom');
+                    if (parsed.bgBody) document.body.style.setProperty('--glv-bg-body', parsed.bgBody);
+                    if (parsed.bgLight) document.body.style.setProperty('--glv-bg-light', parsed.bgLight);
+                    if (parsed.bgCard) document.body.style.setProperty('--glv-bg-card', parsed.bgCard);
+                    if (parsed.bgElevated) document.body.style.setProperty('--glv-bg-elevated', parsed.bgElevated);
+                    if (parsed.glassBg) document.body.style.setProperty('--glv-glass-bg', parsed.glassBg);
+                }
+            } catch (_) {}
+        }
+
+        const _glvCustomAccent = localStorage.getItem('gloveup_custom_accent');
+        if (_glvCustomAccent) {
+            try {
+                const parsed = JSON.parse(_glvCustomAccent);
+                if (parsed && parsed.accent) {
+                    document.body.classList.add('accent-custom');
+                    if (parsed.accent) document.body.style.setProperty('--glv-accent', parsed.accent);
+                    if (parsed.accentHover) document.body.style.setProperty('--glv-accent-hover', parsed.accentHover);
+                    if (parsed.accentSoft) document.body.style.setProperty('--glv-accent-soft', parsed.accentSoft);
+                    if (parsed.accentGlow) document.body.style.setProperty('--glv-accent-glow', parsed.accentGlow);
+                    if (parsed.shadowAccent) document.body.style.setProperty('--glv-shadow-accent', parsed.shadowAccent);
+                    if (parsed.shadowAccentLg) document.body.style.setProperty('--glv-shadow-accent-lg', parsed.shadowAccentLg);
+                }
+            } catch (_) {}
+        }
+
+        const _glvCustomPrimary = localStorage.getItem('gloveup_custom_primary');
+        if (_glvCustomPrimary) {
+            try {
+                const parsed = JSON.parse(_glvCustomPrimary);
+                if (parsed && parsed.primary) {
+                    document.body.classList.add('primary-custom');
+                    if (parsed.primary) document.body.style.setProperty('--glv-primary', parsed.primary);
+                    if (parsed.primaryHover) document.body.style.setProperty('--glv-primary-hover', parsed.primaryHover);
+                }
+            } catch (_) {}
+        }
     </script>
 
     <!-- SIDEBAR -->
@@ -609,7 +731,7 @@
                 // New fields: trainer and hours
                 const trainerEl = document.getElementById('gym-trainer');
                 const hoursEl = document.getElementById('gym-hours');
-                
+
                 if (gym.nombreEntrenador) {
                     trainerEl.style.display = '';
                     trainerEl.querySelector('span').textContent = gym.nombreEntrenador;
@@ -732,9 +854,9 @@
                     else if (boxeador.nivel === 'Principiante') starCount = 1;
 
                     for (let i = 0; i < 5; i++) {
-                        starsHtml += i < starCount
-                            ? '<i class="fas fa-star filled"></i>'
-                            : '<i class="far fa-star"></i>';
+                        starsHtml += i < starCount ?
+                            '<i class="fas fa-star filled"></i>' :
+                            '<i class="far fa-star"></i>';
                     }
 
                     let imgHtml = '<i class="fas fa-user-circle" style="font-size: 2em; color: #ccc;"></i>';
@@ -852,10 +974,10 @@
     <script src="../home/sidebar.js"></script>
 </body>
 
-    <!-- Lightbox Modal -->
-    <div id="lightbox" class="lightbox">
-        <button class="lightbox-close"><i class="fas fa-times"></i></button>
-        <img id="lightbox-img" class="lightbox-content" src="" alt="Zoomed view">
-    </div>
+<!-- Lightbox Modal -->
+<div id="lightbox" class="lightbox">
+    <button class="lightbox-close"><i class="fas fa-times"></i></button>
+    <img id="lightbox-img" class="lightbox-content" src="" alt="Zoomed view">
+</div>
 
 </html>

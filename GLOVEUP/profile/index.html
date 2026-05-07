@@ -25,8 +25,49 @@
         if (_role === 'entrenador') document.body.classList.add('theme-entrenador');
         const _savedTheme = localStorage.getItem('gloveup_theme');
         if (_savedTheme === 'dark') document.body.classList.add('theme-dark');
-        const _glvPalette = localStorage.getItem('gloveup_palette');
-        if (_glvPalette) document.body.classList.add('palette-' + _glvPalette);
+
+        const _glvCustomBg = localStorage.getItem('gloveup_custom_bg');
+        if (_glvCustomBg) {
+            try {
+                const parsed = JSON.parse(_glvCustomBg);
+                if (parsed && parsed.bgBody) {
+                    document.body.classList.add('bg-custom');
+                    if (parsed.bgBody) document.body.style.setProperty('--glv-bg-body', parsed.bgBody);
+                    if (parsed.bgLight) document.body.style.setProperty('--glv-bg-light', parsed.bgLight);
+                    if (parsed.bgCard) document.body.style.setProperty('--glv-bg-card', parsed.bgCard);
+                    if (parsed.bgElevated) document.body.style.setProperty('--glv-bg-elevated', parsed.bgElevated);
+                    if (parsed.glassBg) document.body.style.setProperty('--glv-glass-bg', parsed.glassBg);
+                }
+            } catch (_) {}
+        }
+
+        const _glvCustomAccent = localStorage.getItem('gloveup_custom_accent');
+        if (_glvCustomAccent) {
+            try {
+                const parsed = JSON.parse(_glvCustomAccent);
+                if (parsed && parsed.accent) {
+                    document.body.classList.add('accent-custom');
+                    if (parsed.accent) document.body.style.setProperty('--glv-accent', parsed.accent);
+                    if (parsed.accentHover) document.body.style.setProperty('--glv-accent-hover', parsed.accentHover);
+                    if (parsed.accentSoft) document.body.style.setProperty('--glv-accent-soft', parsed.accentSoft);
+                    if (parsed.accentGlow) document.body.style.setProperty('--glv-accent-glow', parsed.accentGlow);
+                    if (parsed.shadowAccent) document.body.style.setProperty('--glv-shadow-accent', parsed.shadowAccent);
+                    if (parsed.shadowAccentLg) document.body.style.setProperty('--glv-shadow-accent-lg', parsed.shadowAccentLg);
+                }
+            } catch (_) {}
+        }
+
+        const _glvCustomPrimary = localStorage.getItem('gloveup_custom_primary');
+        if (_glvCustomPrimary) {
+            try {
+                const parsed = JSON.parse(_glvCustomPrimary);
+                if (parsed && parsed.primary) {
+                    document.body.classList.add('primary-custom');
+                    if (parsed.primary) document.body.style.setProperty('--glv-primary', parsed.primary);
+                    if (parsed.primaryHover) document.body.style.setProperty('--glv-primary-hover', parsed.primaryHover);
+                }
+            } catch (_) {}
+        }
     </script>
     <!-- SIDEBAR VERTICAL -->
     <aside class="main-sidebar">

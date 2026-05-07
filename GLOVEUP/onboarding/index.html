@@ -62,8 +62,8 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: rgba(249,115,22,0.25);
-            border: 1px solid rgba(249,115,22,0.5);
+            background: rgba(249, 115, 22, 0.25);
+            border: 1px solid rgba(249, 115, 22, 0.5);
             color: #fed7aa;
             font-size: 0.78rem;
             font-weight: 700;
@@ -86,7 +86,7 @@
             flex: 1;
             min-width: 240px;
             background: #fff;
-            border: 1.5px solid rgba(0,0,0,0.08);
+            border: 1.5px solid rgba(0, 0, 0, 0.08);
             border-radius: 16px;
             padding: 22px;
             display: flex;
@@ -100,14 +100,14 @@
         .onboarding-help-card:hover {
             border-color: #f97316;
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(249,115,22,0.1);
+            box-shadow: 0 8px 24px rgba(249, 115, 22, 0.1);
         }
 
         .onboarding-help-card-icon {
             width: 42px;
             height: 42px;
             border-radius: 10px;
-            background: rgba(249,115,22,0.1);
+            background: rgba(249, 115, 22, 0.1);
             color: #f97316;
             display: flex;
             align-items: center;
@@ -132,7 +132,7 @@
 
         body.theme-dark .onboarding-help-card {
             background: #1e293b;
-            border-color: rgba(255,255,255,0.08);
+            border-color: rgba(255, 255, 255, 0.08);
         }
 
         body.theme-dark .onboarding-help-card-body h4 {
@@ -143,17 +143,20 @@
         body.theme-entrenador .onboarding-hero {
             background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #3b82f6 150%);
         }
+
         body.theme-entrenador .onboarding-hero-badge {
-            background: rgba(59,130,246,0.25);
-            border: 1px solid rgba(59,130,246,0.5);
+            background: rgba(59, 130, 246, 0.25);
+            border: 1px solid rgba(59, 130, 246, 0.5);
             color: #bfdbfe;
         }
+
         body.theme-entrenador .onboarding-help-card:hover {
             border-color: #3b82f6;
-            box-shadow: 0 8px 24px rgba(59,130,246,0.12);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.12);
         }
+
         body.theme-entrenador .onboarding-help-card-icon {
-            background: rgba(59,130,246,0.1);
+            background: rgba(59, 130, 246, 0.1);
             color: #3b82f6;
         }
     </style>
@@ -166,8 +169,49 @@
         if (_role === 'entrenador') document.body.classList.add('theme-entrenador');
         const _savedTheme = localStorage.getItem('gloveup_theme');
         if (_savedTheme === 'dark') document.body.classList.add('theme-dark');
-        const _glvPalette = localStorage.getItem('gloveup_palette');
-        if (_glvPalette) document.body.classList.add('palette-' + _glvPalette);
+
+        const _glvCustomBg = localStorage.getItem('gloveup_custom_bg');
+        if (_glvCustomBg) {
+            try {
+                const parsed = JSON.parse(_glvCustomBg);
+                if (parsed && parsed.bgBody) {
+                    document.body.classList.add('bg-custom');
+                    if (parsed.bgBody) document.body.style.setProperty('--glv-bg-body', parsed.bgBody);
+                    if (parsed.bgLight) document.body.style.setProperty('--glv-bg-light', parsed.bgLight);
+                    if (parsed.bgCard) document.body.style.setProperty('--glv-bg-card', parsed.bgCard);
+                    if (parsed.bgElevated) document.body.style.setProperty('--glv-bg-elevated', parsed.bgElevated);
+                    if (parsed.glassBg) document.body.style.setProperty('--glv-glass-bg', parsed.glassBg);
+                }
+            } catch (_) {}
+        }
+
+        const _glvCustomAccent = localStorage.getItem('gloveup_custom_accent');
+        if (_glvCustomAccent) {
+            try {
+                const parsed = JSON.parse(_glvCustomAccent);
+                if (parsed && parsed.accent) {
+                    document.body.classList.add('accent-custom');
+                    if (parsed.accent) document.body.style.setProperty('--glv-accent', parsed.accent);
+                    if (parsed.accentHover) document.body.style.setProperty('--glv-accent-hover', parsed.accentHover);
+                    if (parsed.accentSoft) document.body.style.setProperty('--glv-accent-soft', parsed.accentSoft);
+                    if (parsed.accentGlow) document.body.style.setProperty('--glv-accent-glow', parsed.accentGlow);
+                    if (parsed.shadowAccent) document.body.style.setProperty('--glv-shadow-accent', parsed.shadowAccent);
+                    if (parsed.shadowAccentLg) document.body.style.setProperty('--glv-shadow-accent-lg', parsed.shadowAccentLg);
+                }
+            } catch (_) {}
+        }
+
+        const _glvCustomPrimary = localStorage.getItem('gloveup_custom_primary');
+        if (_glvCustomPrimary) {
+            try {
+                const parsed = JSON.parse(_glvCustomPrimary);
+                if (parsed && parsed.primary) {
+                    document.body.classList.add('primary-custom');
+                    if (parsed.primary) document.body.style.setProperty('--glv-primary', parsed.primary);
+                    if (parsed.primaryHover) document.body.style.setProperty('--glv-primary-hover', parsed.primaryHover);
+                }
+            } catch (_) {}
+        }
     </script>
 
     <!-- SIDEBAR VERTICAL -->
@@ -443,7 +487,7 @@
             const logoutBtn = document.getElementById('logout-button');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', () => {
-                    ['gloveup_user_email','gloveup_user_role','gloveup_user_nombre'].forEach(k => localStorage.removeItem(k));
+                    ['gloveup_user_email', 'gloveup_user_role', 'gloveup_user_nombre'].forEach(k => localStorage.removeItem(k));
                     window.location.href = '../auth/index.html';
                 });
             }
@@ -469,9 +513,15 @@
             const boxerLink = document.getElementById('manual-link-boxer');
             const coachLink = document.getElementById('manual-link-coach');
             if (role === 'entrenador') {
-                if (coachLink) { coachLink.style.display = ''; coachLink.href = '../onboarding/manual-entrenador.html'; }
+                if (coachLink) {
+                    coachLink.style.display = '';
+                    coachLink.href = '../onboarding/manual-entrenador.html';
+                }
             } else {
-                if (boxerLink) { boxerLink.style.display = ''; boxerLink.href = '../onboarding/manual-boxeador.html'; }
+                if (boxerLink) {
+                    boxerLink.style.display = '';
+                    boxerLink.href = '../onboarding/manual-boxeador.html';
+                }
             }
         });
     </script>
