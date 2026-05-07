@@ -166,6 +166,8 @@
         if (_role === 'entrenador') document.body.classList.add('theme-entrenador');
         const _savedTheme = localStorage.getItem('gloveup_theme');
         if (_savedTheme === 'dark') document.body.classList.add('theme-dark');
+        const _glvPalette = localStorage.getItem('gloveup_palette');
+        if (_glvPalette) document.body.classList.add('palette-' + _glvPalette);
     </script>
 
     <!-- SIDEBAR VERTICAL -->

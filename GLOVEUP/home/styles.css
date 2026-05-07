@@ -2498,6 +2498,103 @@ body.theme-entrenador .manual-btn:hover {
 }
 
 
+/* ============================================== */
+/* PALETAS DE COLOR PERSONALIZABLES               */
+/* Las clases palette-* tienen mayor prioridad    */
+/* que theme-entrenador al venir después en CSS   */
+/* ============================================== */
+
+body.palette-naranja {
+    --color-accent: #f97316;
+    --color-accent-hover: #ea580c;
+    --color-accent-soft: rgba(249, 115, 22, 0.1);
+    --color-accent-glow: rgba(249, 115, 22, 0.25);
+    --shadow-accent: 0 8px 24px rgba(249, 115, 22, 0.16);
+    --shadow-accent-lg: 0 16px 40px rgba(249, 115, 22, 0.22);
+}
+body.palette-naranja .btn-primary { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); box-shadow: 0 8px 24px rgba(249,115,22,.22); }
+body.palette-naranja .btn-primary:hover { box-shadow: 0 16px 40px rgba(249,115,22,.30); }
+body.palette-naranja .sidebar-nav li a::before { background: #f97316; }
+body.palette-naranja .sidebar-nav li.active a { color: #f97316; }
+body.palette-naranja .sidebar-nav li.active a i { color: #f97316; }
+body.palette-naranja .sidebar-header .app-name { background: linear-gradient(135deg, #0a0a0a 0%, #f97316 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+body.palette-naranja input:checked + .slider { background-color: #f97316; }
+body.palette-naranja .manual-btn { background: #f97316; }
+body.palette-naranja .manual-btn:hover { background: #ea580c; box-shadow: 0 4px 10px rgba(249,115,22,.35); }
+
+body.palette-azul {
+    --color-accent: #3b82f6;
+    --color-accent-hover: #2563eb;
+    --color-accent-soft: rgba(59, 130, 246, 0.1);
+    --color-accent-glow: rgba(59, 130, 246, 0.25);
+    --shadow-accent: 0 8px 24px rgba(59, 130, 246, 0.16);
+    --shadow-accent-lg: 0 16px 40px rgba(59, 130, 246, 0.22);
+}
+body.palette-azul .btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); box-shadow: 0 8px 24px rgba(59,130,246,.22); }
+body.palette-azul .btn-primary:hover { box-shadow: 0 16px 40px rgba(59,130,246,.30); }
+body.palette-azul .sidebar-nav li a::before { background: #3b82f6; }
+body.palette-azul .sidebar-nav li.active a { color: #3b82f6; }
+body.palette-azul .sidebar-nav li.active a i { color: #3b82f6; }
+body.palette-azul .sidebar-header .app-name { background: linear-gradient(135deg, #0f172a 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+body.palette-azul input:checked + .slider { background-color: #3b82f6; }
+body.palette-azul .manual-btn { background: #3b82f6; }
+body.palette-azul .manual-btn:hover { background: #2563eb; box-shadow: 0 4px 10px rgba(59,130,246,.35); }
+
+body.palette-verde {
+    --color-accent: #10b981;
+    --color-accent-hover: #059669;
+    --color-accent-soft: rgba(16, 185, 129, 0.1);
+    --color-accent-glow: rgba(16, 185, 129, 0.25);
+    --shadow-accent: 0 8px 24px rgba(16, 185, 129, 0.16);
+    --shadow-accent-lg: 0 16px 40px rgba(16, 185, 129, 0.22);
+}
+body.palette-verde .btn-primary { background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 8px 24px rgba(16,185,129,.22); }
+body.palette-verde .btn-primary:hover { box-shadow: 0 16px 40px rgba(16,185,129,.30); }
+body.palette-verde .sidebar-nav li a::before { background: #10b981; }
+body.palette-verde .sidebar-nav li.active a { color: #10b981; }
+body.palette-verde .sidebar-nav li.active a i { color: #10b981; }
+body.palette-verde .sidebar-header .app-name { background: linear-gradient(135deg, #0f172a 0%, #10b981 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+body.palette-verde input:checked + .slider { background-color: #10b981; }
+body.palette-verde .manual-btn { background: #10b981; }
+body.palette-verde .manual-btn:hover { background: #059669; box-shadow: 0 4px 10px rgba(16,185,129,.35); }
+
+body.palette-morado {
+    --color-accent: #8b5cf6;
+    --color-accent-hover: #7c3aed;
+    --color-accent-soft: rgba(139, 92, 246, 0.1);
+    --color-accent-glow: rgba(139, 92, 246, 0.25);
+    --shadow-accent: 0 8px 24px rgba(139, 92, 246, 0.16);
+    --shadow-accent-lg: 0 16px 40px rgba(139, 92, 246, 0.22);
+}
+body.palette-morado .btn-primary { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); box-shadow: 0 8px 24px rgba(139,92,246,.22); }
+body.palette-morado .btn-primary:hover { box-shadow: 0 16px 40px rgba(139,92,246,.30); }
+body.palette-morado .sidebar-nav li a::before { background: #8b5cf6; }
+body.palette-morado .sidebar-nav li.active a { color: #8b5cf6; }
+body.palette-morado .sidebar-nav li.active a i { color: #8b5cf6; }
+body.palette-morado .sidebar-header .app-name { background: linear-gradient(135deg, #0f172a 0%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+body.palette-morado input:checked + .slider { background-color: #8b5cf6; }
+body.palette-morado .manual-btn { background: #8b5cf6; }
+body.palette-morado .manual-btn:hover { background: #7c3aed; box-shadow: 0 4px 10px rgba(139,92,246,.35); }
+
+body.palette-rojo {
+    --color-accent: #ef4444;
+    --color-accent-hover: #dc2626;
+    --color-accent-soft: rgba(239, 68, 68, 0.1);
+    --color-accent-glow: rgba(239, 68, 68, 0.25);
+    --shadow-accent: 0 8px 24px rgba(239, 68, 68, 0.16);
+    --shadow-accent-lg: 0 16px 40px rgba(239, 68, 68, 0.22);
+}
+body.palette-rojo .btn-primary { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); box-shadow: 0 8px 24px rgba(239,68,68,.22); }
+body.palette-rojo .btn-primary:hover { box-shadow: 0 16px 40px rgba(239,68,68,.30); }
+body.palette-rojo .sidebar-nav li a::before { background: #ef4444; }
+body.palette-rojo .sidebar-nav li.active a { color: #ef4444; }
+body.palette-rojo .sidebar-nav li.active a i { color: #ef4444; }
+body.palette-rojo .sidebar-header .app-name { background: linear-gradient(135deg, #0f172a 0%, #ef4444 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+body.palette-rojo input:checked + .slider { background-color: #ef4444; }
+body.palette-rojo .manual-btn { background: #ef4444; }
+body.palette-rojo .manual-btn:hover { background: #dc2626; box-shadow: 0 4px 10px rgba(239,68,68,.35); }
+
+
 /* Focus ring */
 
 body.theme-entrenador a:focus-visible,

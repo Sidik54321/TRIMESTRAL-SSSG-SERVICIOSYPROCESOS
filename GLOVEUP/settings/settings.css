@@ -252,3 +252,86 @@ input:checked + .slider:before {
 .hidden {
     display: none !important;
 }
+
+/* PALETTE PICKER */
+.palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 12px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 12px;
+    padding: 28px;
+}
+
+body.theme-dark .palette-grid {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.palette-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 8px;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.palette-option:hover {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+body.theme-dark .palette-option:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.palette-option.active {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+}
+
+.palette-swatch {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    transition: transform 0.2s;
+}
+
+.palette-option:hover .palette-swatch {
+    transform: scale(1.08);
+}
+
+.palette-swatch i {
+    color: #fff;
+    font-size: 1rem;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.palette-option.active .palette-swatch i {
+    opacity: 1;
+}
+
+.palette-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #64748b;
+    text-align: center;
+}
+
+body.theme-dark .palette-label {
+    color: #94a3b8;
+}
+
+.palette-option.active .palette-label {
+    color: var(--color-accent);
+}

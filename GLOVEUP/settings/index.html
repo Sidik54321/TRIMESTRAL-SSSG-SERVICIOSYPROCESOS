@@ -23,6 +23,8 @@
         if (_role === 'entrenador') document.body.classList.add('theme-entrenador');
         const _savedTheme = localStorage.getItem('gloveup_theme');
         if (_savedTheme === 'dark') document.body.classList.add('theme-dark');
+        const _glvPalette = localStorage.getItem('gloveup_palette');
+        if (_glvPalette) document.body.classList.add('palette-' + _glvPalette);
     </script>
 
     <!-- SIDEBAR VERTICAL -->
@@ -156,6 +158,15 @@
                         </div>
                         <i class="fas fa-chevron-right settings-card-arrow"></i>
                     </div>
+
+                    <!-- Option 3: Palette -->
+                    <div class="settings-card-item" id="nav-manage-palette">
+                        <div class="settings-card-body">
+                            <h3>Paleta de colores</h3>
+                            <p>Personaliza el color de acento de toda la interfaz.</p>
+                        </div>
+                        <i class="fas fa-chevron-right settings-card-arrow"></i>
+                    </div>
                 </div>
             </div>
 
@@ -214,6 +225,46 @@
 
                 <div class="settings-action-bar">
                     <button class="btn btn-primary" id="btn-save-notifs">Guardar Preferencias</button>
+                </div>
+            </div>
+
+            <!-- SUB VIEW: Paleta de Colores -->
+            <div id="settings-palette-view" class="settings-view hidden">
+                <div class="settings-header">
+                    <h1>Paleta de Colores</h1>
+                    <p>Elige el color de acento que verás en toda la aplicación.</p>
+                </div>
+                <div class="palette-grid">
+                    <div class="palette-option" data-palette="naranja">
+                        <div class="palette-swatch" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span class="palette-label">Naranja</span>
+                    </div>
+                    <div class="palette-option" data-palette="azul">
+                        <div class="palette-swatch" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span class="palette-label">Azul</span>
+                    </div>
+                    <div class="palette-option" data-palette="verde">
+                        <div class="palette-swatch" style="background: linear-gradient(135deg, #10b981, #059669);">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span class="palette-label">Verde</span>
+                    </div>
+                    <div class="palette-option" data-palette="morado">
+                        <div class="palette-swatch" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span class="palette-label">Morado</span>
+                    </div>
+                    <div class="palette-option" data-palette="rojo">
+                        <div class="palette-swatch" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span class="palette-label">Rojo</span>
+                    </div>
                 </div>
             </div>
 
