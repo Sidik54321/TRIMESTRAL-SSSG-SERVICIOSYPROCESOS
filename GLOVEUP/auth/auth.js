@@ -13,6 +13,42 @@ const API_BASE_URL = (window.localStorage.getItem('gloveup_api_base_url') || (wi
 
 // Eliminado: lógica BoxRec ID (no se requiere)
 
+function showAuthAlert({
+    title,
+    message,
+    autoCloseMs
+}) {
+    const dialog = document.getElementById('auth-alert-dialog');
+    const titleEl = document.getElementById('auth-alert-title');
+    const messageEl = document.getElementById('auth-alert-message');
+    if (!dialog || typeof dialog.showModal !== 'function' || !titleEl || !messageEl) {
+        return Promise.resolve('');
+    }
+
+    titleEl.textContent = String(title || 'Aviso');
+    messageEl.textContent = String(message || '');
+
+    if (dialog.open) {
+        try {
+            dialog.close('reopen');
+        } catch (_) {}
+    }
+
+    return new Promise((resolve) => {
+        const onClose = () => resolve(String(dialog.returnValue || ''));
+        dialog.addEventListener('close', onClose, { once: true });
+        dialog.showModal();
+        if (typeof autoCloseMs === 'number' && Number.isFinite(autoCloseMs) && autoCloseMs > 0) {
+            window.setTimeout(() => {
+                if (!dialog.open) return;
+                try {
+                    dialog.close('auto');
+                } catch (_) {}
+            }, autoCloseMs);
+        }
+    });
+}
+
 export function validateSignUpForm(event) {
     event.preventDefault();
 
@@ -33,7 +69,10 @@ export function validateSignUpForm(event) {
     const errorMessageDiv = document.getElementById('signup-error-message');
 
     if (!errorMessageDiv) {
-        alert('No se pudo inicializar el formulario de registro.');
+        showAuthAlert({
+            title: 'Error',
+            message: 'No se pudo inicializar el formulario de registro.'
+        });
         return false;
     }
 
@@ -91,7 +130,10 @@ export function validateSignUpForm(event) {
             localStorage.removeItem(SESSION_MAINTAINED_KEY);
             sessionStorage.removeItem(STORED_USER_ID_KEY);
             sessionStorage.removeItem(SESSION_MAINTAINED_KEY);
-            alert('🎉 ¡Registro completado! Ya puedes iniciar sesión.');
+            showAuthAlert({
+                title: 'Registro completado',
+                message: 'Ya puedes iniciar sesión.'
+            });
             document.getElementById('tab-1').checked = true;
             document.getElementById('tab-2').checked = false;
 
@@ -124,7 +166,10 @@ export function validateSignInForm(event) {
     const passInput = document.getElementById('pass_signin');
 
     if (!userInput || !passInput || !errorMessageDiv) {
-        alert('No se pudo inicializar el formulario de inicio de sesión.');
+        showAuthAlert({
+            title: 'Error',
+            message: 'No se pudo inicializar el formulario de inicio de sesión.'
+        });
         return false;
     }
 
@@ -165,9 +210,16 @@ export function validateSignInForm(event) {
                 sessionStorage.setItem(SESSION_MAINTAINED_KEY, 'true');
             }
 
-            alert('✅ Inicio de sesión exitoso. ¡Bienvenido!');
             const role = (data.rol || 'usuario').toLowerCase();
-            window.location.href = role === 'entrenador' ? '../dashboard/entrenador/dashboard.html' : '../dashboard/boxeador/dashboard.html';
+            const nextUrl = role === 'entrenador' ? '../dashboard/entrenador/dashboard.html' : '../dashboard/boxeador/dashboard.html';
+            showAuthAlert({
+                title: 'Inicio de sesión',
+                message: '¡Bienvenido!',
+                autoCloseMs: 650
+            });
+            window.setTimeout(() => {
+                window.location.href = nextUrl;
+            }, 650);
         })
         .catch((err) => {
             const rawMessage = err && err.message ? err.message.toLowerCase() : '';
@@ -198,7 +250,10 @@ export function validateForgotPasswordForm(event) {
     const passRepeatInput = document.getElementById('pass_repeat_forgot');
 
     if (!errorMessageDiv || !successMessageDiv || !emailInput || !dniInput || !passInput || !passRepeatInput) {
-        alert('No se pudo inicializar el formulario de recuperar contraseña.');
+        showAuthAlert({
+            title: 'Error',
+            message: 'No se pudo inicializar el formulario de recuperar contraseña.'
+        });
         return false;
     }
 

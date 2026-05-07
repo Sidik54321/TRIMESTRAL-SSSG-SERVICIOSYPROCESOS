@@ -129,9 +129,15 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.removeItem(STORED_USER_DNI_KEY);
             sessionStorage.removeItem(STORED_USER_ID_KEY);
 
-            alert('Has cerrado sesión correctamente.');
             const authPath = window.location.pathname.includes('/dashboard/') ? '../../auth/index.html' : '../auth/index.html';
-            window.location.href = authPath;
+            if (typeof window.showToast === 'function') {
+                window.showToast('Has cerrado sesión correctamente.', 'info', 1200);
+                window.setTimeout(() => {
+                    window.location.href = authPath;
+                }, 250);
+            } else {
+                window.location.href = authPath;
+            }
         });
     }
 

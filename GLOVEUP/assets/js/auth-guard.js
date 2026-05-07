@@ -29,21 +29,30 @@
     }
 
     // Inyectar sistema de notificaciones GloveUp (Toasts)
-    document.addEventListener('DOMContentLoaded', () => {
+    (function injectToasts() {
+        if (typeof window.showToast === 'function') return;
         const pathParts = window.location.pathname.split('/');
         let assetsPrefix = '';
         if (window.location.pathname.includes('/dashboard/')) assetsPrefix = '../../';
         else if (window.location.pathname.match(/\/(home|gyms|sparring|profile|settings|onboarding|admin|auth)\//)) assetsPrefix = '../';
 
-        // Inyectar CSS
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = assetsPrefix + 'assets/css/toasts.css';
-        document.head.appendChild(link);
+        const cssHref = assetsPrefix + 'assets/css/toasts.css';
+        const jsSrc = assetsPrefix + 'assets/js/toasts.js';
 
-        // Inyectar JS
-        const script = document.createElement('script');
-        script.src = assetsPrefix + 'assets/js/toasts.js';
-        document.head.appendChild(script);
-    });
+        const hasCss = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).some(l => (l.getAttribute('href') || '') === cssHref);
+        if (!hasCss) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = cssHref;
+            document.head.appendChild(link);
+        }
+
+        const hasJs = Array.from(document.querySelectorAll('script')).some(s => (s.getAttribute('src') || '') === jsSrc);
+        if (!hasJs) {
+            const script = document.createElement('script');
+            script.src = jsSrc;
+            script.async = false;
+            document.head.appendChild(script);
+        }
+    })();
 })();

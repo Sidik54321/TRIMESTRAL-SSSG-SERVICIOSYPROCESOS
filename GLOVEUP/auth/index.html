@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <script src="../assets/js/auth-guard.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GloveUp - Acceso</title>
     <link rel="stylesheet" href="auth.css">
@@ -188,6 +189,21 @@
             </div>
         </div>
     </div>
+
+    <dialog id="auth-alert-dialog" class="auth-dialog">
+        <form method="dialog" class="auth-dialog-card">
+            <div class="auth-dialog-header">
+                <h3 id="auth-alert-title" class="auth-dialog-title"></h3>
+                <button type="submit" class="auth-dialog-x" value="close" aria-label="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="auth-alert-message" class="auth-dialog-message"></div>
+            <div class="auth-dialog-actions">
+                <button type="submit" class="auth-dialog-btn auth-dialog-btn-primary" value="ok">Aceptar</button>
+            </div>
+        </form>
+    </dialog>
 
     <script type="module">
         import { validateSignUpForm, validateSignInForm, validateForgotPasswordForm } from './auth.js';

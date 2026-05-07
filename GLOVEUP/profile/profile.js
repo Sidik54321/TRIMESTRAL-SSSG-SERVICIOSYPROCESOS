@@ -25,6 +25,12 @@ function $(id) {
     return document.getElementById(id);
 }
 
+function notify(message, type = 'info', duration = 3500) {
+    if (typeof window.showToast === 'function') {
+        window.showToast(String(message || ''), type, duration);
+    }
+}
+
 function getEmail() {
     return (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
 }
@@ -75,7 +81,9 @@ function setFormReadonly(readonly) {
     });
 
     const selects = Array.from(document.querySelectorAll('#weightClass, #stance, #gender, #sparring-freq'));
-    selects.forEach((el) => { if (el) el.disabled = readonly; });
+    selects.forEach((el) => {
+        if (el) el.disabled = readonly;
+    });
 
     const photoInput = $('photo-input');
     if (photoInput) photoInput.disabled = readonly;
@@ -548,7 +556,7 @@ async function saveProfileForm(showAlert = true) {
         }
         applyCoachProfileToForm(saved || {});
         if (showAlert) {
-            alert('Perfil guardado en MongoDB.');
+            notify('Perfil guardado en MongoDB.', 'success');
         }
         return;
     }
@@ -567,7 +575,7 @@ async function saveProfileForm(showAlert = true) {
     }
     applyProfileToForm(profileState);
     if (showAlert) {
-        alert('Perfil guardado en MongoDB.');
+        notify('Perfil guardado en MongoDB.', 'success');
     }
 }
 
@@ -808,7 +816,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const tags = reviewTags ? Array.from(reviewTags.querySelectorAll('.chip.active')).map((c) => String(c.getAttribute('data-tag') || '').trim()).filter(Boolean) : [];
                         const note = reviewNote ? String(reviewNote.value || '').trim() : '';
                         if (!Number.isFinite(stars) || stars < 1 || stars > 5) {
-                            alert('Selecciona una valoración (1-5)');
+                            notify('Selecciona una valoración (1-5)', 'warning');
                             return;
                         }
                         try {
@@ -826,7 +834,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             resetReview();
                             await refreshSessions();
                         } catch (err) {
-                            alert(err.message || 'No se pudo guardar la valoración');
+                            notify(err.message || 'No se pudo guardar la valoración', 'error');
                         }
                     });
                 }
@@ -851,14 +859,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                             await refreshChallenges();
                             await refreshSessions();
                         } catch (err) {
-                            alert(err.message || 'No se pudo responder al reto');
+                            notify(err.message || 'No se pudo responder al reto', 'error');
                         }
                     });
                 }
             }
         }
     } catch (err) {
-        alert(err.message || 'No se pudo cargar el perfil');
+        notify(err.message || 'No se pudo cargar el perfil', 'error');
         if (isViewMode) {
             window.location.href = 'index.html';
         }
@@ -870,7 +878,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 await saveProfileForm(true);
             } catch (err) {
-                alert(err.message || 'No se pudo guardar el perfil');
+                notify(err.message || 'No se pudo guardar el perfil', 'error');
             }
         });
     }
@@ -882,7 +890,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (isViewMode) return;
                 await onPhotoSelected(event);
             } catch (err) {
-                alert(err.message || 'No se pudo guardar la foto');
+                notify(err.message || 'No se pudo guardar la foto', 'error');
             }
         });
     }
@@ -894,7 +902,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (isViewMode) return;
                 await removePhoto();
             } catch (err) {
-                alert(err.message || 'No se pudo quitar la foto');
+                notify(err.message || 'No se pudo quitar la foto', 'error');
             }
         });
     }

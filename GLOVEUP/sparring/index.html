@@ -504,6 +504,11 @@
             const dtToday = document.getElementById('dt-today');
             const dtCancel = document.getElementById('dt-cancel');
             const dtApply = document.getElementById('dt-apply');
+            const notify = (message, type = 'info', duration = 3500) => {
+                if (typeof window.showToast === 'function') {
+                    window.showToast(String(message || ''), type, duration);
+                }
+            };
             let dtViewYear = 0;
             let dtViewMonth = 0;
             let dtSelected = null;
@@ -1109,7 +1114,7 @@
             if (dtApply) dtApply.addEventListener('click', () => {
                 if (!challengeDatetime) return;
                 if (!dtSelected || Number.isNaN(dtSelected.getTime())) {
-                    alert('Selecciona una fecha');
+                    notify('Selecciona una fecha', 'warning');
                     return;
                 }
                 const hour = dtHour ? Number(dtHour.value || 0) : dtSelected.getHours();
@@ -1137,19 +1142,19 @@
                     const scheduledAt = challengeDatetime && challengeDatetime.dataset && challengeDatetime.dataset.iso ? String(challengeDatetime.dataset.iso) : '';
                     const coachIds = Array.from(document.querySelectorAll('.coach-cb:checked')).map(cb => decodeURIComponent(String(cb.value))).filter(Boolean);
                     if (!preset) {
-                        alert('Selecciona una descripción');
+                        notify('Selecciona una descripción', 'warning');
                         return;
                     }
                     if (!coachIds.length) {
-                        alert('Selecciona al menos un entrenador');
+                        notify('Selecciona al menos un entrenador', 'warning');
                         return;
                     }
                     if (!gymName) {
-                        alert('Selecciona un gimnasio');
+                        notify('Selecciona un gimnasio', 'warning');
                         return;
                     }
                     if (!scheduledAt || Number.isNaN(new Date(scheduledAt).getTime())) {
-                        alert('Selecciona una fecha y hora');
+                        notify('Selecciona una fecha y hora', 'warning');
                         return;
                     }
                     const finalTarget = challengeTargetIdentifier;
@@ -1175,9 +1180,9 @@
                             throw new Error((data && data.error) || 'No se pudo enviar el reto');
                         }
                         if (challengeModal) challengeModal.close();
-                        alert('Reto enviado.');
+                        notify('Reto enviado.', 'success');
                     } catch (err) {
-                        alert(err.message || 'No se pudo enviar el reto');
+                        notify(err.message || 'No se pudo enviar el reto', 'error');
                     }
                 });
             }
