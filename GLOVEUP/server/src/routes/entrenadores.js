@@ -1,9 +1,13 @@
-import { Router } from 'express';
+import {
+    Router
+} from 'express';
 import crypto from 'crypto';
 import Entrenador from '../models/Entrenador.js';
 import Boxeador from '../models/Boxeador.js';
 import Usuario from '../models/Usuario.js';
-import { crearNotificacion } from './notificaciones.js';
+import {
+    crearNotificacion
+} from './notificaciones.js';
 
 const router = Router();
 
@@ -57,7 +61,9 @@ router.get('/me/challenges-for-boxers', async (req, res) => {
             // 1. Recibidos
             const received = Array.isArray(b.sparringChallengesReceived) ? b.sparringChallengesReceived : [];
             for (const c of received) {
-                const challenger = await Boxeador.findOne({ email: c.fromEmail }).select('nombre nivel peso foto').lean();
+                const challenger = await Boxeador.findOne({
+                    email: c.fromEmail
+                }).select('nombre nivel peso foto').lean();
                 activity.push({
                     ...c,
                     direction: 'inbound',
@@ -77,7 +83,9 @@ router.get('/me/challenges-for-boxers', async (req, res) => {
             // 2. Enviados
             const sent = Array.isArray(b.sparringChallengesSent) ? b.sparringChallengesSent : [];
             for (const c of sent) {
-                const recipient = await Boxeador.findOne({ email: c.toEmail }).select('nombre nivel peso foto').lean();
+                const recipient = await Boxeador.findOne({
+                    email: c.toEmail
+                }).select('nombre nivel peso foto').lean();
                 activity.push({
                     ...c,
                     direction: 'outbound',
@@ -99,7 +107,9 @@ router.get('/me/challenges-for-boxers', async (req, res) => {
             const sessions = Array.isArray(b.sparringSessions) ? b.sparringSessions : [];
             for (const s of sessions) {
                 const otherEmail = s.boxerA_email === b.email ? s.boxerB_email : s.boxerA_email;
-                const other = await Boxeador.findOne({ email: otherEmail }).select('nombre nivel peso foto').lean();
+                const other = await Boxeador.findOne({
+                    email: otherEmail
+                }).select('nombre nivel peso foto').lean();
                 activity.push({
                     id: s.id || s._id,
                     status: 'accepted',
@@ -171,12 +181,22 @@ router.put('/me', async (req, res) => {
 
         let emailToSave = coach.email;
         if (nuevoEmail && nuevoEmail !== coach.email) {
-            const existingUser = await Usuario.findOne({ email: nuevoEmail }).lean();
+            const existingUser = await Usuario.findOne({
+                email: nuevoEmail
+            }).lean();
             if (existingUser) {
-                return res.status(400).json({ error: 'El nuevo email ya está en uso' });
+                return res.status(400).json({
+                    error: 'El nuevo email ya está en uso'
+                });
             }
             // Actualizar en la colección principal de usuarios
-            await Usuario.updateOne({ email: coach.email }, { $set: { email: nuevoEmail } });
+            await Usuario.updateOne({
+                email: coach.email
+            }, {
+                $set: {
+                    email: nuevoEmail
+                }
+            });
             emailToSave = nuevoEmail;
         }
 
@@ -202,10 +222,13 @@ router.put('/me', async (req, res) => {
 
         // Si el gimnasio cambió, actualizarlo en todos sus boxeadores
         if (update.gimnasio !== undefined && update.gimnasio !== oldGym) {
-            await Boxeador.updateMany(
-                { entrenadorId: coach._id },
-                { $set: { gimnasio: update.gimnasio || '' } }
-            );
+            await Boxeador.updateMany({
+                entrenadorId: coach._id
+            }, {
+                $set: {
+                    gimnasio: update.gimnasio || ''
+                }
+            });
         }
 
         return res.json(coach.toObject());
@@ -224,7 +247,9 @@ router.get('/me/calendar-events', async (req, res) => {
         const coach = await requireCoachByEmail(req.query.email);
         return res.json(Array.isArray(coach.calendarEvents) ? coach.calendarEvents : []);
     } catch (err) {
-        return res.status(err.status || 400).json({ error: err.message });
+        return res.status(err.status || 400).json({
+            error: err.message
+        });
     }
 });
 
@@ -232,17 +257,37 @@ router.get('/me/calendar-events', async (req, res) => {
 router.post('/me/calendar-events', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
-        const { title, start, end, allDay, color, tipo, notas } = req.body || {};
+        const {
+            title,
+            start,
+            end,
+            allDay,
+            color,
+            tipo,
+            notas
+        } = req.body || {};
         if (!title || !start) {
-            return res.status(400).json({ error: 'Titulo y fecha de inicio son obligatorios.' });
+            return res.status(400).json({
+                error: 'Titulo y fecha de inicio son obligatorios.'
+            });
         }
-        const ev = { title, start, end: end || '', allDay: allDay !== false, color: color || '#3b82f6', tipo: tipo || 'personalizado', notas: notas || '' };
+        const ev = {
+            title,
+            start,
+            end: end || '',
+            allDay: allDay !== false,
+            color: color || '#3b82f6',
+            tipo: tipo || 'personalizado',
+            notas: notas || ''
+        };
         coach.calendarEvents.push(ev);
         await coach.save();
         const created = coach.calendarEvents[coach.calendarEvents.length - 1];
         return res.status(201).json(created);
     } catch (err) {
-        return res.status(err.status || 400).json({ error: err.message });
+        return res.status(err.status || 400).json({
+            error: err.message
+        });
     }
 });
 
@@ -251,8 +296,18 @@ router.put('/me/calendar-events/:eventId', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
         const ev = coach.calendarEvents.id(req.params.eventId);
-        if (!ev) return res.status(404).json({ error: 'Evento no encontrado.' });
-        const { title, start, end, allDay, color, tipo, notas } = req.body || {};
+        if (!ev) return res.status(404).json({
+            error: 'Evento no encontrado.'
+        });
+        const {
+            title,
+            start,
+            end,
+            allDay,
+            color,
+            tipo,
+            notas
+        } = req.body || {};
         if (title !== undefined) ev.title = title;
         if (start !== undefined) ev.start = start;
         if (end !== undefined) ev.end = end;
@@ -263,7 +318,9 @@ router.put('/me/calendar-events/:eventId', async (req, res) => {
         await coach.save();
         return res.json(ev);
     } catch (err) {
-        return res.status(err.status || 400).json({ error: err.message });
+        return res.status(err.status || 400).json({
+            error: err.message
+        });
     }
 });
 
@@ -272,12 +329,18 @@ router.delete('/me/calendar-events/:eventId', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
         const ev = coach.calendarEvents.id(req.params.eventId);
-        if (!ev) return res.status(404).json({ error: 'Evento no encontrado.' });
+        if (!ev) return res.status(404).json({
+            error: 'Evento no encontrado.'
+        });
         ev.deleteOne();
         await coach.save();
-        return res.json({ ok: true });
+        return res.json({
+            ok: true
+        });
     } catch (err) {
-        return res.status(err.status || 400).json({ error: err.message });
+        return res.status(err.status || 400).json({
+            error: err.message
+        });
     }
 });
 
@@ -526,7 +589,9 @@ router.post('/me/boxeadores/create', async (req, res) => {
         }
 
         // Encriptar el DNI antes de guardarlo en Usuario para consistencia
-        const { encrypt } = await import('../utils/crypto.js');
+        const {
+            encrypt
+        } = await import('../utils/crypto.js');
         const encryptedDni = encrypt(dniLicencia);
 
         const usuario = await Usuario.create({
@@ -614,7 +679,11 @@ router.put('/me/boxeadores/:id', async (req, res) => {
             if (payload.dniLicencia !== undefined) updateUser.dniLicencia = boxer.dniLicencia;
             if (payload.email !== undefined) updateUser.email = boxer.email;
             if (Object.keys(updateUser).length > 0) {
-                await Usuario.updateOne({ _id: boxer.usuarioId }, { $set: updateUser });
+                await Usuario.updateOne({
+                    _id: boxer.usuarioId
+                }, {
+                    $set: updateUser
+                });
             }
         }
 
@@ -661,9 +730,13 @@ router.delete('/me/boxeadores/:id', async (req, res) => {
 
         const boxerName = boxer.nombre || boxer.email;
         const usuarioId = boxer.usuarioId;
-        await Boxeador.deleteOne({ _id: boxer._id });
+        await Boxeador.deleteOne({
+            _id: boxer._id
+        });
         if (usuarioId) {
-            await Usuario.deleteOne({ _id: usuarioId });
+            await Usuario.deleteOne({
+                _id: usuarioId
+            });
         }
 
         // Notificación al entrenador
@@ -675,7 +748,9 @@ router.delete('/me/boxeadores/:id', async (req, res) => {
             de: coach.email
         });
 
-        return res.json({ ok: true });
+        return res.json({
+            ok: true
+        });
     } catch (err) {
         return res.status(err.status || 400).json({
             error: err.message
@@ -718,30 +793,49 @@ router.post('/', async (req, res) => {
 router.post('/me/challenges/respond', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
-        const { challengeId, action } = req.body || {};
+        const {
+            challengeId,
+            action
+        } = req.body || {};
 
-        if (!challengeId) return res.status(400).json({ error: 'challengeId requerido' });
-        if (action !== 'accept' && action !== 'decline') return res.status(400).json({ error: 'Acción inválida: usa "accept" o "decline"' });
+        if (!challengeId) return res.status(400).json({
+            error: 'challengeId requerido'
+        });
+        if (action !== 'accept' && action !== 'decline') return res.status(400).json({
+            error: 'Acción inválida: usa "accept" o "decline"'
+        });
 
         const coachEmail = coach.email.toLowerCase();
 
         // Search all of this coach's boxers for the challenge
-        const myBoxers = await Boxeador.find({ entrenadorId: coach._id }).lean();
+        const myBoxers = await Boxeador.find({
+            entrenadorId: coach._id
+        }).lean();
         let foundChallenge = null;
         let isToCoach = false; // True if this is the coach of the challenged (recipient) boxer
 
         for (const boxer of myBoxers) {
             const received = Array.isArray(boxer.sparringChallengesReceived) ? boxer.sparringChallengesReceived : [];
             const c = received.find(x => x && String(x.id) === challengeId);
-            if (c) { foundChallenge = c; isToCoach = true; break; }
+            if (c) {
+                foundChallenge = c;
+                isToCoach = true;
+                break;
+            }
 
             const sent = Array.isArray(boxer.sparringChallengesSent) ? boxer.sparringChallengesSent : [];
             const s = sent.find(x => x && String(x.id) === challengeId);
-            if (s) { foundChallenge = s; isToCoach = false; break; }
+            if (s) {
+                foundChallenge = s;
+                isToCoach = false;
+                break;
+            }
         }
 
         if (!foundChallenge) {
-            return res.status(404).json({ error: 'Reto no encontrado en los boxeadores bajo tu supervisión' });
+            return res.status(404).json({
+                error: 'Reto no encontrado en los boxeadores bajo tu supervisión'
+            });
         }
 
         const curStatus = String(foundChallenge.status || 'pending');
@@ -751,13 +845,21 @@ router.post('/me/challenges/respond', async (req, res) => {
 
         // Validar que este entrenador no haya respondido ya (usa == para capturar null y undefined)
         if (isToCoach && foundChallenge.coachToApproval != null) {
-            return res.status(400).json({ error: 'Ya has respondido a este reto como el entrenador del retado.' });
+            return res.status(400).json({
+                error: 'Ya has respondido a este reto como el entrenador del retado.'
+            });
         }
         if (!isToCoach && foundChallenge.coachFromApproval != null) {
-            return res.status(400).json({ error: 'Ya has respondido a este reto como el entrenador del retador.' });
+            return res.status(400).json({
+                error: 'Ya has respondido a este reto como el entrenador del retador.'
+            });
         }
-        if (curStatus === 'accepted') return res.status(400).json({ error: 'Este sparring ya está confirmado.' });
-        if (curStatus === 'declined') return res.status(400).json({ error: 'Este reto ya ha sido rechazado.' });
+        if (curStatus === 'accepted') return res.status(400).json({
+            error: 'Este sparring ya está confirmado.'
+        });
+        if (curStatus === 'declined') return res.status(400).json({
+            error: 'Este reto ya ha sido rechazado.'
+        });
 
         const fromEmail = (foundChallenge.fromEmail || '').toLowerCase();
         const toEmail = (foundChallenge.toEmail || '').toLowerCase();
@@ -783,24 +885,32 @@ router.post('/me/challenges/respond', async (req, res) => {
         }
 
         // Update the challenge in ALL boxer documents (both received and sent arrays)
-        await Boxeador.updateMany(
-            { 'sparringChallengesReceived.id': challengeId },
-            { $set: {
+        await Boxeador.updateMany({
+            'sparringChallengesReceived.id': challengeId
+        }, {
+            $set: {
                 [`sparringChallengesReceived.$[elem].${coachApprovalField}`]: approvalValue,
                 'sparringChallengesReceived.$[elem].status': newStatus,
                 'sparringChallengesReceived.$[elem].respondedAt': respondedAt
-            }},
-            { arrayFilters: [{ 'elem.id': challengeId }] }
-        );
-        await Boxeador.updateMany(
-            { 'sparringChallengesSent.id': challengeId },
-            { $set: {
+            }
+        }, {
+            arrayFilters: [{
+                'elem.id': challengeId
+            }]
+        });
+        await Boxeador.updateMany({
+            'sparringChallengesSent.id': challengeId
+        }, {
+            $set: {
                 [`sparringChallengesSent.$[elem].${coachApprovalField}`]: approvalValue,
                 'sparringChallengesSent.$[elem].status': newStatus,
                 'sparringChallengesSent.$[elem].respondedAt': respondedAt
-            }},
-            { arrayFilters: [{ 'elem.id': challengeId }] }
-        );
+            }
+        }, {
+            arrayFilters: [{
+                'elem.id': challengeId
+            }]
+        });
 
         // Handle outcomes
         if (newStatus === 'accepted') {
@@ -829,93 +939,230 @@ router.post('/me/challenges/respond', async (req, res) => {
 
             for (const bEmail of [fromEmail, toEmail]) {
                 if (!bEmail) continue;
-                const bx = await Boxeador.findOne({ email: bEmail }).lean();
+                const bx = await Boxeador.findOne({
+                    email: bEmail
+                }).lean();
                 if (!bx) continue;
                 const alreadyHas = (Array.isArray(bx.sparringSessions) ? bx.sparringSessions : []).some(s => String(s.challengeId) === challengeId);
                 if (!alreadyHas) {
-                    await Boxeador.updateOne({ email: bEmail }, { $push: { sparringSessions: session } });
+                    await Boxeador.updateOne({
+                        email: bEmail
+                    }, {
+                        $push: {
+                            sparringSessions: session
+                        }
+                    });
                 }
             }
 
             // Notify both boxers
-            await crearNotificacion({ para: fromEmail, tipo: 'sparring', titulo: 'Sparring Confirmado', cuerpo: `Tu sparring con ${foundChallenge.toNombre} ha sido aprobado por ambos entrenadores.`, de: toEmail });
-            await crearNotificacion({ para: toEmail, tipo: 'sparring', titulo: 'Sparring Confirmado', cuerpo: `Tu sparring con ${foundChallenge.fromNombre} ha sido aprobado por ambos entrenadores.`, de: fromEmail });
+            await crearNotificacion({
+                para: fromEmail,
+                tipo: 'sparring',
+                titulo: 'Sparring Confirmado',
+                cuerpo: `Tu sparring con ${foundChallenge.toNombre} ha sido aprobado por ambos entrenadores.`,
+                de: toEmail
+            });
+            await crearNotificacion({
+                para: toEmail,
+                tipo: 'sparring',
+                titulo: 'Sparring Confirmado',
+                cuerpo: `Tu sparring con ${foundChallenge.fromNombre} ha sido aprobado por ambos entrenadores.`,
+                de: fromEmail
+            });
 
         } else if (newStatus === 'pending_coach_from') {
             // Notify the challenger's coach that it's their turn
             const coachFromEmail = (foundChallenge.coachFromEmail || '');
             if (coachFromEmail) {
-                await crearNotificacion({ para: coachFromEmail, tipo: 'sparring', titulo: 'Confirma el sparring de tu boxeador', cuerpo: `El entrenador rival ha aprobado. Necesitas confirmar el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}.`, de: coachEmail });
+                await crearNotificacion({
+                    para: coachFromEmail,
+                    tipo: 'sparring',
+                    titulo: 'Confirma el sparring de tu boxeador',
+                    cuerpo: `El entrenador rival ha aprobado. Necesitas confirmar el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}.`,
+                    de: coachEmail
+                });
             }
         } else if (newStatus === 'declined') {
             // Notify both boxers of the rejection
-            await crearNotificacion({ para: fromEmail, tipo: 'sparring', titulo: 'Sparring Rechazado', cuerpo: `Un entrenador ha rechazado el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}. El reto ha sido cancelado.`, de: coachEmail });
-            await crearNotificacion({ para: toEmail, tipo: 'sparring', titulo: 'Sparring Rechazado', cuerpo: `Un entrenador ha rechazado el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}. El reto ha sido cancelado.`, de: coachEmail });
+            await crearNotificacion({
+                para: fromEmail,
+                tipo: 'sparring',
+                titulo: 'Sparring Rechazado',
+                cuerpo: `Un entrenador ha rechazado el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}. El reto ha sido cancelado.`,
+                de: coachEmail
+            });
+            await crearNotificacion({
+                para: toEmail,
+                tipo: 'sparring',
+                titulo: 'Sparring Rechazado',
+                cuerpo: `Un entrenador ha rechazado el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}. El reto ha sido cancelado.`,
+                de: coachEmail
+            });
             // Notify the other coach too
             const otherCoachEmail = isToCoach ? (foundChallenge.coachFromEmail || '') : (foundChallenge.coachToEmail || '');
             if (otherCoachEmail && otherCoachEmail !== coachEmail) {
-                await crearNotificacion({ para: otherCoachEmail, tipo: 'sparring', titulo: 'Sparring Cancelado', cuerpo: `El entrenador rival ha rechazado el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}. El reto ha sido cancelado.`, de: coachEmail });
+                await crearNotificacion({
+                    para: otherCoachEmail,
+                    tipo: 'sparring',
+                    titulo: 'Sparring Cancelado',
+                    cuerpo: `El entrenador rival ha rechazado el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}. El reto ha sido cancelado.`,
+                    de: coachEmail
+                });
             }
         }
 
-        return res.json({ ok: true, status: newStatus });
+        return res.json({
+            ok: true,
+            status: newStatus
+        });
     } catch (err) {
-        return res.status(err.status || 400).json({ error: err.message });
+        return res.status(err.status || 400).json({
+            error: err.message
+        });
     }
 });
 
 router.post('/me/challenges/complete', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
-        const { challengeId, stars, note } = req.body || {};
+        const {
+            challengeId,
+            stars,
+            note
+        } = req.body || {};
 
-        if (!challengeId) return res.status(400).json({ error: 'challengeId requerido' });
-        
-        const myBoxers = await Boxeador.find({ entrenadorId: coach._id }).lean();
+        if (!challengeId) return res.status(400).json({
+            error: 'challengeId requerido'
+        });
+
+        const myBoxers = await Boxeador.find({
+            entrenadorId: coach._id
+        }).lean();
         let foundChallenge = null;
+        let foundBoxerEmail = '';
+        let foundIn = '';
 
         for (const boxer of myBoxers) {
             const received = Array.isArray(boxer.sparringChallengesReceived) ? boxer.sparringChallengesReceived : [];
             const c = received.find(x => x && String(x.id) === challengeId);
-            if (c) { foundChallenge = c; break; }
+            if (c) {
+                foundChallenge = c;
+                foundBoxerEmail = (boxer.email || '').toString().trim().toLowerCase();
+                foundIn = 'received';
+                break;
+            }
 
             const sent = Array.isArray(boxer.sparringChallengesSent) ? boxer.sparringChallengesSent : [];
             const s = sent.find(x => x && String(x.id) === challengeId);
-            if (s) { foundChallenge = s; break; }
+            if (s) {
+                foundChallenge = s;
+                foundBoxerEmail = (boxer.email || '').toString().trim().toLowerCase();
+                foundIn = 'sent';
+                break;
+            }
         }
 
         if (!foundChallenge) {
-            return res.status(404).json({ error: 'Reto no encontrado' });
+            return res.status(404).json({
+                error: 'Reto no encontrado'
+            });
         }
 
-        if (foundChallenge.status !== 'accepted') {
-            return res.status(400).json({ error: 'Solo se pueden completar retos que hayan sido aceptados.' });
+        const st = (foundChallenge.status || '').toString().trim().toLowerCase();
+        if (st !== 'accepted' && st !== 'completed') {
+            return res.status(400).json({
+                error: 'Solo se pueden valorar retos aceptados o completados.'
+            });
         }
 
         const completedAt = new Date().toISOString();
         const rating = Number(stars) || 5;
 
-        // Actualizar el estado a 'completed' y añadir valoración
-        await Boxeador.updateMany(
-            { 'sparringChallengesReceived.id': challengeId },
-            { $set: {
+        // Marcar estado 'completed' para todos (sin sobrescribir valoraciones ajenas)
+        await Boxeador.updateMany({
+            'sparringChallengesReceived.id': challengeId
+        }, {
+            $set: {
                 'sparringChallengesReceived.$[elem].status': 'completed',
-                'sparringChallengesReceived.$[elem].rating': rating,
-                'sparringChallengesReceived.$[elem].completedNote': note || '',
                 'sparringChallengesReceived.$[elem].completedAt': completedAt
-            }},
-            { arrayFilters: [{ 'elem.id': challengeId }] }
-        );
-        await Boxeador.updateMany(
-            { 'sparringChallengesSent.id': challengeId },
-            { $set: {
+            }
+        }, {
+            arrayFilters: [{
+                'elem.id': challengeId
+            }]
+        });
+        await Boxeador.updateMany({
+            'sparringChallengesSent.id': challengeId
+        }, {
+            $set: {
                 'sparringChallengesSent.$[elem].status': 'completed',
-                'sparringChallengesSent.$[elem].rating': rating,
-                'sparringChallengesSent.$[elem].completedNote': note || '',
                 'sparringChallengesSent.$[elem].completedAt': completedAt
-            }},
-            { arrayFilters: [{ 'elem.id': challengeId }] }
-        );
+            }
+        }, {
+            arrayFilters: [{
+                'elem.id': challengeId
+            }]
+        });
+
+        // Guardar la valoración del entrenador SOLO para el boxeador de este entrenador
+        if (foundBoxerEmail) {
+            if (foundIn === 'received') {
+                await Boxeador.updateOne({
+                    email: foundBoxerEmail
+                }, {
+                    $set: {
+                        'sparringChallengesReceived.$[elem].rating': rating,
+                        'sparringChallengesReceived.$[elem].completedNote': note || '',
+                        'sparringChallengesReceived.$[elem].completedAt': completedAt
+                    }
+                }, {
+                    arrayFilters: [{
+                        'elem.id': challengeId
+                    }]
+                });
+            } else if (foundIn === 'sent') {
+                await Boxeador.updateOne({
+                    email: foundBoxerEmail
+                }, {
+                    $set: {
+                        'sparringChallengesSent.$[elem].rating': rating,
+                        'sparringChallengesSent.$[elem].completedNote': note || '',
+                        'sparringChallengesSent.$[elem].completedAt': completedAt
+                    }
+                }, {
+                    arrayFilters: [{
+                        'elem.id': challengeId
+                    }]
+                });
+            }
+
+            await Boxeador.updateMany({
+                'sparringSessions.challengeId': challengeId
+            }, {
+                $set: {
+                    'sparringSessions.$[elem].status': 'completed',
+                    'sparringSessions.$[elem].completedAt': completedAt
+                }
+            }, {
+                arrayFilters: [{
+                    'elem.challengeId': challengeId
+                }]
+            });
+
+            await Boxeador.updateOne({
+                email: foundBoxerEmail
+            }, {
+                $set: {
+                    'sparringSessions.$[elem].ratingEntrenador': rating,
+                    'sparringSessions.$[elem].noteEntrenador': (note || '').toString().trim().slice(0, 500)
+                }
+            }, {
+                arrayFilters: [{
+                    'elem.challengeId': challengeId
+                }]
+            });
+        }
 
         // Notificar a los boxeadores
         const notifyEmails = [foundChallenge.fromEmail, foundChallenge.toEmail];
@@ -929,10 +1176,15 @@ router.post('/me/challenges/complete', async (req, res) => {
             });
         }
 
-        res.json({ success: true, status: 'completed' });
+        res.json({
+            success: true,
+            status: 'completed'
+        });
     } catch (err) {
         console.error('Error completing challenge:', err);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({
+            error: err.message
+        });
     }
 });
 

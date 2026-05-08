@@ -977,6 +977,13 @@ body.theme-dark .coach-item:hover {
     box-shadow: var(--shadow-accent);
 }
 
+.dt-cell:disabled,
+.dt-cell.past {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .dt-cell-empty {
     height: 42px;
     border-radius: var(--radius-md);

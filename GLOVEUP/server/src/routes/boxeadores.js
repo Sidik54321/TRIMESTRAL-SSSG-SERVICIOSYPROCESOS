@@ -6,7 +6,9 @@ import mongoose from 'mongoose';
 import Boxeador from '../models/Boxeador.js';
 import Entrenador from '../models/Entrenador.js';
 import Usuario from '../models/Usuario.js';
-import { crearNotificacion } from './notificaciones.js';
+import {
+    crearNotificacion
+} from './notificaciones.js';
 
 const router = Router();
 
@@ -181,7 +183,9 @@ router.post('/challenges', async (req, res) => {
 
         let to = await findBoxeadorByIdentifier(toIdentifier);
         if (!to) {
-            to = await Entrenador.findOne({ email: toIdentifier }).lean() || await Entrenador.findById(toIdentifier).lean();
+            to = await Entrenador.findOne({
+                email: toIdentifier
+            }).lean() || await Entrenador.findById(toIdentifier).lean();
         }
         if (!to) {
             return res.status(404).json({
@@ -190,7 +194,9 @@ router.post('/challenges', async (req, res) => {
         }
 
         // Bloquear si un entrenador intenta retar a un boxeador
-        const fromTrainer = await Entrenador.findOne({ email: fromEmail }).lean();
+        const fromTrainer = await Entrenador.findOne({
+            email: fromEmail
+        }).lean();
         const toBoxer = await findBoxeadorByIdentifier(toIdentifier);
         if (fromTrainer && toBoxer) {
             return res.status(403).json({
@@ -223,17 +229,23 @@ router.post('/challenges', async (req, res) => {
         let coachToEmail = null;
         const toEmailNorm = (to.email || '').toString().trim().toLowerCase();
 
-        const fromBoxerForCoach = await Boxeador.findOne({ email: fromEmail }).select('entrenadorId').lean();
+        const fromBoxerForCoach = await Boxeador.findOne({
+            email: fromEmail
+        }).select('entrenadorId').lean();
         if (fromBoxerForCoach && fromBoxerForCoach.entrenadorId) {
             const fromCoach = await Entrenador.findById(fromBoxerForCoach.entrenadorId).select('email').lean();
             if (fromCoach) coachFromEmail = (fromCoach.email || '').toLowerCase();
         } else {
             // Si no es un boxeador, ver si es un entrenador directamente
-            const isCoach = await Entrenador.findOne({ email: fromEmail }).select('email').lean();
+            const isCoach = await Entrenador.findOne({
+                email: fromEmail
+            }).select('email').lean();
             if (isCoach) coachFromEmail = fromEmail.toLowerCase();
         }
 
-        const toBoxerForCoach = await Boxeador.findOne({ email: toEmailNorm }).select('entrenadorId').lean();
+        const toBoxerForCoach = await Boxeador.findOne({
+            email: toEmailNorm
+        }).select('entrenadorId').lean();
         if (toBoxerForCoach && toBoxerForCoach.entrenadorId) {
             const toCoach = await Entrenador.findById(toBoxerForCoach.entrenadorId).select('email').lean();
             if (toCoach) coachToEmail = (toCoach.email || '').toLowerCase();
@@ -246,6 +258,16 @@ router.post('/challenges', async (req, res) => {
             if (!coachToEmail) missing.push(to.nombre || toEmailNorm);
             return res.status(400).json({
                 error: `No se puede crear el reto: ${missing.join(' y ')} no tiene(n) entrenador asignado. Ambos boxeadores necesitan un entrenador para que el sparring sea aprobado.`
+            });
+        }
+
+        const requiredCoachIds = [];
+        if (fromBoxerForCoach && fromBoxerForCoach.entrenadorId) requiredCoachIds.push(String(fromBoxerForCoach.entrenadorId));
+        if (toBoxerForCoach && toBoxerForCoach.entrenadorId) requiredCoachIds.push(String(toBoxerForCoach.entrenadorId));
+        const missingRequired = requiredCoachIds.filter((id) => !coachIds.includes(id));
+        if (missingRequired.length) {
+            return res.status(400).json({
+                error: 'Debes seleccionar obligatoriamente a los entrenadores de ambos boxeadores.'
             });
         }
 
@@ -275,7 +297,9 @@ router.post('/challenges', async (req, res) => {
             respondedAt: ''
         };
 
-        if (await Boxeador.findOne({ email: fromEmail })) {
+        if (await Boxeador.findOne({
+                email: fromEmail
+            })) {
             await Boxeador.updateOne({
                 email: fromEmail
             }, {
@@ -293,7 +317,9 @@ router.post('/challenges', async (req, res) => {
             });
         }
 
-        if (await Boxeador.findOne({ email: record.toEmail })) {
+        if (await Boxeador.findOne({
+                email: record.toEmail
+            })) {
             await Boxeador.updateOne({
                 email: record.toEmail
             }, {
@@ -357,7 +383,9 @@ router.post('/challenges', async (req, res) => {
 
 router.post('/challenges/respond', async (req, res) => {
     // Deprecated: use POST /api/entrenadores/me/challenges/respond
-    return res.status(410).json({ error: 'Este endpoint está obsoleto. Usa POST /api/entrenadores/me/challenges/respond' });
+    return res.status(410).json({
+        error: 'Este endpoint está obsoleto. Usa POST /api/entrenadores/me/challenges/respond'
+    });
 });
 
 router.get('/sessions', async (req, res) => {
@@ -453,7 +481,9 @@ router.post('/sessions/complete', async (req, res) => {
         const updateOps = {
             $set: {
                 'sparringSessions.$[elem].status': 'completed',
-                'sparringSessions.$[elem].completedAt': now
+                'sparringSessions.$[elem].completedAt': now,
+                'sparringSessions.$[elem].ratingBoxeador': stars,
+                'sparringSessions.$[elem].noteBoxeador': note
             },
             $push: {
                 'sparringSessions.$[elem].reviews': review
@@ -469,9 +499,18 @@ router.post('/sessions/complete', async (req, res) => {
         });
 
         if (partnerEmail) {
+            const partnerUpdateOps = {
+                $set: {
+                    'sparringSessions.$[elem].status': 'completed',
+                    'sparringSessions.$[elem].completedAt': now
+                },
+                $push: {
+                    'sparringSessions.$[elem].reviews': review
+                }
+            };
             await Boxeador.updateOne({
                 email: partnerEmail
-            }, updateOps, {
+            }, partnerUpdateOps, {
                 arrayFilters: [{
                     'elem.id': sessionId
                 }]
@@ -529,12 +568,22 @@ router.put('/me', async (req, res) => {
 
         let emailToSave = email;
         if (nuevoEmail && nuevoEmail !== email) {
-            const existingUser = await Usuario.findOne({ email: nuevoEmail }).lean();
+            const existingUser = await Usuario.findOne({
+                email: nuevoEmail
+            }).lean();
             if (existingUser) {
-                return res.status(400).json({ error: 'El nuevo email ya está en uso' });
+                return res.status(400).json({
+                    error: 'El nuevo email ya está en uso'
+                });
             }
             // Actualizar en la colección principal de usuarios
-            await Usuario.updateOne({ email }, { $set: { email: nuevoEmail } });
+            await Usuario.updateOne({
+                email
+            }, {
+                $set: {
+                    email: nuevoEmail
+                }
+            });
             emailToSave = nuevoEmail;
         }
 

@@ -124,8 +124,14 @@ const BoxeadorSchema = new mongoose.Schema({
         coachEmails: [String],
         coachFromEmail: String,
         coachToEmail: String,
-        coachFromApproval: { type: mongoose.Schema.Types.Mixed, default: null },
-        coachToApproval: { type: mongoose.Schema.Types.Mixed, default: null },
+        coachFromApproval: {
+            type: mongoose.Schema.Types.Mixed,
+            default: null
+        },
+        coachToApproval: {
+            type: mongoose.Schema.Types.Mixed,
+            default: null
+        },
         gymName: String,
         scheduledAt: String,
         status: String,
@@ -146,8 +152,14 @@ const BoxeadorSchema = new mongoose.Schema({
         coachEmails: [String],
         coachFromEmail: String,
         coachToEmail: String,
-        coachFromApproval: { type: mongoose.Schema.Types.Mixed, default: null },
-        coachToApproval: { type: mongoose.Schema.Types.Mixed, default: null },
+        coachFromApproval: {
+            type: mongoose.Schema.Types.Mixed,
+            default: null
+        },
+        coachToApproval: {
+            type: mongoose.Schema.Types.Mixed,
+            default: null
+        },
         gymName: String,
         scheduledAt: String,
         status: String,
@@ -169,6 +181,10 @@ const BoxeadorSchema = new mongoose.Schema({
         status: String,
         createdAt: String,
         completedAt: String,
+        ratingEntrenador: Number,
+        ratingBoxeador: Number,
+        noteEntrenador: String,
+        noteBoxeador: String,
         reviews: [{
             byEmail: String,
             stars: Number,

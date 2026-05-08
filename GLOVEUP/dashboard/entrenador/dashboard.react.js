@@ -334,10 +334,18 @@ function CoachCalendar({
     const [formNotas, setFormNotas] = useState('');
     const [formLoading, setFormLoading] = useState(false);
     const [formError, setFormError] = useState('');
-    const [filters, setFilters] = useState({ sparring: true, inscripcion: true, recordatorio: true, personalizado: true });
+    const [filters, setFilters] = useState({
+        sparring: true,
+        inscripcion: true,
+        recordatorio: true,
+        personalizado: true
+    });
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-    const toggleFilter = (key) => setFilters(prev => ({ ...prev, [key]: !prev[key] }));
+    const toggleFilter = (key) => setFilters(prev => ({
+        ...prev,
+        [key]: !prev[key]
+    }));
 
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
 
@@ -359,7 +367,10 @@ function CoachCalendar({
             setDetails('Este evento es automatico y no se puede editar.');
             return;
         }
-        setEditingEvent({ id: dbId, fcEvent: ev });
+        setEditingEvent({
+            id: dbId,
+            fcEvent: ev
+        });
         setFormTitle(ev.title || '');
         setFormStart(ev.startStr ? ev.startStr.slice(0, 10) : '');
         setFormEnd(ev.endStr ? ev.endStr.slice(0, 10) : '');
@@ -497,100 +508,274 @@ function CoachCalendar({
         };
     }, []);
 
-    const colorOptions = [
-        { value: '#3b82f6', label: 'Azul' },
-        { value: '#ef4444', label: 'Rojo' },
-        { value: '#22c55e', label: 'Verde' },
-        { value: '#f59e0b', label: 'Naranja' },
-        { value: '#8b5cf6', label: 'Morado' },
-        { value: '#111827', label: 'Negro' }
+    const colorOptions = [{
+            value: '#3b82f6',
+            label: 'Azul'
+        },
+        {
+            value: '#ef4444',
+            label: 'Rojo'
+        },
+        {
+            value: '#22c55e',
+            label: 'Verde'
+        },
+        {
+            value: '#f59e0b',
+            label: 'Naranja'
+        },
+        {
+            value: '#8b5cf6',
+            label: 'Morado'
+        },
+        {
+            value: '#111827',
+            label: 'Negro'
+        }
     ];
 
-    const tipoOptions = [
-        { value: 'personalizado', label: 'Personalizado' },
-        { value: 'entrenamiento', label: 'Entrenamiento' },
-        { value: 'competicion', label: 'Competicion' },
-        { value: 'reunion', label: 'Reunion' },
-        { value: 'descanso', label: 'Descanso' }
+    const tipoOptions = [{
+            value: 'personalizado',
+            label: 'Personalizado'
+        },
+        {
+            value: 'entrenamiento',
+            label: 'Entrenamiento'
+        },
+        {
+            value: 'competicion',
+            label: 'Competicion'
+        },
+        {
+            value: 'reunion',
+            label: 'Reunion'
+        },
+        {
+            value: 'descanso',
+            label: 'Descanso'
+        }
     ];
 
     const modalOverlay = showModal ? h('div', {
-        style: {
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', zIndex: 9999
-        },
-        onClick: (e) => { if (e.target === e.currentTarget) closeModal(); }
-    },
-        h('div', {
             style: {
-                backgroundColor: '#fff', borderRadius: '20px', padding: '32px',
-                maxWidth: 480, width: '90%', boxShadow: '0 25px 50px rgba(0,0,0,0.2)',
-                maxHeight: '90vh', overflowY: 'auto'
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0,0,0,0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 9999
+            },
+            onClick: (e) => {
+                if (e.target === e.currentTarget) closeModal();
             }
         },
-            h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 } },
-                h('h3', { style: { margin: 0, fontSize: '1.3rem', fontWeight: 800 } },
+        h('div', {
+                style: {
+                    backgroundColor: '#fff',
+                    borderRadius: '20px',
+                    padding: '32px',
+                    maxWidth: 480,
+                    width: '90%',
+                    boxShadow: '0 25px 50px rgba(0,0,0,0.2)',
+                    maxHeight: '90vh',
+                    overflowY: 'auto'
+                }
+            },
+            h('div', {
+                    style: {
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 24
+                    }
+                },
+                h('h3', {
+                        style: {
+                            margin: 0,
+                            fontSize: '1.3rem',
+                            fontWeight: 800
+                        }
+                    },
                     editingEvent ? 'Editar Evento' : 'Nuevo Evento'),
                 h('button', {
                     onClick: closeModal,
-                    style: { background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#6b7280', lineHeight: 1 }
+                    style: {
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '1.5rem',
+                        cursor: 'pointer',
+                        color: '#6b7280',
+                        lineHeight: 1
+                    }
                 }, String.fromCharCode(215))
             ),
             formError ? h('div', {
-                style: { padding: '10px 14px', borderRadius: 12, backgroundColor: '#fee2e2', color: '#b91c1c', fontSize: '.85rem', fontWeight: 600, marginBottom: 16 }
+                style: {
+                    padding: '10px 14px',
+                    borderRadius: 12,
+                    backgroundColor: '#fee2e2',
+                    color: '#b91c1c',
+                    fontSize: '.85rem',
+                    fontWeight: 600,
+                    marginBottom: 16
+                }
             }, formError) : null,
 
             // Titulo
-            h('label', { style: { display: 'block', fontSize: '.8rem', fontWeight: 700, marginBottom: 6, color: '#374151' } }, 'Titulo *'),
+            h('label', {
+                style: {
+                    display: 'block',
+                    fontSize: '.8rem',
+                    fontWeight: 700,
+                    marginBottom: 6,
+                    color: '#374151'
+                }
+            }, 'Titulo *'),
             h('input', {
-                type: 'text', value: formTitle, placeholder: 'Ej: Entrenamiento especial',
+                type: 'text',
+                value: formTitle,
+                placeholder: 'Ej: Entrenamiento especial',
                 onChange: (e) => setFormTitle(e.target.value),
-                style: { width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e5e7eb', fontSize: '.9rem', marginBottom: 16, boxSizing: 'border-box' }
+                style: {
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: 12,
+                    border: '1px solid #e5e7eb',
+                    fontSize: '.9rem',
+                    marginBottom: 16,
+                    boxSizing: 'border-box'
+                }
             }),
 
             // Fechas
-            h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 } },
+            h('div', {
+                    style: {
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: 12,
+                        marginBottom: 16
+                    }
+                },
                 h('div', null,
-                    h('label', { style: { display: 'block', fontSize: '.8rem', fontWeight: 700, marginBottom: 6, color: '#374151' } }, 'Fecha inicio *'),
+                    h('label', {
+                        style: {
+                            display: 'block',
+                            fontSize: '.8rem',
+                            fontWeight: 700,
+                            marginBottom: 6,
+                            color: '#374151'
+                        }
+                    }, 'Fecha inicio *'),
                     h('input', {
-                        type: 'date', value: formStart,
+                        type: 'date',
+                        value: formStart,
                         onChange: (e) => setFormStart(e.target.value),
-                        style: { width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e5e7eb', fontSize: '.9rem', boxSizing: 'border-box' }
+                        style: {
+                            width: '100%',
+                            padding: '10px 14px',
+                            borderRadius: 12,
+                            border: '1px solid #e5e7eb',
+                            fontSize: '.9rem',
+                            boxSizing: 'border-box'
+                        }
                     })
                 ),
                 h('div', null,
-                    h('label', { style: { display: 'block', fontSize: '.8rem', fontWeight: 700, marginBottom: 6, color: '#374151' } }, 'Fecha fin'),
+                    h('label', {
+                        style: {
+                            display: 'block',
+                            fontSize: '.8rem',
+                            fontWeight: 700,
+                            marginBottom: 6,
+                            color: '#374151'
+                        }
+                    }, 'Fecha fin'),
                     h('input', {
-                        type: 'date', value: formEnd,
+                        type: 'date',
+                        value: formEnd,
                         onChange: (e) => setFormEnd(e.target.value),
-                        style: { width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e5e7eb', fontSize: '.9rem', boxSizing: 'border-box' }
+                        style: {
+                            width: '100%',
+                            padding: '10px 14px',
+                            borderRadius: 12,
+                            border: '1px solid #e5e7eb',
+                            fontSize: '.9rem',
+                            boxSizing: 'border-box'
+                        }
                     })
                 )
             ),
 
             // Tipo y Color
-            h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 } },
+            h('div', {
+                    style: {
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: 12,
+                        marginBottom: 16
+                    }
+                },
                 h('div', null,
-                    h('label', { style: { display: 'block', fontSize: '.8rem', fontWeight: 700, marginBottom: 6, color: '#374151' } }, 'Tipo'),
+                    h('label', {
+                        style: {
+                            display: 'block',
+                            fontSize: '.8rem',
+                            fontWeight: 700,
+                            marginBottom: 6,
+                            color: '#374151'
+                        }
+                    }, 'Tipo'),
                     h('select', {
                         value: formTipo,
                         onChange: (e) => setFormTipo(e.target.value),
-                        style: { width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e5e7eb', fontSize: '.9rem', boxSizing: 'border-box', backgroundColor: '#fff' }
-                    }, ...tipoOptions.map(o => h('option', { key: o.value, value: o.value }, o.label)))
+                        style: {
+                            width: '100%',
+                            padding: '10px 14px',
+                            borderRadius: 12,
+                            border: '1px solid #e5e7eb',
+                            fontSize: '.9rem',
+                            boxSizing: 'border-box',
+                            backgroundColor: '#fff'
+                        }
+                    }, ...tipoOptions.map(o => h('option', {
+                        key: o.value,
+                        value: o.value
+                    }, o.label)))
                 ),
                 h('div', null,
-                    h('label', { style: { display: 'block', fontSize: '.8rem', fontWeight: 700, marginBottom: 6, color: '#374151' } }, 'Color'),
-                    h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
+                    h('label', {
+                        style: {
+                            display: 'block',
+                            fontSize: '.8rem',
+                            fontWeight: 700,
+                            marginBottom: 6,
+                            color: '#374151'
+                        }
+                    }, 'Color'),
+                    h('div', {
+                            style: {
+                                display: 'flex',
+                                gap: 6,
+                                flexWrap: 'wrap'
+                            }
+                        },
                         ...colorOptions.map(c => h('button', {
                             key: c.value,
                             type: 'button',
                             title: c.label,
                             onClick: () => setFormColor(c.value),
                             style: {
-                                width: 28, height: 28, borderRadius: '50%',
-                                backgroundColor: c.value, border: formColor === c.value ? '3px solid #111827' : '2px solid #e5e7eb',
-                                cursor: 'pointer', transition: 'all .15s'
+                                width: 28,
+                                height: 28,
+                                borderRadius: '50%',
+                                backgroundColor: c.value,
+                                border: formColor === c.value ? '3px solid #111827' : '2px solid #e5e7eb',
+                                cursor: 'pointer',
+                                transition: 'all .15s'
                             }
                         }))
                     )
@@ -598,32 +783,82 @@ function CoachCalendar({
             ),
 
             // Notas
-            h('label', { style: { display: 'block', fontSize: '.8rem', fontWeight: 700, marginBottom: 6, color: '#374151' } }, 'Notas'),
+            h('label', {
+                style: {
+                    display: 'block',
+                    fontSize: '.8rem',
+                    fontWeight: 700,
+                    marginBottom: 6,
+                    color: '#374151'
+                }
+            }, 'Notas'),
             h('textarea', {
-                value: formNotas, placeholder: 'Notas opcionales...',
+                value: formNotas,
+                placeholder: 'Notas opcionales...',
                 onChange: (e) => setFormNotas(e.target.value),
                 rows: 3,
-                style: { width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e5e7eb', fontSize: '.9rem', resize: 'vertical', marginBottom: 20, boxSizing: 'border-box', fontFamily: 'inherit' }
+                style: {
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: 12,
+                    border: '1px solid #e5e7eb',
+                    fontSize: '.9rem',
+                    resize: 'vertical',
+                    marginBottom: 20,
+                    boxSizing: 'border-box',
+                    fontFamily: 'inherit'
+                }
             }),
 
             // Botones de accion
-            h('div', { style: { display: 'flex', gap: 10 } },
-                h('button', {
-                    className: 'btn btn-primary',
-                    disabled: formLoading,
-                    onClick: saveEvent,
-                    style: { flex: 2, padding: '12px', fontSize: '.9rem', fontWeight: 700, borderRadius: 12 }
+            h('div', {
+                    style: {
+                        display: 'flex',
+                        gap: 10
+                    }
                 },
-                    h('i', { className: `fas ${editingEvent ? 'fa-save' : 'fa-plus'}`, style: { marginRight: 6 } }),
+                h('button', {
+                        className: 'btn btn-primary',
+                        disabled: formLoading,
+                        onClick: saveEvent,
+                        style: {
+                            flex: 2,
+                            padding: '12px',
+                            fontSize: '.9rem',
+                            fontWeight: 700,
+                            borderRadius: 12
+                        }
+                    },
+                    h('i', {
+                        className: `fas ${editingEvent ? 'fa-save' : 'fa-plus'}`,
+                        style: {
+                            marginRight: 6
+                        }
+                    }),
                     formLoading ? 'Guardando...' : (editingEvent ? 'Guardar cambios' : 'Crear evento')
                 ),
                 editingEvent ? h('button', {
-                    className: 'btn btn-secondary',
-                    disabled: formLoading,
-                    onClick: () => { setFormError(''); setShowDeleteConfirm(true); },
-                    style: { flex: 1, padding: '12px', fontSize: '.9rem', color: '#ef4444', borderColor: '#ef4444', borderRadius: 12 }
-                },
-                    h('i', { className: 'fas fa-trash', style: { marginRight: 6 } }),
+                        className: 'btn btn-secondary',
+                        disabled: formLoading,
+                        onClick: () => {
+                            setFormError('');
+                            setShowDeleteConfirm(true);
+                        },
+                        style: {
+                            flex: 1,
+                            padding: '12px',
+                            fontSize: '.9rem',
+                            color: '#ef4444',
+                            borderColor: '#ef4444',
+                            borderRadius: 12
+                        }
+                    },
+                    h('i', {
+                        className: 'fas fa-trash',
+                        style: {
+                            marginRight: 6
+                        }
+                    }),
                     'Eliminar'
                 ) : null
             )
@@ -631,33 +866,106 @@ function CoachCalendar({
     ) : null;
 
     const deleteConfirmModal = showDeleteConfirm ? h('div', {
-        style: {
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', zIndex: 10000
-        },
-        onClick: (e) => { if (!formLoading && e.target === e.currentTarget) setShowDeleteConfirm(false); }
-    },
-        h('div', {
             style: {
-                backgroundColor: '#fff', borderRadius: '16px', padding: '24px',
-                maxWidth: 400, width: '90%', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0,0,0,0.6)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10000
+            },
+            onClick: (e) => {
+                if (!formLoading && e.target === e.currentTarget) setShowDeleteConfirm(false);
             }
         },
-            h('i', { className: 'fas fa-exclamation-triangle', style: { fontSize: '3rem', color: '#ef4444', marginBottom: '16px', display: 'block' } }),
-            h('h3', { style: { margin: '0 0 12px 0', fontSize: '1.25rem', fontWeight: 800, color: '#111827' } }, '¿Eliminar este evento?'),
-            h('p', { style: { margin: '0 0 24px 0', fontSize: '0.95rem', color: '#6b7280' } }, 'Esta acción no se puede deshacer.'),
-            formError ? h('div', { style: { padding: '10px', borderRadius: 12, backgroundColor: '#fee2e2', color: '#b91c1c', fontSize: '.85rem', fontWeight: 600, marginBottom: 16 } }, formError) : null,
-            h('div', { style: { display: 'flex', gap: 12, justifyContent: 'center' } },
+        h('div', {
+                style: {
+                    backgroundColor: '#fff',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    maxWidth: 400,
+                    width: '90%',
+                    textAlign: 'center',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+                }
+            },
+            h('i', {
+                className: 'fas fa-exclamation-triangle',
+                style: {
+                    fontSize: '3rem',
+                    color: '#ef4444',
+                    marginBottom: '16px',
+                    display: 'block'
+                }
+            }),
+            h('h3', {
+                style: {
+                    margin: '0 0 12px 0',
+                    fontSize: '1.25rem',
+                    fontWeight: 800,
+                    color: '#111827'
+                }
+            }, '¿Eliminar este evento?'),
+            h('p', {
+                style: {
+                    margin: '0 0 24px 0',
+                    fontSize: '0.95rem',
+                    color: '#6b7280'
+                }
+            }, 'Esta acción no se puede deshacer.'),
+            formError ? h('div', {
+                style: {
+                    padding: '10px',
+                    borderRadius: 12,
+                    backgroundColor: '#fee2e2',
+                    color: '#b91c1c',
+                    fontSize: '.85rem',
+                    fontWeight: 600,
+                    marginBottom: 16
+                }
+            }, formError) : null,
+            h('div', {
+                    style: {
+                        display: 'flex',
+                        gap: 12,
+                        justifyContent: 'center'
+                    }
+                },
                 h('button', {
-                    onClick: () => { if (!formLoading) setShowDeleteConfirm(false); },
+                    onClick: () => {
+                        if (!formLoading) setShowDeleteConfirm(false);
+                    },
                     disabled: formLoading,
-                    style: { padding: '10px 20px', borderRadius: 10, border: '1px solid #d1d5db', background: '#fff', color: '#374151', fontWeight: 700, cursor: formLoading ? 'not-allowed' : 'pointer', flex: 1, minHeight: '44px' }
+                    style: {
+                        padding: '10px 20px',
+                        borderRadius: 10,
+                        border: '1px solid #d1d5db',
+                        background: '#fff',
+                        color: '#374151',
+                        fontWeight: 700,
+                        cursor: formLoading ? 'not-allowed' : 'pointer',
+                        flex: 1,
+                        minHeight: '44px'
+                    }
                 }, 'Cancelar'),
                 h('button', {
                     onClick: deleteEvent,
                     disabled: formLoading,
-                    style: { padding: '10px 20px', borderRadius: 10, border: 'none', background: '#ef4444', color: '#fff', fontWeight: 700, cursor: formLoading ? 'not-allowed' : 'pointer', flex: 1, minHeight: '44px' }
+                    style: {
+                        padding: '10px 20px',
+                        borderRadius: 10,
+                        border: 'none',
+                        background: '#ef4444',
+                        color: '#fff',
+                        fontWeight: 700,
+                        cursor: formLoading ? 'not-allowed' : 'pointer',
+                        flex: 1,
+                        minHeight: '44px'
+                    }
                 }, formLoading ? 'Eliminando...' : 'Eliminar')
             )
         )
@@ -668,35 +976,81 @@ function CoachCalendar({
         null,
         modalOverlay,
         deleteConfirmModal,
-        h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 } },
-            h('div', { className: 'coach-calendar-legend', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
+        h('div', {
+                style: {
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 12
+                }
+            },
+            h('div', {
+                    className: 'coach-calendar-legend',
+                    style: {
+                        display: 'flex',
+                        gap: 8,
+                        flexWrap: 'wrap'
+                    }
+                },
                 h('span', {
                     className: 'coach-calendar-pill coach-calendar-pill--sparring',
                     onClick: () => toggleFilter('sparring'),
-                    style: { cursor: 'pointer', opacity: filters.sparring ? 1 : 0.4, transition: 'opacity 0.2s', userSelect: 'none' }
+                    style: {
+                        cursor: 'pointer',
+                        opacity: filters.sparring ? 1 : 0.4,
+                        transition: 'opacity 0.2s',
+                        userSelect: 'none'
+                    }
                 }, 'Sparring'),
                 h('span', {
                     className: 'coach-calendar-pill coach-calendar-pill--inscripcion',
                     onClick: () => toggleFilter('inscripcion'),
-                    style: { cursor: 'pointer', opacity: filters.inscripcion ? 1 : 0.4, transition: 'opacity 0.2s', userSelect: 'none' }
+                    style: {
+                        cursor: 'pointer',
+                        opacity: filters.inscripcion ? 1 : 0.4,
+                        transition: 'opacity 0.2s',
+                        userSelect: 'none'
+                    }
                 }, 'Inscripcion'),
                 h('span', {
                     className: 'coach-calendar-pill coach-calendar-pill--recordatorio',
                     onClick: () => toggleFilter('recordatorio'),
-                    style: { cursor: 'pointer', opacity: filters.recordatorio ? 1 : 0.4, transition: 'opacity 0.2s', userSelect: 'none' }
+                    style: {
+                        cursor: 'pointer',
+                        opacity: filters.recordatorio ? 1 : 0.4,
+                        transition: 'opacity 0.2s',
+                        userSelect: 'none'
+                    }
                 }, 'Recordatorio'),
                 h('span', {
                     className: 'coach-calendar-pill',
                     onClick: () => toggleFilter('personalizado'),
-                    style: { backgroundColor: '#3b82f6', color: '#fff', cursor: 'pointer', opacity: filters.personalizado ? 1 : 0.4, transition: 'opacity 0.2s', userSelect: 'none' }
+                    style: {
+                        backgroundColor: '#3b82f6',
+                        color: '#fff',
+                        cursor: 'pointer',
+                        opacity: filters.personalizado ? 1 : 0.4,
+                        transition: 'opacity 0.2s',
+                        userSelect: 'none'
+                    }
                 }, 'Personalizado')
             ),
             h('button', {
-                className: 'btn btn-primary',
-                onClick: () => openCreateModal(''),
-                style: { padding: '8px 18px', fontSize: '.85rem', fontWeight: 700, borderRadius: 12 }
-            },
-                h('i', { className: 'fas fa-plus', style: { marginRight: 6 } }),
+                    className: 'btn btn-primary',
+                    onClick: () => openCreateModal(''),
+                    style: {
+                        padding: '8px 18px',
+                        fontSize: '.85rem',
+                        fontWeight: 700,
+                        borderRadius: 12
+                    }
+                },
+                h('i', {
+                    className: 'fas fa-plus',
+                    style: {
+                        marginRight: 6
+                    }
+                }),
                 'Nuevo evento'
             )
         ),
@@ -706,7 +1060,9 @@ function CoachCalendar({
             role: 'application',
             'aria-label': 'Calendario de Gestion'
         }),
-        h('div', { className: 'coach-calendar-details' }, details)
+        h('div', {
+            className: 'coach-calendar-details'
+        }, details)
     );
 }
 
@@ -791,12 +1147,12 @@ function MetricCard({
 }) {
     return h(
         'div', {
-        className: 'metric-card has-chart'
-    },
+            className: 'metric-card has-chart'
+        },
         h(
             'div', {
-            className: 'metric-header'
-        },
+                className: 'metric-header'
+            },
             h('span', {
                 className: 'metric-label'
             }, label),
@@ -897,19 +1253,38 @@ function CoachStatsDashboard() {
     }, [boxers, metricas, customEvents]);
 
     if (loading && boxers.length === 0) {
-        return h('div', { style: { padding: 40, textAlign: 'center', opacity: 0.5 } }, 'Cargando panel...');
+        return h('div', {
+            style: {
+                padding: 40,
+                textAlign: 'center',
+                opacity: 0.5
+            }
+        }, 'Cargando panel...');
     }
 
     return h(
         React.Fragment,
         null,
         h('header', {
-            className: 'dashboard-header',
-            style: { marginBottom: 24 }
-        },
-            h('div', { className: 'dashboard-title-block' },
-                h('h1', { style: { fontSize: '2rem', fontWeight: 900 } }, coachName || 'Entrenador'),
-                h('p', { style: { opacity: 0.8 } }, 'Resumen de actividad y gestion de boxeadores.')
+                className: 'dashboard-header',
+                style: {
+                    marginBottom: 24
+                }
+            },
+            h('div', {
+                    className: 'dashboard-title-block'
+                },
+                h('h1', {
+                    style: {
+                        fontSize: '2rem',
+                        fontWeight: 900
+                    }
+                }, coachName || 'Entrenador'),
+                h('p', {
+                    style: {
+                        opacity: 0.8
+                    }
+                }, 'Resumen de actividad y gestion de boxeadores.')
             )
         ),
 
@@ -926,11 +1301,20 @@ function CoachStatsDashboard() {
 
         h(
             'div', {
-            className: 'dashboard-panel',
-            style: { marginBottom: 24 }
-        },
-            h('h2', { style: { marginBottom: 16 } }, 'Calendario de Actividades'),
-            h(CoachCalendar, { events: calendarEvents, onEventsChange: load })
+                className: 'dashboard-panel',
+                style: {
+                    marginBottom: 24
+                }
+            },
+            h('h2', {
+                style: {
+                    marginBottom: 16
+                }
+            }, 'Calendario de Actividades'),
+            h(CoachCalendar, {
+                events: calendarEvents,
+                onEventsChange: load
+            })
         )
     );
 }
@@ -938,8 +1322,15 @@ function CoachStatsDashboard() {
 function CoachManagement() {
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState(null);
-    const [coach, setCoach] = useState({ gimnasio: '', precioMensual: 0 });
-    const [metricas, setMetricas] = useState({ boxeadoresActivos: 0, inscripcionesMes: 0, ingresosMes: 0 });
+    const [coach, setCoach] = useState({
+        gimnasio: '',
+        precioMensual: 0
+    });
+    const [metricas, setMetricas] = useState({
+        boxeadoresActivos: 0,
+        inscripcionesMes: 0,
+        ingresosMes: 0
+    });
     const [cobrosTotal, setCobrosTotal] = useState(0);
     const [boxers, setBoxers] = useState([]);
 
@@ -975,7 +1366,10 @@ function CoachManagement() {
 
     const refreshAll = async () => {
         if (!email) {
-            setMessage({ kind: 'error', text: 'No se ha encontrado el email.' });
+            setMessage({
+                kind: 'error',
+                text: 'No se ha encontrado el email.'
+            });
             setLoading(false);
             return;
         }
@@ -1017,12 +1411,20 @@ function CoachManagement() {
                 if (rawHorario.includes('|')) {
                     const [diasStr, horas] = rawHorario.split('|').map(s => s.trim());
                     // Analizar días
-                    const dayMap = { 'L': 0, 'M': 1, 'X': 2, 'J': 3, 'V': 4, 'S': 5, 'D': 6 };
+                    const dayMap = {
+                        'L': 0,
+                        'M': 1,
+                        'X': 2,
+                        'J': 3,
+                        'V': 4,
+                        'S': 5,
+                        'D': 6
+                    };
                     const nextDays = [false, false, false, false, false, false, false];
 
-                    if (diasStr.toUpperCase().includes('L-V')) [0, 1, 2, 3, 4].forEach(i => nextDays[i] = true);
-                    else if (diasStr.toUpperCase().includes('L-S')) [0, 1, 2, 3, 4, 5].forEach(i => nextDays[i] = true);
-                    else if (diasStr.toUpperCase().includes('TODOS')) [0, 1, 2, 3, 4, 5, 6].forEach(i => nextDays[i] = true);
+                    if (diasStr.toUpperCase().includes('L-V'))[0, 1, 2, 3, 4].forEach(i => nextDays[i] = true);
+                    else if (diasStr.toUpperCase().includes('L-S'))[0, 1, 2, 3, 4, 5].forEach(i => nextDays[i] = true);
+                    else if (diasStr.toUpperCase().includes('TODOS'))[0, 1, 2, 3, 4, 5, 6].forEach(i => nextDays[i] = true);
                     else {
                         diasStr.split(',').forEach(d => {
                             const trimmed = d.trim().toUpperCase()[0];
@@ -1045,7 +1447,10 @@ function CoachManagement() {
             }
             setMessage(null);
         } catch (err) {
-            setMessage({ kind: 'error', text: err.message || 'Error cargando datos.' });
+            setMessage({
+                kind: 'error',
+                text: err.message || 'Error cargando datos.'
+            });
         } finally {
             setLoading(false);
         }
@@ -1066,7 +1471,9 @@ function CoachManagement() {
                 if (markerRef.current) {
                     markerRef.current.setLatLng(pos);
                 } else {
-                    markerRef.current = window.L.marker(pos, { draggable: true }).addTo(mapRef.current);
+                    markerRef.current = window.L.marker(pos, {
+                        draggable: true
+                    }).addTo(mapRef.current);
                     markerRef.current.on('dragend', () => {
                         const newPos = markerRef.current.getLatLng();
                         setLat(newPos.lat);
@@ -1088,7 +1495,9 @@ function CoachManagement() {
         }).addTo(map);
 
         if (lat && lng) {
-            markerRef.current = window.L.marker([lat, lng], { draggable: true }).addTo(map);
+            markerRef.current = window.L.marker([lat, lng], {
+                draggable: true
+            }).addTo(map);
             markerRef.current.on('dragend', () => {
                 const newPos = markerRef.current.getLatLng();
                 setLat(newPos.lat);
@@ -1097,13 +1506,18 @@ function CoachManagement() {
         }
 
         map.on('click', (e) => {
-            const { lat, lng } = e.latlng;
+            const {
+                lat,
+                lng
+            } = e.latlng;
             setLat(lat);
             setLng(lng);
             if (markerRef.current) {
                 markerRef.current.setLatLng([lat, lng]);
             } else {
-                markerRef.current = window.L.marker([lat, lng], { draggable: true }).addTo(map);
+                markerRef.current = window.L.marker([lat, lng], {
+                    draggable: true
+                }).addTo(map);
                 markerRef.current.on('dragend', () => {
                     const newPos = markerRef.current.getLatLng();
                     setLat(newPos.lat);
@@ -1125,7 +1539,9 @@ function CoachManagement() {
         };
     }, [loading, lat === null, lng === null]);
 
-    useEffect(() => { refreshAll(); }, []);
+    useEffect(() => {
+        refreshAll();
+    }, []);
 
     const filteredBoxers = useMemo(() => {
         const q = search.trim().toLowerCase();
@@ -1144,7 +1560,11 @@ function CoachManagement() {
         setIsGeocoding(true);
         try {
             const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccion)}&limit=1`;
-            const res = await fetch(url, { headers: { 'User-Agent': 'GloveUp-App' } });
+            const res = await fetch(url, {
+                headers: {
+                    'User-Agent': 'GloveUp-App'
+                }
+            });
             const data = await res.json();
             if (data && data.length > 0) {
                 const first = data[0];
@@ -1170,7 +1590,9 @@ function CoachManagement() {
         try {
             await requestJson(`/api/entrenadores/me?email=${encodeURIComponent(email)}`, {
                 method: 'PUT',
-                body: { gimnasio: gymInput }
+                body: {
+                    gimnasio: gymInput
+                }
             });
             const dayTags = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
             const selectedNames = dayTags.filter((_, i) => selectedDays[i]);
@@ -1204,10 +1626,16 @@ function CoachManagement() {
                 method: 'POST',
                 body: payload
             });
-            setMessage({ kind: 'ok', text: hasGym ? 'Información del gimnasio guardada correctamente.' : '¡Enhorabuena! Gimnasio creado con éxito.' });
+            setMessage({
+                kind: 'ok',
+                text: hasGym ? 'Información del gimnasio guardada correctamente.' : '¡Enhorabuena! Gimnasio creado con éxito.'
+            });
             refreshAll();
         } catch (err) {
-            setMessage({ kind: 'error', text: err.message });
+            setMessage({
+                kind: 'error',
+                text: err.message
+            });
         }
     };
 
@@ -1235,11 +1663,18 @@ function CoachManagement() {
         try {
             await requestJson(`/api/entrenadores/me/boxeadores?email=${encodeURIComponent(email)}`, {
                 method: 'POST',
-                body: { boxeadorIdentifier: assignEmail.trim() }
+                body: {
+                    boxeadorIdentifier: assignEmail.trim()
+                }
             });
             setAssignEmail('');
             refreshAll();
-        } catch (err) { setMessage({ kind: 'error', text: err.message }); }
+        } catch (err) {
+            setMessage({
+                kind: 'error',
+                text: err.message
+            });
+        }
     };
 
     const removeBoxer = async () => {
@@ -1247,11 +1682,18 @@ function CoachManagement() {
         try {
             await requestJson(`/api/entrenadores/me/boxeadores?email=${encodeURIComponent(email)}`, {
                 method: 'DELETE',
-                body: { boxeadorIdentifier: assignEmail.trim() }
+                body: {
+                    boxeadorIdentifier: assignEmail.trim()
+                }
             });
             setAssignEmail('');
             refreshAll();
-        } catch (err) { setMessage({ kind: 'error', text: err.message }); }
+        } catch (err) {
+            setMessage({
+                kind: 'error',
+                text: err.message
+            });
+        }
     };
 
     const selectForEdit = (b) => {
@@ -1265,11 +1707,20 @@ function CoachManagement() {
         try {
             await requestJson(`/api/entrenadores/me/boxeadores/${encodeURIComponent(editId)}?email=${encodeURIComponent(email)}`, {
                 method: 'PUT',
-                body: { nombre: editName, dniLicencia: editDni, nivel: editLevel }
+                body: {
+                    nombre: editName,
+                    dniLicencia: editDni,
+                    nivel: editLevel
+                }
             });
             setEditId('');
             refreshAll();
-        } catch (err) { setMessage({ kind: 'error', text: err.message }); }
+        } catch (err) {
+            setMessage({
+                kind: 'error',
+                text: err.message
+            });
+        }
     };
 
     const deleteEdit = async () => {
@@ -1279,7 +1730,12 @@ function CoachManagement() {
             });
             setEditId('');
             refreshAll();
-        } catch (err) { setMessage({ kind: 'error', text: err.message }); }
+        } catch (err) {
+            setMessage({
+                kind: 'error',
+                text: err.message
+            });
+        }
     };
 
     const levelScore = (nivel = '') => {
@@ -1293,60 +1749,318 @@ function CoachManagement() {
     };
     const renderStars = (v) => {
         const filled = Math.max(0, Math.min(5, Number(v) || 0));
-        return Array.from({ length: 5 }, (_, i) =>
-            h('i', { key: i, className: i < filled ? 'fas fa-star' : 'far fa-star', style: { color: i < filled ? '#f97316' : '#d1d5db', fontSize: '0.75rem' } })
+        return Array.from({
+                length: 5
+            }, (_, i) =>
+            h('i', {
+                key: i,
+                className: i < filled ? 'fas fa-star' : 'far fa-star',
+                style: {
+                    color: i < filled ? '#f97316' : '#d1d5db',
+                    fontSize: '0.75rem'
+                }
+            })
         );
     };
 
 
     if (loading && !coach.gimnasio && !gymInput) {
-        return h('div', { style: { padding: 40, textAlign: 'center', opacity: 0.5 } }, 'Cargando panel...');
+        return h('div', {
+            style: {
+                padding: 40,
+                textAlign: 'center',
+                opacity: 0.5
+            }
+        }, 'Cargando panel...');
     }
 
     return h(React.Fragment, null, [
-        h('div', { key: 'main-panel', className: 'dashboard-panel', style: !hasGym ? { border: '2px dashed #e5e7eb', backgroundColor: '#f9fafb', padding: '40px 20px' } : {} }, [
+        h('div', {
+            key: 'main-panel',
+            className: 'dashboard-panel',
+            style: !hasGym ? {
+                border: '2px dashed #e5e7eb',
+                backgroundColor: '#f9fafb',
+                padding: '40px 20px'
+            } : {}
+        }, [
             (!hasGym ?
-                h('div', { style: { textAlign: 'center', marginBottom: '30px' } }, [
-                    h('h2', { style: { fontSize: '2rem', color: '#111827', marginBottom: '10px' } }, 'Crea tu Gimnasio ✨'),
-                    h('p', { style: { color: '#6b7280', fontSize: '1.05rem', maxWidth: '600px', margin: '0 auto' } }, 'Aún no tienes un centro registrado. Completa la información de tu gimnasio para empezar a invitar y gestionar a tus boxeadores.')
-                ])
-                : h('h2', null, 'Mi gimnasio')
+                h('div', {
+                    style: {
+                        textAlign: 'center',
+                        marginBottom: '30px'
+                    }
+                }, [
+                    h('h2', {
+                        style: {
+                            fontSize: '2rem',
+                            color: '#111827',
+                            marginBottom: '10px'
+                        }
+                    }, 'Crea tu Gimnasio ✨'),
+                    h('p', {
+                        style: {
+                            color: '#6b7280',
+                            fontSize: '1.05rem',
+                            maxWidth: '600px',
+                            margin: '0 auto'
+                        }
+                    }, 'Aún no tienes un centro registrado. Completa la información de tu gimnasio para empezar a invitar y gestionar a tus boxeadores.')
+                ]) :
+                h('h2', null, 'Mi gimnasio')
             ),
 
-            h('div', { style: { display: 'grid', gap: '20px', marginTop: hasGym ? '24px' : '0' } }, [
-                h('div', { style: { display: 'flex', flexDirection: 'column', gap: '20px' } }, [
-                    h('div', { style: { padding: '24px', borderRadius: '24px', border: '1px solid #f3f4f6', backgroundColor: '#fff', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', gap: '20px' } }, [
-                        h('div', { style: { display: 'flex', alignItems: 'center', gap: '20px' } }, [
-                            h('div', { style: { position: 'relative', width: '90px', height: '90px', borderRadius: '24px', backgroundColor: '#f3f4f6', overflow: 'hidden', border: '2px solid #e5e7eb', flexShrink: 0 } }, [
-                                (fotoPerfil ? h('img', { src: fotoPerfil, style: { width: '100%', height: '100%', objectFit: 'cover' } }) : h('div', { style: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' } }, [h('i', { className: 'fas fa-image', style: { fontSize: '1.5rem' } })])),
-                                h('label', { style: { position: 'absolute', inset: 0, cursor: 'pointer', backgroundColor: 'rgba(0,0,0,0.3)', opacity: 0, transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }, onMouseEnter: e => e.currentTarget.style.opacity = 1, onMouseLeave: e => e.currentTarget.style.opacity = 0 }, [
-                                    h('i', { className: 'fas fa-camera' }),
-                                    h('input', { type: 'file', accept: 'image/*', onChange: onPickFotoPerfil, style: { display: 'none' } })
+            h('div', {
+                style: {
+                    display: 'grid',
+                    gap: '20px',
+                    marginTop: hasGym ? '24px' : '0'
+                }
+            }, [
+                h('div', {
+                    style: {
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '20px'
+                    }
+                }, [
+                    h('div', {
+                        style: {
+                            padding: '24px',
+                            borderRadius: '24px',
+                            border: '1px solid #f3f4f6',
+                            backgroundColor: '#fff',
+                            boxShadow: '0 8px 30px rgba(0,0,0,0.04)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '20px'
+                        }
+                    }, [
+                        h('div', {
+                            style: {
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '20px'
+                            }
+                        }, [
+                            h('div', {
+                                style: {
+                                    position: 'relative',
+                                    width: '90px',
+                                    height: '90px',
+                                    borderRadius: '24px',
+                                    backgroundColor: '#f3f4f6',
+                                    overflow: 'hidden',
+                                    border: '2px solid #e5e7eb',
+                                    flexShrink: 0
+                                }
+                            }, [
+                                (fotoPerfil ? h('img', {
+                                    src: fotoPerfil,
+                                    style: {
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'cover'
+                                    }
+                                }) : h('div', {
+                                    style: {
+                                        width: '100%',
+                                        height: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: '#9ca3af'
+                                    }
+                                }, [h('i', {
+                                    className: 'fas fa-image',
+                                    style: {
+                                        fontSize: '1.5rem'
+                                    }
+                                })])),
+                                h('label', {
+                                    style: {
+                                        position: 'absolute',
+                                        inset: 0,
+                                        cursor: 'pointer',
+                                        backgroundColor: 'rgba(0,0,0,0.3)',
+                                        opacity: 0,
+                                        transition: 'opacity 0.2s',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: '#fff'
+                                    },
+                                    onMouseEnter: e => e.currentTarget.style.opacity = 1,
+                                    onMouseLeave: e => e.currentTarget.style.opacity = 0
+                                }, [
+                                    h('i', {
+                                        className: 'fas fa-camera'
+                                    }),
+                                    h('input', {
+                                        type: 'file',
+                                        accept: 'image/*',
+                                        onChange: onPickFotoPerfil,
+                                        style: {
+                                            display: 'none'
+                                        }
+                                    })
                                 ])
                             ]),
-                            h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' } }, [
-                                h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Nombre del Gimnasio'),
-                                h('input', { value: gymInput, onChange: (e) => setGymInput(e.target.value), placeholder: 'Ej: Boxing Club Valencia', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '1rem', transition: 'border-color 0.2s', outline: 'none' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' })
+                            h('div', {
+                                style: {
+                                    flex: 1,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '8px'
+                                }
+                            }, [
+                                h('label', {
+                                    style: {
+                                        fontSize: '.8rem',
+                                        fontWeight: 800,
+                                        color: '#111827',
+                                        textTransform: 'uppercase'
+                                    }
+                                }, 'Nombre del Gimnasio'),
+                                h('input', {
+                                    value: gymInput,
+                                    onChange: (e) => setGymInput(e.target.value),
+                                    placeholder: 'Ej: Boxing Club Valencia',
+                                    style: {
+                                        width: '100%',
+                                        padding: '12px 16px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #e5e7eb',
+                                        fontSize: '1rem',
+                                        transition: 'border-color 0.2s',
+                                        outline: 'none'
+                                    },
+                                    onFocus: e => e.target.style.borderColor = '#3b82f6',
+                                    onBlur: e => e.target.style.borderColor = '#e5e7eb'
+                                })
                             ])
                         ]),
-                        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' } }, [
-                            h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, [
-                                h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Correo de Contacto'),
-                                h('input', { value: emailContacto, onChange: (e) => setEmailContacto(e.target.value), placeholder: 'info@gimnasio.com', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem' } })
+                        h('div', {
+                            style: {
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: '16px'
+                            }
+                        }, [
+                            h('div', {
+                                style: {
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '8px'
+                                }
+                            }, [
+                                h('label', {
+                                    style: {
+                                        fontSize: '.8rem',
+                                        fontWeight: 800,
+                                        color: '#111827',
+                                        textTransform: 'uppercase'
+                                    }
+                                }, 'Correo de Contacto'),
+                                h('input', {
+                                    value: emailContacto,
+                                    onChange: (e) => setEmailContacto(e.target.value),
+                                    placeholder: 'info@gimnasio.com',
+                                    style: {
+                                        width: '100%',
+                                        padding: '12px 16px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #e5e7eb',
+                                        fontSize: '0.95rem'
+                                    }
+                                })
                             ]),
-                            h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, [
-                                h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Teléfono'),
-                                h('input', { value: telefono, onChange: (e) => setTelefono(e.target.value), placeholder: '+34 600 000 000', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem' } })
+                            h('div', {
+                                style: {
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '8px'
+                                }
+                            }, [
+                                h('label', {
+                                    style: {
+                                        fontSize: '.8rem',
+                                        fontWeight: 800,
+                                        color: '#111827',
+                                        textTransform: 'uppercase'
+                                    }
+                                }, 'Teléfono'),
+                                h('input', {
+                                    value: telefono,
+                                    onChange: (e) => setTelefono(e.target.value),
+                                    placeholder: '+34 600 000 000',
+                                    style: {
+                                        width: '100%',
+                                        padding: '12px 16px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #e5e7eb',
+                                        fontSize: '0.95rem'
+                                    }
+                                })
                             ])
                         ]),
-                        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' } }, [
-                            h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, [
-                                h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Dueño / Instructor Principal'),
-                                h('input', { value: nombreEntrenador, onChange: (e) => setNombreEntrenador(e.target.value), placeholder: 'Nombre del entrenador', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem' } })
+                        h('div', {
+                            style: {
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: '16px',
+                                marginTop: '16px'
+                            }
+                        }, [
+                            h('div', {
+                                style: {
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '8px'
+                                }
+                            }, [
+                                h('label', {
+                                    style: {
+                                        fontSize: '.8rem',
+                                        fontWeight: 800,
+                                        color: '#111827',
+                                        textTransform: 'uppercase'
+                                    }
+                                }, 'Dueño / Instructor Principal'),
+                                h('input', {
+                                    value: nombreEntrenador,
+                                    onChange: (e) => setNombreEntrenador(e.target.value),
+                                    placeholder: 'Nombre del entrenador',
+                                    style: {
+                                        width: '100%',
+                                        padding: '12px 16px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #e5e7eb',
+                                        fontSize: '0.95rem'
+                                    }
+                                })
                             ]),
-                            h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, [
-                                h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Días de Apertura'),
-                                h('div', { style: { display: 'flex', gap: '6px' } }, ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day, i) => (
+                            h('div', {
+                                style: {
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '8px'
+                                }
+                            }, [
+                                h('label', {
+                                    style: {
+                                        fontSize: '.8rem',
+                                        fontWeight: 800,
+                                        color: '#111827',
+                                        textTransform: 'uppercase'
+                                    }
+                                }, 'Días de Apertura'),
+                                h('div', {
+                                    style: {
+                                        display: 'flex',
+                                        gap: '6px'
+                                    }
+                                }, ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day, i) => (
                                     h('button', {
                                         type: 'button',
                                         key: day,
@@ -1356,105 +2070,596 @@ function CoachManagement() {
                                             setSelectedDays(next);
                                         },
                                         style: {
-                                            width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #e5e7eb',
+                                            width: '36px',
+                                            height: '36px',
+                                            borderRadius: '50%',
+                                            border: '1px solid #e5e7eb',
                                             backgroundColor: selectedDays[i] ? '#6366f1' : '#fff',
                                             color: selectedDays[i] ? '#fff' : '#4b5563',
-                                            fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                                            fontSize: '0.8rem',
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
                                             boxShadow: selectedDays[i] ? '0 4px 10px rgba(99, 102, 241, 0.3)' : 'none'
                                         }
                                     }, day)
                                 )))
                             ]),
-                            h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, [
-                                h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Rango de Horas'),
-                                h('div', { style: { display: 'flex', gap: '8px', alignItems: 'center' } }, [
-                                    h('input', { type: 'time', value: horaApertura, onChange: (e) => setHoraApertura(e.target.value), style: { flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #e5e7eb' } }),
-                                    h('span', { style: { color: '#666' } }, '-'),
-                                    h('input', { type: 'time', value: horaCierre, onChange: (e) => setHoraCierre(e.target.value), style: { flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #e5e7eb' } })
+                            h('div', {
+                                style: {
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '8px'
+                                }
+                            }, [
+                                h('label', {
+                                    style: {
+                                        fontSize: '.8rem',
+                                        fontWeight: 800,
+                                        color: '#111827',
+                                        textTransform: 'uppercase'
+                                    }
+                                }, 'Rango de Horas'),
+                                h('div', {
+                                    style: {
+                                        display: 'flex',
+                                        gap: '8px',
+                                        alignItems: 'center'
+                                    }
+                                }, [
+                                    h('input', {
+                                        type: 'time',
+                                        value: horaApertura,
+                                        onChange: (e) => setHoraApertura(e.target.value),
+                                        style: {
+                                            flex: 1,
+                                            padding: '12px',
+                                            borderRadius: '12px',
+                                            border: '1px solid #e5e7eb'
+                                        }
+                                    }),
+                                    h('span', {
+                                        style: {
+                                            color: '#666'
+                                        }
+                                    }, '-'),
+                                    h('input', {
+                                        type: 'time',
+                                        value: horaCierre,
+                                        onChange: (e) => setHoraCierre(e.target.value),
+                                        style: {
+                                            flex: 1,
+                                            padding: '12px',
+                                            borderRadius: '12px',
+                                            border: '1px solid #e5e7eb'
+                                        }
+                                    })
                                 ])
                             ])
                         ])
                     ]),
-                    h('div', { style: { padding: '24px', borderRadius: '24px', border: '1px solid #f3f4f6', backgroundColor: '#fff', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', gap: '12px' } }, [
-                        h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Dirección y Mapa'),
-                        h('div', { style: { position: 'relative' } }, [
-                            h('input', { value: direccion, onChange: (e) => setDireccion(e.target.value), onBlur: geocodeAddress, placeholder: 'Av. del Cid, 10, Valencia', style: { width: '100%', padding: '12px 16px', paddingRight: '40px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem' } }),
-                            (isGeocoding && h('i', { className: 'fas fa-spinner fa-spin', style: { position: 'absolute', right: '14px', top: '14px', color: '#6366f1' } })),
-                            (!isGeocoding && lat && h('i', { className: 'fas fa-check-circle', style: { position: 'absolute', right: '14px', top: '14px', color: '#10b981' }, title: 'Ubicación encontrada' }))
+                    h('div', {
+                        style: {
+                            padding: '24px',
+                            borderRadius: '24px',
+                            border: '1px solid #f3f4f6',
+                            backgroundColor: '#fff',
+                            boxShadow: '0 8px 30px rgba(0,0,0,0.04)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px'
+                        }
+                    }, [
+                        h('label', {
+                            style: {
+                                fontSize: '.8rem',
+                                fontWeight: 800,
+                                color: '#111827',
+                                textTransform: 'uppercase'
+                            }
+                        }, 'Dirección y Mapa'),
+                        h('div', {
+                            style: {
+                                position: 'relative'
+                            }
+                        }, [
+                            h('input', {
+                                value: direccion,
+                                onChange: (e) => setDireccion(e.target.value),
+                                onBlur: geocodeAddress,
+                                placeholder: 'Av. del Cid, 10, Valencia',
+                                style: {
+                                    width: '100%',
+                                    padding: '12px 16px',
+                                    paddingRight: '40px',
+                                    borderRadius: '12px',
+                                    border: '1px solid #e5e7eb',
+                                    fontSize: '0.95rem'
+                                }
+                            }),
+                            (isGeocoding && h('i', {
+                                className: 'fas fa-spinner fa-spin',
+                                style: {
+                                    position: 'absolute',
+                                    right: '14px',
+                                    top: '14px',
+                                    color: '#6366f1'
+                                }
+                            })),
+                            (!isGeocoding && lat && h('i', {
+                                className: 'fas fa-check-circle',
+                                style: {
+                                    position: 'absolute',
+                                    right: '14px',
+                                    top: '14px',
+                                    color: '#10b981'
+                                },
+                                title: 'Ubicación encontrada'
+                            }))
                         ]),
-                        h('div', { id: 'gym-location-map', style: { height: '300px', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden', backgroundColor: '#f9fafb' } }),
-                        h('p', { style: { fontSize: '.75rem', color: '#6b7280', margin: 0 } }, [h('i', { className: 'fas fa-info-circle', style: { marginRight: '4px' } }), 'Haz clic en el mapa para ajustar tu ubicación exacta.'])
+                        h('div', {
+                            id: 'gym-location-map',
+                            style: {
+                                height: '300px',
+                                borderRadius: '12px',
+                                border: '1px solid #e5e7eb',
+                                overflow: 'hidden',
+                                backgroundColor: '#f9fafb'
+                            }
+                        }),
+                        h('p', {
+                            style: {
+                                fontSize: '.75rem',
+                                color: '#6b7280',
+                                margin: 0
+                            }
+                        }, [h('i', {
+                            className: 'fas fa-info-circle',
+                            style: {
+                                marginRight: '4px'
+                            }
+                        }), 'Haz clic en el mapa para ajustar tu ubicación exacta.'])
                     ]),
-                    h('div', { style: { padding: '24px', borderRadius: '24px', border: '1px solid #f3f4f6', backgroundColor: '#fff', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', gap: '12px' } }, [
-                        h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Biografía'),
-                        h('textarea', { value: bioInput, onChange: (e) => setBioInput(e.target.value), rows: 3, placeholder: 'Describe tu gimnasio, filosofía...', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', resize: 'vertical' } })
+                    h('div', {
+                        style: {
+                            padding: '24px',
+                            borderRadius: '24px',
+                            border: '1px solid #f3f4f6',
+                            backgroundColor: '#fff',
+                            boxShadow: '0 8px 30px rgba(0,0,0,0.04)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px'
+                        }
+                    }, [
+                        h('label', {
+                            style: {
+                                fontSize: '.8rem',
+                                fontWeight: 800,
+                                color: '#111827',
+                                textTransform: 'uppercase'
+                            }
+                        }, 'Biografía'),
+                        h('textarea', {
+                            value: bioInput,
+                            onChange: (e) => setBioInput(e.target.value),
+                            rows: 3,
+                            placeholder: 'Describe tu gimnasio, filosofía...',
+                            style: {
+                                width: '100%',
+                                padding: '12px 16px',
+                                borderRadius: '12px',
+                                border: '1px solid #e5e7eb',
+                                fontSize: '0.95rem',
+                                resize: 'vertical'
+                            }
+                        })
                     ])
                 ]),
-                h('div', { style: { padding: '24px', borderRadius: '24px', border: '1px solid #f3f4f6', backgroundColor: '#fff', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', gap: '16px' } }, [
-                    h('label', { style: { fontSize: '.8rem', fontWeight: 800, color: '#111827', textTransform: 'uppercase' } }, 'Galería del Gimnasio'),
-                    h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '12px' } }, [
-                        ...fotos.map((src, idx) => h('div', { key: idx, style: { position: 'relative', borderRadius: '16px', overflow: 'hidden', height: '110px', border: '1px solid #e5e7eb' }, onMouseEnter: e => e.currentTarget.lastChild.style.opacity = 1, onMouseLeave: e => e.currentTarget.lastChild.style.opacity = 0 }, [
-                            h('img', { src, style: { width: '100%', height: '100%', objectFit: 'cover' } }),
-                            h('div', { style: { position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', opacity: 0, transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, [
-                                h('button', { onClick: () => setFotos(prev => prev.filter((_, i) => i !== idx)), style: { background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer' } }, [h('i', { className: 'fas fa-trash-alt' })])
+                h('div', {
+                    style: {
+                        padding: '24px',
+                        borderRadius: '24px',
+                        border: '1px solid #f3f4f6',
+                        backgroundColor: '#fff',
+                        boxShadow: '0 8px 30px rgba(0,0,0,0.04)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '16px'
+                    }
+                }, [
+                    h('label', {
+                        style: {
+                            fontSize: '.8rem',
+                            fontWeight: 800,
+                            color: '#111827',
+                            textTransform: 'uppercase'
+                        }
+                    }, 'Galería del Gimnasio'),
+                    h('div', {
+                        style: {
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
+                            gap: '12px'
+                        }
+                    }, [
+                        ...fotos.map((src, idx) => h('div', {
+                            key: idx,
+                            style: {
+                                position: 'relative',
+                                borderRadius: '16px',
+                                overflow: 'hidden',
+                                height: '110px',
+                                border: '1px solid #e5e7eb'
+                            },
+                            onMouseEnter: e => e.currentTarget.lastChild.style.opacity = 1,
+                            onMouseLeave: e => e.currentTarget.lastChild.style.opacity = 0
+                        }, [
+                            h('img', {
+                                src,
+                                style: {
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                }
+                            }),
+                            h('div', {
+                                style: {
+                                    position: 'absolute',
+                                    inset: 0,
+                                    backgroundColor: 'rgba(0,0,0,0.5)',
+                                    opacity: 0,
+                                    transition: 'opacity 0.2s',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }
+                            }, [
+                                h('button', {
+                                    onClick: () => setFotos(prev => prev.filter((_, i) => i !== idx)),
+                                    style: {
+                                        background: '#ef4444',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '50%',
+                                        width: '32px',
+                                        height: '32px',
+                                        cursor: 'pointer'
+                                    }
+                                }, [h('i', {
+                                    className: 'fas fa-trash-alt'
+                                })])
                             ])
                         ])),
-                        h('label', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #cbd5e1', borderRadius: '16px', height: '110px', cursor: 'pointer', color: '#64748b', backgroundColor: '#f8fafc' } }, [
-                            h('i', { className: 'fas fa-plus', style: { fontSize: '1.2rem', marginBottom: '4px' } }),
-                            h('span', { style: { fontSize: '.75rem', fontWeight: 700 } }, 'Añadir'),
-                            h('input', { type: 'file', accept: 'image/*', multiple: true, onChange: onPickFotos, style: { display: 'none' } })
+                        h('label', {
+                            style: {
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: '2px dashed #cbd5e1',
+                                borderRadius: '16px',
+                                height: '110px',
+                                cursor: 'pointer',
+                                color: '#64748b',
+                                backgroundColor: '#f8fafc'
+                            }
+                        }, [
+                            h('i', {
+                                className: 'fas fa-plus',
+                                style: {
+                                    fontSize: '1.2rem',
+                                    marginBottom: '4px'
+                                }
+                            }),
+                            h('span', {
+                                style: {
+                                    fontSize: '.75rem',
+                                    fontWeight: 700
+                                }
+                            }, 'Añadir'),
+                            h('input', {
+                                type: 'file',
+                                accept: 'image/*',
+                                multiple: true,
+                                onChange: onPickFotos,
+                                style: {
+                                    display: 'none'
+                                }
+                            })
                         ])
                     ])
                 ])
             ]),
 
-            h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: !hasGym ? 'center' : 'stretch', marginTop: '12px' } }, [
-                h('button', { className: 'btn btn-primary', onClick: saveGym, style: { padding: '16px 32px', borderRadius: '16px', fontWeight: 800, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center', boxShadow: '0 4px 14px rgba(59,130,246,0.4)' } }, [
-                    h('i', { className: hasGym ? 'fas fa-save' : 'fas fa-plus' }),
+            h('div', {
+                style: {
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: !hasGym ? 'center' : 'stretch',
+                    marginTop: '12px'
+                }
+            }, [
+                h('button', {
+                    className: 'btn btn-primary',
+                    onClick: saveGym,
+                    style: {
+                        padding: '16px 32px',
+                        borderRadius: '16px',
+                        fontWeight: 800,
+                        fontSize: '1.1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 14px rgba(59,130,246,0.4)'
+                    }
+                }, [
+                    h('i', {
+                        className: hasGym ? 'fas fa-save' : 'fas fa-plus'
+                    }),
                     (hasGym ? 'Guardar Cambios del Perfil' : 'Dar de alta Gimnasio Ahora')
                 ]),
-                (message ? h('div', { style: { marginTop: '16px', padding: '12px 20px', borderRadius: '12px', fontWeight: 600, textAlign: 'center', backgroundColor: message.kind === 'error' ? '#fee2e2' : '#dcfce7', color: message.kind === 'error' ? '#b91c1c' : '#065f46' } }, message.text) : null)
+                (message ? h('div', {
+                    style: {
+                        marginTop: '16px',
+                        padding: '12px 20px',
+                        borderRadius: '12px',
+                        fontWeight: 600,
+                        textAlign: 'center',
+                        backgroundColor: message.kind === 'error' ? '#fee2e2' : '#dcfce7',
+                        color: message.kind === 'error' ? '#b91c1c' : '#065f46'
+                    }
+                }, message.text) : null)
             ])
         ]),
 
-        (hasGym ? h('div', { key: 'boxers-panel', className: 'dashboard-panel' }, [
+        (hasGym ? h('div', {
+            key: 'boxers-panel',
+            className: 'dashboard-panel'
+        }, [
             h('h2', null, 'Tus boxeadores'),
-            h('div', { className: 'coach-boxers-toolbar', style: { display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' } }, [
-                h('input', { value: search, onChange: (e) => setSearch(e.target.value), placeholder: 'Buscar boxeador...', style: { flex: 1, minWidth: '200px', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
-                h('div', { className: 'coach-boxers-assign', style: { display: 'flex', gap: '8px', flex: 1, minWidth: '300px' } }, [
-                    h('input', { value: assignEmail, onChange: (e) => setAssignEmail(e.target.value), placeholder: 'Email o DNI para asignar', style: { flex: 1, padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
-                    h('button', { className: 'btn btn-primary', onClick: addBoxer, style: { padding: '12px 20px', borderRadius: '12px', fontWeight: 700 } }, 'Añadir'),
-                    h('button', { className: 'btn btn-secondary', onClick: removeBoxer, style: { padding: '12px 20px', borderRadius: '12px', fontWeight: 700, color: '#ef4444', borderColor: '#ef4444' } }, 'Quitar')
+            h('div', {
+                className: 'coach-boxers-toolbar',
+                style: {
+                    display: 'flex',
+                    gap: '16px',
+                    flexWrap: 'wrap',
+                    alignItems: 'center'
+                }
+            }, [
+                h('input', {
+                    value: search,
+                    onChange: (e) => setSearch(e.target.value),
+                    placeholder: 'Buscar boxeador...',
+                    style: {
+                        flex: 1,
+                        minWidth: '200px',
+                        padding: '12px 16px',
+                        borderRadius: '12px',
+                        border: '1px solid #e5e7eb',
+                        fontSize: '0.95rem',
+                        outline: 'none',
+                        transition: 'border-color 0.2s',
+                        boxSizing: 'border-box'
+                    },
+                    onFocus: e => e.target.style.borderColor = '#3b82f6',
+                    onBlur: e => e.target.style.borderColor = '#e5e7eb'
+                }),
+                h('div', {
+                    className: 'coach-boxers-assign',
+                    style: {
+                        display: 'flex',
+                        gap: '8px',
+                        flex: 1,
+                        minWidth: '300px'
+                    }
+                }, [
+                    h('input', {
+                        value: assignEmail,
+                        onChange: (e) => setAssignEmail(e.target.value),
+                        placeholder: 'Email o DNI para asignar',
+                        style: {
+                            flex: 1,
+                            padding: '12px 16px',
+                            borderRadius: '12px',
+                            border: '1px solid #e5e7eb',
+                            fontSize: '0.95rem',
+                            outline: 'none',
+                            transition: 'border-color 0.2s',
+                            boxSizing: 'border-box'
+                        },
+                        onFocus: e => e.target.style.borderColor = '#3b82f6',
+                        onBlur: e => e.target.style.borderColor = '#e5e7eb'
+                    }),
+                    h('button', {
+                        className: 'btn btn-primary',
+                        onClick: addBoxer,
+                        style: {
+                            padding: '12px 20px',
+                            borderRadius: '12px',
+                            fontWeight: 700
+                        }
+                    }, 'Añadir'),
+                    h('button', {
+                        className: 'btn btn-secondary',
+                        onClick: removeBoxer,
+                        style: {
+                            padding: '12px 20px',
+                            borderRadius: '12px',
+                            fontWeight: 700,
+                            color: '#ef4444',
+                            borderColor: '#ef4444'
+                        }
+                    }, 'Quitar')
                 ])
             ]),
-            h('div', { className: 'sparring-list', style: { marginTop: 15 } }, [
+            h('div', {
+                className: 'sparring-list',
+                style: {
+                    marginTop: 15
+                }
+            }, [
                 (filteredBoxers.length === 0 ? h('p', null, 'No hay boxeadores.') :
-                    filteredBoxers.map((b, i) => h(React.Fragment, { key: b._id || b.email }, [
-                        h('div', { className: 'sparring-card' }, [
-                            h('div', { className: 'card-rank' }, [h('span', null, `#${i + 1}`)]),
-                            h('div', { className: 'card-name' }, [h('span', { className: 'main-name' }, b.nombre), h('span', null, b.email)]),
-                            h('div', { className: 'card-stars' }, renderStars(levelScore(b.nivel))),
-                            h('div', { className: 'card-action' }, [h('button', { className: 'view-profile-button', onClick: () => selectForEdit(b) }, 'Editar')])
+                    filteredBoxers.map((b, i) => h(React.Fragment, {
+                        key: b._id || b.email
+                    }, [
+                        h('div', {
+                            className: 'sparring-card'
+                        }, [
+                            h('div', {
+                                className: 'card-rank'
+                            }, [h('span', null, `#${i + 1}`)]),
+                            h('div', {
+                                className: 'card-name'
+                            }, [h('span', {
+                                className: 'main-name'
+                            }, b.nombre), h('span', null, b.email)]),
+                            h('div', {
+                                className: 'card-stars'
+                            }, renderStars(levelScore(b.nivel))),
+                            h('div', {
+                                className: 'card-action'
+                            }, [h('button', {
+                                className: 'view-profile-button',
+                                onClick: () => selectForEdit(b)
+                            }, 'Editar')])
                         ]),
-                        (editId === (b._id || b.email) ? h('div', { style: { padding: '20px', border: '1px solid #e5e7eb', backgroundColor: '#f8fafc', borderRadius: '16px', marginTop: '12px', display: 'grid', gap: '12px' } }, [
-                            h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' } }, [
-                                h('input', { value: editName, onChange: (e) => setEditName(e.target.value), placeholder: 'Nombre del boxeador', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
-                                h('input', { value: editDni, onChange: (e) => setEditDni(e.target.value), placeholder: 'DNI o Licencia', style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }),
-                                h('select', { value: editLevel, onChange: (e) => setEditLevel(e.target.value), style: { width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box', backgroundColor: '#fff', cursor: 'pointer' }, onFocus: e => e.target.style.borderColor = '#3b82f6', onBlur: e => e.target.style.borderColor = '#e5e7eb' }, [
-                                    h('option', { value: 'Principiante' }, 'Principiante'), h('option', { value: 'Intermedio' }, 'Intermedio'), h('option', { value: 'Avanzado' }, 'Avanzado'), h('option', { value: 'Amateur' }, 'Amateur'), h('option', { value: 'Profesional' }, 'Profesional')
+                        (editId === (b._id || b.email) ? h('div', {
+                            style: {
+                                padding: '20px',
+                                border: '1px solid #e5e7eb',
+                                backgroundColor: '#f8fafc',
+                                borderRadius: '16px',
+                                marginTop: '12px',
+                                display: 'grid',
+                                gap: '12px'
+                            }
+                        }, [
+                            h('div', {
+                                style: {
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                                    gap: '12px'
+                                }
+                            }, [
+                                h('input', {
+                                    value: editName,
+                                    onChange: (e) => setEditName(e.target.value),
+                                    placeholder: 'Nombre del boxeador',
+                                    style: {
+                                        width: '100%',
+                                        padding: '12px 16px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #e5e7eb',
+                                        fontSize: '0.95rem',
+                                        outline: 'none',
+                                        transition: 'border-color 0.2s',
+                                        boxSizing: 'border-box'
+                                    },
+                                    onFocus: e => e.target.style.borderColor = '#3b82f6',
+                                    onBlur: e => e.target.style.borderColor = '#e5e7eb'
+                                }),
+                                h('input', {
+                                    value: editDni,
+                                    onChange: (e) => setEditDni(e.target.value),
+                                    placeholder: 'DNI o Licencia',
+                                    style: {
+                                        width: '100%',
+                                        padding: '12px 16px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #e5e7eb',
+                                        fontSize: '0.95rem',
+                                        outline: 'none',
+                                        transition: 'border-color 0.2s',
+                                        boxSizing: 'border-box'
+                                    },
+                                    onFocus: e => e.target.style.borderColor = '#3b82f6',
+                                    onBlur: e => e.target.style.borderColor = '#e5e7eb'
+                                }),
+                                h('select', {
+                                    value: editLevel,
+                                    onChange: (e) => setEditLevel(e.target.value),
+                                    style: {
+                                        width: '100%',
+                                        padding: '12px 16px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #e5e7eb',
+                                        fontSize: '0.95rem',
+                                        outline: 'none',
+                                        transition: 'border-color 0.2s',
+                                        boxSizing: 'border-box',
+                                        backgroundColor: '#fff',
+                                        cursor: 'pointer'
+                                    },
+                                    onFocus: e => e.target.style.borderColor = '#3b82f6',
+                                    onBlur: e => e.target.style.borderColor = '#e5e7eb'
+                                }, [
+                                    h('option', {
+                                        value: 'Principiante'
+                                    }, 'Principiante'), h('option', {
+                                        value: 'Intermedio'
+                                    }, 'Intermedio'), h('option', {
+                                        value: 'Avanzado'
+                                    }, 'Avanzado'), h('option', {
+                                        value: 'Amateur'
+                                    }, 'Amateur'), h('option', {
+                                        value: 'Profesional'
+                                    }, 'Profesional')
                                 ])
                             ]),
-                            h('div', { style: { display: 'flex', gap: '10px', marginTop: '4px' } }, [
-                                h('button', { className: 'btn btn-primary', onClick: saveEdit, style: { padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '.9rem' } }, 'Guardar cambios'),
-                                h('button', { className: 'btn btn-secondary', onClick: deleteEdit, style: { padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '.9rem', color: '#ef4444', borderColor: '#ef4444' } }, 'Dar de baja'),
-                                h('button', { className: 'btn btn-secondary', onClick: () => setEditId(''), style: { padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '.9rem', color: '#6b7280', borderColor: '#d1d5db', marginLeft: 'auto' } }, 'Cancelar')
+                            h('div', {
+                                style: {
+                                    display: 'flex',
+                                    gap: '10px',
+                                    marginTop: '4px'
+                                }
+                            }, [
+                                h('button', {
+                                    className: 'btn btn-primary',
+                                    onClick: saveEdit,
+                                    style: {
+                                        padding: '10px 20px',
+                                        borderRadius: '10px',
+                                        fontWeight: 700,
+                                        fontSize: '.9rem'
+                                    }
+                                }, 'Guardar cambios'),
+                                h('button', {
+                                    className: 'btn btn-secondary',
+                                    onClick: deleteEdit,
+                                    style: {
+                                        padding: '10px 20px',
+                                        borderRadius: '10px',
+                                        fontWeight: 700,
+                                        fontSize: '.9rem',
+                                        color: '#ef4444',
+                                        borderColor: '#ef4444'
+                                    }
+                                }, 'Dar de baja'),
+                                h('button', {
+                                    className: 'btn btn-secondary',
+                                    onClick: () => setEditId(''),
+                                    style: {
+                                        padding: '10px 20px',
+                                        borderRadius: '10px',
+                                        fontWeight: 700,
+                                        fontSize: '.9rem',
+                                        color: '#6b7280',
+                                        borderColor: '#d1d5db',
+                                        marginLeft: 'auto'
+                                    }
+                                }, 'Cancelar')
                             ])
                         ]) : null)
                     ])))
             ]),
         ]) : null),
 
-        h('div', { key: 'revenue-panel', className: 'dashboard-panel' }, [
+        h('div', {
+            key: 'revenue-panel',
+            className: 'dashboard-panel'
+        }, [
             h('h2', null, 'Resumen'),
             h('p', null, [
                 'Cobros registrados: ',
@@ -1463,6 +2668,7 @@ function CoachManagement() {
         ])
     ]);
 }
+
 function CoachFinance() {
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState(null);
@@ -1558,8 +2764,8 @@ function CoachFinance() {
         null,
         h(
             'div', {
-            className: 'dashboard-panel'
-        },
+                className: 'dashboard-panel'
+            },
             h('h2', null, 'Gestión'),
             message ? h('div', {
                 style: {
@@ -1576,12 +2782,12 @@ function CoachFinance() {
             }, 'Cargando...') : null,
             h(
                 'div', {
-                className: 'dashboard-metrics',
-                style: {
-                    marginTop: 16,
-                    marginBottom: 0
-                }
-            },
+                    className: 'dashboard-metrics',
+                    style: {
+                        marginTop: 16,
+                        marginBottom: 0
+                    }
+                },
                 h(MetricCard, {
                     label: 'Tu gimnasio',
                     pill: metricas.gimnasio || '-',
@@ -1641,18 +2847,24 @@ function CoachFinance() {
         ),
         h(
             'div', {
-            className: 'dashboard-panel'
-        },
+                className: 'dashboard-panel'
+            },
             h('h2', null, 'Precio mensual'),
-            h('p', { className: 'muted', style: { fontSize: '.9rem', margin: '-4px 0 16px 0' } }, 'Define el precio para el cálculo estimado de ingresos.'),
+            h('p', {
+                className: 'muted',
+                style: {
+                    fontSize: '.9rem',
+                    margin: '-4px 0 16px 0'
+                }
+            }, 'Define el precio para el cálculo estimado de ingresos.'),
             h(
                 'div', {
-                style: {
-                    display: 'flex',
-                    gap: '12px',
-                    maxWidth: 420
-                }
-            },
+                    style: {
+                        display: 'flex',
+                        gap: '12px',
+                        maxWidth: 420
+                    }
+                },
                 h('input', {
                     value: priceInput,
                     onChange: (e) => setPriceInput(e.target.value),
@@ -1677,14 +2889,19 @@ function CoachFinance() {
                     className: 'btn btn-primary',
                     type: 'button',
                     onClick: savePrice,
-                    style: { padding: '14px 24px', borderRadius: '12px', fontWeight: 800, fontSize: '.95rem' }
+                    style: {
+                        padding: '14px 24px',
+                        borderRadius: '12px',
+                        fontWeight: 800,
+                        fontSize: '.95rem'
+                    }
                 }, 'Guardar')
             )
         ),
         h(
             'div', {
-            className: 'dashboard-panel'
-        },
+                className: 'dashboard-panel'
+            },
             h('h2', null, 'Inscripciones (ingresos)'),
             h(InscriptionRevenueLineChart, {
                 boxers,
@@ -1708,7 +2925,9 @@ function CoachChallenges() {
     useEffect(() => {
         const stored = localStorage.getItem('gloveup_trainer_archived');
         if (stored) {
-            try { setArchivedIds(JSON.parse(stored)); } catch (e) { }
+            try {
+                setArchivedIds(JSON.parse(stored));
+            } catch (e) {}
         }
     }, []);
 
@@ -1784,7 +3003,10 @@ function CoachChallenges() {
         try {
             await requestJson(`/api/entrenadores/me/challenges/respond?email=${encodeURIComponent(email)}`, {
                 method: 'POST',
-                body: { challengeId, action }
+                body: {
+                    challengeId,
+                    action
+                }
             });
             setMessage({
                 kind: 'ok',
@@ -1833,10 +3055,10 @@ function CoachChallenges() {
         null,
         h(
             'div', {
-            style: {
-                padding: '20px 0'
-            }
-        },
+                style: {
+                    padding: '20px 0'
+                }
+            },
             h('h2', {
                 style: {
                     fontSize: '1.8rem',
@@ -1847,58 +3069,85 @@ function CoachChallenges() {
             }, coachName || 'Entrenador'),
             h('p', {
                 className: 'muted',
-                style: { marginBottom: 16, fontSize: '1rem' }
+                style: {
+                    marginBottom: 16,
+                    fontSize: '1rem'
+                }
             }, 'Peticiones de sparring externas para tus boxeadores.'),
 
             // Barra de filtros
             h('div', {
-                style: {
-                    display: 'flex',
-                    gap: 8,
-                    flexWrap: 'wrap',
-                    marginBottom: 20,
-                    padding: '14px 16px',
-                    backgroundColor: 'var(--color-secondary, #f9fafb)',
-                    borderRadius: '16px',
-                    border: '1px solid var(--color-border, #e5e7eb)'
-                }
-            },
-                [
-                    { key: 'pending', label: 'En curso', icon: 'fa-spinner fa-spin' },
-                    { key: 'accepted', label: 'Aceptado', icon: 'fa-check-circle' },
-                    { key: 'declined', label: 'Rechazado', icon: 'fa-times-circle' },
-                    { key: 'completed', label: 'Completados', icon: 'fa-flag-checkered' },
-                    { key: 'history', label: 'Historial', icon: 'fa-history' }
+                    style: {
+                        display: 'flex',
+                        gap: 8,
+                        flexWrap: 'wrap',
+                        marginBottom: 20,
+                        padding: '14px 16px',
+                        backgroundColor: 'var(--color-secondary, #f9fafb)',
+                        borderRadius: '16px',
+                        border: '1px solid var(--color-border, #e5e7eb)'
+                    }
+                },
+                [{
+                        key: 'pending',
+                        label: 'En curso',
+                        icon: 'fa-spinner fa-spin'
+                    },
+                    {
+                        key: 'accepted',
+                        label: 'Aceptado',
+                        icon: 'fa-check-circle'
+                    },
+                    {
+                        key: 'declined',
+                        label: 'Rechazado',
+                        icon: 'fa-times-circle'
+                    },
+                    {
+                        key: 'completed',
+                        label: 'Completados',
+                        icon: 'fa-flag-checkered'
+                    },
+                    {
+                        key: 'history',
+                        label: 'Historial',
+                        icon: 'fa-history'
+                    }
                 ].map(tab => {
-                    const count = tab.key === 'completed'
-                        ? challenges.filter(c => c.status === 'completed' && !archivedIds.includes(c.id)).length
-                        : tab.key === 'history'
-                        ? challenges.filter(c => archivedIds.includes(c.id)).length
-                        : tab.key === 'pending'
-                            ? challenges.filter(c => isPendingStatus(c.status) && c.status !== 'completed' && !archivedIds.includes(c.id) && !hasIApproved(c)).length
-                        : tab.key === 'accepted'
-                            ? challenges.filter(c => (c.status === 'accepted' || (isPendingStatus(c.status) && hasIApproved(c))) && !archivedIds.includes(c.id)).length
-                            : challenges.filter(c => c.status === tab.key && !archivedIds.includes(c.id)).length;
+                    const count = tab.key === 'completed' ?
+                        challenges.filter(c => c.status === 'completed' && !archivedIds.includes(c.id)).length :
+                        tab.key === 'history' ?
+                        challenges.filter(c => archivedIds.includes(c.id)).length :
+                        tab.key === 'pending' ?
+                        challenges.filter(c => isPendingStatus(c.status) && c.status !== 'completed' && !archivedIds.includes(c.id) && !hasIApproved(c)).length :
+                        tab.key === 'accepted' ?
+                        challenges.filter(c => (c.status === 'accepted' || (isPendingStatus(c.status) && hasIApproved(c))) && !archivedIds.includes(c.id)).length :
+                        challenges.filter(c => c.status === tab.key && !archivedIds.includes(c.id)).length;
                     const isActive = filter === tab.key;
                     return h('button', {
-                        key: tab.key,
-                        onClick: () => setFilter(tab.key),
-                        style: {
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            padding: '8px 16px',
-                            borderRadius: '999px',
-                            border: isActive ? '2px solid #111827' : '1px solid #e5e7eb',
-                            backgroundColor: isActive ? '#111827' : '#fff',
-                            color: isActive ? '#fff' : '#374151',
-                            fontWeight: 700,
-                            fontSize: '.8rem',
-                            cursor: 'pointer',
-                            transition: 'all .18s'
-                        }
-                    },
-                        h('i', { className: `fas ${tab.icon}`, style: { fontSize: '.75rem' } }),
+                            key: tab.key,
+                            onClick: () => setFilter(tab.key),
+                            style: {
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                padding: '8px 16px',
+                                borderRadius: '999px',
+                                border: isActive ? '2px solid #111827' : '1px solid #e5e7eb',
+                                backgroundColor: isActive ? '#111827' : '#fff',
+                                color: isActive ? '#fff' : '#374151',
+                                fontWeight: 700,
+                                fontSize: '.8rem',
+                                cursor: 'pointer',
+                                transition: 'all .18s'
+                            }
+                        },
+                        h('i', {
+                            className: `fas ${tab.icon}`,
+                            style: {
+                                fontSize: '.75rem'
+                            }
+                        }),
                         ' ', tab.label,
                         h('span', {
                             style: {
@@ -1926,226 +3175,537 @@ function CoachChallenges() {
                     color: message.kind === 'error' ? '#b91c1c' : '#065f46'
                 }
             }, message.text) : null,
-            loading ? h('p', { style: { marginTop: 20, textAlign: 'center', opacity: 0.6 } }, 'Cargando retos...') :
-                filteredChallenges.length === 0 ? h('p', {
-                    style: { padding: '40px 20px', textAlign: 'center', opacity: 0.5 }
-                }, challenges.length === 0 ? 'No hay retos para tus boxeadores.' : 'No hay retos en esta categoria.') :
-                    h('div', {
-                        style: { display: 'flex', flexDirection: 'column', gap: 12, marginTop: 4 }
-                    },
-                        ...filteredChallenges.map((c) => {
-                            const avatarPlaceholder = '../../assets/images/unnamed-removebg-preview.png';
+            loading ? h('p', {
+                style: {
+                    marginTop: 20,
+                    textAlign: 'center',
+                    opacity: 0.6
+                }
+            }, 'Cargando retos...') :
+            filteredChallenges.length === 0 ? h('p', {
+                style: {
+                    padding: '40px 20px',
+                    textAlign: 'center',
+                    opacity: 0.5
+                }
+            }, challenges.length === 0 ? 'No hay retos para tus boxeadores.' : 'No hay retos en esta categoria.') :
+            h('div', {
+                    style: {
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 12,
+                        marginTop: 4
+                    }
+                },
+                ...filteredChallenges.map((c) => {
+                    const avatarPlaceholder = '../../assets/images/unnamed-removebg-preview.png';
+                    const isInbound = c.direction === 'inbound';
+                    const challengerFoto = isInbound ? c.otherFoto : c.boxerFoto;
+                    const challengerName = isInbound ? c.otherName : c.boxerName;
+                    const challengerNivel = isInbound ? c.otherNivel : c.boxerNivel;
+                    const challengerPeso = isInbound ? c.otherPeso : c.boxerPeso;
+                    const challengedFoto = isInbound ? c.boxerFoto : c.otherFoto;
+                    const challengedName = isInbound ? c.boxerName : c.otherName;
+                    const challengedNivel = isInbound ? c.boxerNivel : c.otherNivel;
+                    const challengedPeso = isInbound ? c.boxerPeso : c.otherPeso;
 
-                            return h(
-                                'div', {
-                                key: c.id,
+                    return h(
+                        'div', {
+                            key: c.id,
+                            style: {
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 16,
+                                padding: '24px',
+                                backgroundColor: '#fff',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '16px',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                marginBottom: 12
+                            }
+                        },
+                        // Header: Status Badge
+                        h('div', {
                                 style: {
                                     display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: 16,
-                                    padding: '24px',
-                                    backgroundColor: '#fff',
-                                    border: '1px solid #e5e7eb',
-                                    borderRadius: '16px',
-                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                                    marginBottom: 12
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    borderBottom: '1px solid #f3f4f6',
+                                    paddingBottom: 12
                                 }
                             },
-                                // Header: Status Badge
-                                h('div', {
+                            h('div', {
                                     style: {
                                         display: 'flex',
-                                        justifyContent: 'space-between',
                                         alignItems: 'center',
-                                        borderBottom: '1px solid #f3f4f6',
-                                        paddingBottom: 12
+                                        gap: 8,
+                                        fontSize: '.75rem',
+                                        fontWeight: 700,
+                                        textTransform: 'uppercase',
+                                        color: '#6b7280'
                                     }
                                 },
-                                    h('div', {
+                                h('i', {
+                                    className: 'fas fa-shield-alt'
+                                }),
+                                c.direction === 'outbound' ? 'Reto Enviado' : 'Propuesta de Sparring'
+                            ),
+                            (() => {
+                                const s = c.status || 'pending';
+                                const dir = c.direction || 'inbound';
+                                const isToCoach = dir === 'inbound';
+                                const myApp = isToCoach ? c.coachToApproval : c.coachFromApproval;
+                                const otherApp = isToCoach ? c.coachFromApproval : c.coachToApproval;
+
+                                let label, bg, color;
+                                if (s === 'accepted') {
+                                    label = 'Aceptado';
+                                    bg = '#dcfce7';
+                                    color = '#166534';
+                                } else if (s === 'declined') {
+                                    label = 'Rechazado';
+                                    bg = '#fee2e2';
+                                    color = '#991b1b';
+                                } else if (s === 'completed') {
+                                    label = 'Finalizado';
+                                    bg = '#f0f9ff';
+                                    color = '#0369a1';
+                                } else {
+                                    if (hasIApproved(c)) {
+                                        label = 'Esperando al rival';
+                                        bg = '#f3f4f6';
+                                        color = '#64748b';
+                                    } else if (myApp === null && otherApp === null) {
+                                        label = isToCoach ? 'Tu aprobación necesaria' : 'Debes aprobar tu reto';
+                                        bg = '#fffbeb';
+                                        color = '#d97706';
+                                    } else if (myApp === null && otherApp !== null) {
+                                        label = '¡Tu aprobación necesaria!';
+                                        bg = '#fffbeb';
+                                        color = '#92400e';
+                                    } else {
+                                        label = 'En curso';
+                                        bg = '#f3f4f6';
+                                        color = '#374151';
+                                    }
+                                }
+                                return h('div', {
                                         style: {
                                             display: 'flex',
-                                            alignItems: 'center',
                                             gap: 8,
-                                            fontSize: '.75rem',
-                                            fontWeight: 700,
-                                            textTransform: 'uppercase',
-                                            color: '#6b7280'
+                                            alignItems: 'center'
                                         }
                                     },
-                                        h('i', { className: 'fas fa-shield-alt' }),
-                                        c.direction === 'outbound' ? 'Reto Enviado' : 'Propuesta de Sparring'
-                                    ),
-                                    (() => {
-                                        const s = c.status || 'pending';
-                                        const dir = c.direction || 'inbound';
-                                        const isToCoach = dir === 'inbound';
-                                        const myApp = isToCoach ? c.coachToApproval : c.coachFromApproval;
-                                        const otherApp = isToCoach ? c.coachFromApproval : c.coachToApproval;
-
-                                        let label, bg, color;
-                                        if (s === 'accepted') { label = 'Aceptado'; bg = '#dcfce7'; color = '#166534'; }
-                                        else if (s === 'declined') { label = 'Rechazado'; bg = '#fee2e2'; color = '#991b1b'; }
-                                        else if (s === 'completed') { label = 'Finalizado'; bg = '#f0f9ff'; color = '#0369a1'; }
-                                        else {
-                                            if (hasIApproved(c)) {
-                                                label = 'Esperando al rival';
-                                                bg = '#f3f4f6'; color = '#64748b';
-                                            } else if (myApp === null && otherApp === null) {
-                                                label = isToCoach ? 'Tu aprobación necesaria' : 'Debes aprobar tu reto';
-                                                bg = '#fffbeb'; color = '#d97706';
-                                            } else if (myApp === null && otherApp !== null) {
-                                                label = '¡Tu aprobación necesaria!';
-                                                bg = '#fffbeb'; color = '#92400e';
-                                            } else {
-                                                label = 'En curso'; bg = '#f3f4f6'; color = '#374151';
-                                            }
+                                    h('div', {
+                                        style: {
+                                            padding: '4px 12px',
+                                            borderRadius: 20,
+                                            fontSize: '.7rem',
+                                            fontWeight: 800,
+                                            textTransform: 'uppercase',
+                                            backgroundColor: bg,
+                                            color
                                         }
-                                        return h('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
-                                            h('div', { style: { padding: '4px 12px', borderRadius: 20, fontSize: '.7rem', fontWeight: 800, textTransform: 'uppercase', backgroundColor: bg, color } }, label),
-                                            filter === 'history' ?
-                                                h('button', {
-                                                    onClick: () => unarchiveChallenge(c.id),
-                                                    title: 'Restaurar',
-                                                    style: { border: 'none', background: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '.9rem' }
-                                                }, h('i', { className: 'fas fa-undo' })) :
-                                                h('button', {
-                                                    onClick: () => archiveChallenge(c.id),
-                                                    title: 'Borrar/Archivar',
-                                                    style: { border: 'none', background: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '.9rem' }
-                                                }, h('i', { className: 'fas fa-trash-alt' }))
-                                        );
-                                    })()
-                                ),
+                                    }, label),
+                                    filter === 'history' ?
+                                    h('button', {
+                                        onClick: () => unarchiveChallenge(c.id),
+                                        title: 'Restaurar',
+                                        style: {
+                                            border: 'none',
+                                            background: 'none',
+                                            color: '#6b7280',
+                                            cursor: 'pointer',
+                                            fontSize: '.9rem'
+                                        }
+                                    }, h('i', {
+                                        className: 'fas fa-undo'
+                                    })) :
+                                    h('button', {
+                                        onClick: () => archiveChallenge(c.id),
+                                        title: 'Borrar/Archivar',
+                                        style: {
+                                            border: 'none',
+                                            background: 'none',
+                                            color: '#9ca3af',
+                                            cursor: 'pointer',
+                                            fontSize: '.9rem'
+                                        }
+                                    }, h('i', {
+                                        className: 'fas fa-trash-alt'
+                                    }))
+                                );
+                            })()
+                        ),
 
-                                // Main Matchup Area
-                                h('div', {
+                        // Main Matchup Area
+                        h('div', {
+                                style: {
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr auto 1fr',
+                                    alignItems: 'center',
+                                    gap: 20
+                                }
+                            },
+                            // Boxer A (Challenger)
+                            h('div', {
                                     style: {
-                                        display: 'grid',
-                                        gridTemplateColumns: '1fr auto 1fr',
-                                        alignItems: 'center',
-                                        gap: 20
+                                        textAlign: 'center'
                                     }
                                 },
-                                    // Boxer A (Challenger)
-                                    h('div', { style: { textAlign: 'center' } },
-                                        h('img', {
-                                            src: c.fromFoto || avatarPlaceholder,
-                                            style: { width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '3px solid #f3f4f6', marginBottom: 10 }
-                                        }),
-                                        h('div', { style: { fontWeight: 800, fontSize: '.95rem', color: '#111827' } }, c.fromNombre),
-                                        h('div', { style: { fontSize: '.75rem', color: '#6b7280', marginTop: 4 } },
-                                            h('span', { className: 'badge', style: { backgroundColor: '#f3f4f6', color: '#374151', padding: '2px 8px', borderRadius: 4 } }, c.fromNivel || 'Amateur')
-                                        ),
-                                        c.fromPeso ? h('div', { style: { fontSize: '.7rem', color: '#9ca3af', marginTop: 4 } }, `Peso: ${c.fromPeso}`) : null
-                                    ),
+                                h('img', {
+                                    src: challengerFoto || avatarPlaceholder,
+                                    style: {
+                                        width: 64,
+                                        height: 64,
+                                        borderRadius: '50%',
+                                        objectFit: 'cover',
+                                        border: '3px solid #f3f4f6',
+                                        marginBottom: 10
+                                    }
+                                }),
+                                h('div', {
+                                    style: {
+                                        fontWeight: 800,
+                                        fontSize: '.95rem',
+                                        color: '#111827'
+                                    }
+                                }, challengerName),
+                                h('div', {
+                                        style: {
+                                            fontSize: '.75rem',
+                                            color: '#6b7280',
+                                            marginTop: 4
+                                        }
+                                    },
+                                    h('span', {
+                                        className: 'badge',
+                                        style: {
+                                            backgroundColor: '#f3f4f6',
+                                            color: '#374151',
+                                            padding: '2px 8px',
+                                            borderRadius: 4
+                                        }
+                                    }, challengerNivel || 'Amateur')
+                                ),
+                                challengerPeso ? h('div', {
+                                    style: {
+                                        fontSize: '.7rem',
+                                        color: '#9ca3af',
+                                        marginTop: 4
+                                    }
+                                }, `Peso: ${challengerPeso}`) : null
+                            ),
 
-                                    // Middle: VS & Details
-                                    h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } },
-                                        h('div', {
+                            // Middle: VS & Details
+                            h('div', {
+                                    style: {
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        gap: 8
+                                    }
+                                },
+                                h('div', {
+                                    style: {
+                                        width: 40,
+                                        height: 40,
+                                        borderRadius: '50%',
+                                        backgroundColor: '#111827',
+                                        color: '#fff',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontWeight: 900,
+                                        fontSize: '.8rem',
+                                        boxShadow: '0 0 0 4px #fff, 0 0 0 5px #f3f4f6'
+                                    }
+                                }, 'VS'),
+                                h('div', {
+                                        style: {
+                                            textAlign: 'center',
+                                            marginTop: 10
+                                        }
+                                    },
+                                    h('div', {
+                                        style: {
+                                            fontWeight: 700,
+                                            fontSize: '.75rem',
+                                            color: '#111827'
+                                        }
+                                    }, c.preset),
+                                    h('div', {
                                             style: {
-                                                width: 40,
-                                                height: 40,
-                                                borderRadius: '50%',
-                                                backgroundColor: '#111827',
+                                                fontSize: '.7rem',
+                                                color: '#6b7280',
+                                                marginTop: 2
+                                            }
+                                        },
+                                        h('i', {
+                                            className: 'fas fa-calendar-alt',
+                                            style: {
+                                                marginRight: 4
+                                            }
+                                        }),
+                                        `${formatDateEs(c.scheduledAt.slice(0, 10))} • ${c.scheduledAt.slice(11, 16)}`
+                                    )
+                                )
+                            ),
+
+                            // Boxer B (My Boxer)
+                            h('div', {
+                                    style: {
+                                        textAlign: 'center'
+                                    }
+                                },
+                                h('img', {
+                                    src: challengedFoto || avatarPlaceholder,
+                                    style: {
+                                        width: 64,
+                                        height: 64,
+                                        borderRadius: '50%',
+                                        objectFit: 'cover',
+                                        border: '3px solid #f3f4f6',
+                                        marginBottom: 10
+                                    }
+                                }),
+                                h('div', {
+                                    style: {
+                                        fontWeight: 800,
+                                        fontSize: '.95rem',
+                                        color: 'var(--color-accent, #f97316)'
+                                    }
+                                }, challengedName),
+                                h('div', {
+                                        style: {
+                                            fontSize: '.75rem',
+                                            color: '#6b7280',
+                                            marginTop: 4
+                                        }
+                                    },
+                                    h('span', {
+                                        className: 'badge',
+                                        style: {
+                                            backgroundColor: '#fff7ed',
+                                            color: '#9a3412',
+                                            padding: '2px 8px',
+                                            borderRadius: 4
+                                        }
+                                    }, challengedNivel || 'Amateur')
+                                ),
+                                challengedPeso ? h('div', {
+                                    style: {
+                                        fontSize: '.7rem',
+                                        color: '#9ca3af',
+                                        marginTop: 4
+                                    }
+                                }, `Peso: ${challengedPeso}`) : null
+                            )
+                        ),
+
+                        // Info Row: Gym and Coaches
+                        h('div', {
+                                style: {
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                    gap: 12,
+                                    padding: '12px 16px',
+                                    backgroundColor: '#f9fafb',
+                                    borderRadius: '12px',
+                                    border: '1px solid #f3f4f6'
+                                }
+                            },
+                            h('div', {
+                                    style: {
+                                        fontSize: '.8rem',
+                                        color: '#4b5563',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 8
+                                    }
+                                },
+                                h('i', {
+                                    className: 'fas fa-building',
+                                    style: {
+                                        color: '#9ca3af'
+                                    }
+                                }),
+                                h('span', {
+                                    style: {
+                                        fontWeight: 600
+                                    }
+                                }, 'Ubicacion:'),
+                                c.gymName
+                            ),
+                            Array.isArray(c.coachNombres) && c.coachNombres.length > 0 ? h('div', {
+                                    style: {
+                                        fontSize: '.8rem',
+                                        color: '#4b5563',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 8
+                                    }
+                                },
+                                h('i', {
+                                    className: 'fas fa-user-tie',
+                                    style: {
+                                        color: '#9ca3af'
+                                    }
+                                }),
+                                h('span', {
+                                    style: {
+                                        fontWeight: 600
+                                    }
+                                }, 'Supervision:'),
+                                c.coachNombres.join(', ')
+                            ) : null
+                        ),
+
+                        // Note Section
+                        c.note ? h('div', {
+                            style: {
+                                fontSize: '.85rem',
+                                color: '#6b7280',
+                                fontStyle: 'italic',
+                                padding: '0 8px'
+                            }
+                        }, `"${c.note}"`) : null,
+                        // Action Buttons
+                        (() => {
+                            const s = c.status || 'pending';
+                            const dir = c.direction || 'inbound';
+                            const isToCoach = dir === 'inbound';
+                            const myApproval = isToCoach ? c.coachToApproval : c.coachFromApproval;
+
+                            // Turn to approve
+                            const canAct = (s !== 'accepted' && s !== 'declined' && s !== 'completed') && (myApproval == null);
+                            if (canAct) {
+                                return h('div', {
+                                        style: {
+                                            display: 'flex',
+                                            gap: '20px',
+                                            marginTop: 12,
+                                            justifyContent: 'center'
+                                        }
+                                    },
+                                    h('button', {
+                                        title: 'Aprobar Sparring',
+                                        className: 'glv-action-btn glv-approve',
+                                        style: {
+                                            width: '60px',
+                                            height: '60px',
+                                            borderRadius: '50%',
+                                            border: 'none',
+                                            backgroundColor: '#dcfce7',
+                                            color: '#16a34a',
+                                            fontSize: '1.4rem',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            boxShadow: '0 4px 10px rgba(22, 163, 74, 0.15)'
+                                        },
+                                        onClick: () => respond(c.id, 'accept'),
+                                        onMouseEnter: e => {
+                                            e.currentTarget.style.backgroundColor = '#16a34a';
+                                            e.currentTarget.style.color = '#fff';
+                                            e.currentTarget.style.transform = 'translateY(-4px) scale(1.1)';
+                                            e.currentTarget.style.boxShadow = '0 10px 20px rgba(22, 163, 74, 0.25)';
+                                        },
+                                        onMouseLeave: e => {
+                                            e.currentTarget.style.backgroundColor = '#dcfce7';
+                                            e.currentTarget.style.color = '#16a34a';
+                                            e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                                            e.currentTarget.style.boxShadow = '0 4px 10px rgba(22, 163, 74, 0.15)';
+                                        }
+                                    }, h('i', {
+                                        className: 'fas fa-check'
+                                    })),
+                                    h('button', {
+                                        title: 'Rechazar Reto',
+                                        className: 'glv-action-btn glv-decline',
+                                        style: {
+                                            width: '60px',
+                                            height: '60px',
+                                            borderRadius: '50%',
+                                            border: 'none',
+                                            backgroundColor: '#fee2e2',
+                                            color: '#dc2626',
+                                            fontSize: '1.4rem',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            boxShadow: '0 4px 10px rgba(220, 38, 38, 0.15)'
+                                        },
+                                        onClick: () => respond(c.id, 'decline'),
+                                        onMouseEnter: e => {
+                                            e.currentTarget.style.backgroundColor = '#dc2626';
+                                            e.currentTarget.style.color = '#fff';
+                                            e.currentTarget.style.transform = 'translateY(-4px) scale(1.1)';
+                                            e.currentTarget.style.boxShadow = '0 10px 20px rgba(220, 38, 38, 0.25)';
+                                        },
+                                        onMouseLeave: e => {
+                                            e.currentTarget.style.backgroundColor = '#fee2e2';
+                                            e.currentTarget.style.color = '#dc2626';
+                                            e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                                            e.currentTarget.style.boxShadow = '0 4px 10px rgba(220, 38, 38, 0.15)'
+                                        }
+                                    }, h('i', {
+                                        className: 'fas fa-times'
+                                    }))
+                                );
+                            }
+
+                            // Accepted -> Can Complete
+                            if (s === 'accepted') {
+                                return h('div', {
+                                        style: {
+                                            display: 'flex',
+                                            gap: '20px',
+                                            marginTop: 12,
+                                            justifyContent: 'center'
+                                        }
+                                    },
+                                    h('button', {
+                                            className: 'glv-btn-primary',
+                                            style: {
+                                                padding: '12px 24px',
+                                                borderRadius: '12px',
+                                                border: 'none',
+                                                backgroundColor: 'var(--color-accent, #f97316)',
                                                 color: '#fff',
+                                                fontWeight: 700,
+                                                fontSize: '.9rem',
+                                                cursor: 'pointer',
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                justifyContent: 'center',
-                                                fontWeight: 900,
-                                                fontSize: '.8rem',
-                                                boxShadow: '0 0 0 4px #fff, 0 0 0 5px #f3f4f6'
-                                            }
-                                        }, 'VS'),
-                                        h('div', { style: { textAlign: 'center', marginTop: 10 } },
-                                            h('div', { style: { fontWeight: 700, fontSize: '.75rem', color: '#111827' } }, c.preset),
-                                            h('div', { style: { fontSize: '.7rem', color: '#6b7280', marginTop: 2 } },
-                                                h('i', { className: 'fas fa-calendar-alt', style: { marginRight: 4 } }),
-                                                `${formatDateEs(c.scheduledAt.slice(0, 10))} • ${c.scheduledAt.slice(11, 16)}`
-                                            )
-                                        )
-                                    ),
-
-                                    // Boxer B (My Boxer)
-                                    h('div', { style: { textAlign: 'center' } },
-                                        h('img', {
-                                            src: c.boxerFoto || avatarPlaceholder,
-                                            style: { width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '3px solid #f3f4f6', marginBottom: 10 }
+                                                gap: 10,
+                                                boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)'
+                                            },
+                                            onClick: () => setCompletingChallengeId(c.id)
+                                        },
+                                        h('i', {
+                                            className: 'fas fa-flag-checkered'
                                         }),
-                                        h('div', { style: { fontWeight: 800, fontSize: '.95rem', color: 'var(--color-accent, #f97316)' } }, c.boxerName),
-                                        h('div', { style: { fontSize: '.75rem', color: '#6b7280', marginTop: 4 } },
-                                            h('span', { className: 'badge', style: { backgroundColor: '#fff7ed', color: '#9a3412', padding: '2px 8px', borderRadius: 4 } }, c.boxerNivel || 'Amateur')
-                                        ),
-                                        c.boxerPeso ? h('div', { style: { fontSize: '.7rem', color: '#9ca3af', marginTop: 4 } }, `Peso: ${c.boxerPeso}`) : null
+                                        'Finalizar y Valorar'
                                     )
-                                ),
+                                );
+                            }
 
-                                // Info Row: Gym and Coaches
-                                h('div', {
-                                    style: {
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                                        gap: 12,
-                                        padding: '12px 16px',
-                                        backgroundColor: '#f9fafb',
-                                        borderRadius: '12px',
-                                        border: '1px solid #f3f4f6'
-                                    }
-                                },
-                                    h('div', { style: { fontSize: '.8rem', color: '#4b5563', display: 'flex', alignItems: 'center', gap: 8 } },
-                                        h('i', { className: 'fas fa-building', style: { color: '#9ca3af' } }),
-                                        h('span', { style: { fontWeight: 600 } }, 'Ubicacion:'),
-                                        c.gymName
-                                    ),
-                                    Array.isArray(c.coachNombres) && c.coachNombres.length > 0 ? h('div', { style: { fontSize: '.8rem', color: '#4b5563', display: 'flex', alignItems: 'center', gap: 8 } },
-                                        h('i', { className: 'fas fa-user-tie', style: { color: '#9ca3af' } }),
-                                        h('span', { style: { fontWeight: 600 } }, 'Supervision:'),
-                                        c.coachNombres.join(', ')
-                                    ) : null
-                                ),
-
-                                // Note Section
-                                c.note ? h('div', {
-                                    style: {
-                                        fontSize: '.85rem',
-                                        color: '#6b7280',
-                                        fontStyle: 'italic',
-                                        padding: '0 8px'
-                                    }
-                                }, `"${c.note}"`) : null,
-                                // Action Buttons
-                                (() => {
-                                    const s = c.status || 'pending';
-                                    const dir = c.direction || 'inbound';
-                                    const isToCoach = dir === 'inbound';
-                                    const myApproval = isToCoach ? c.coachToApproval : c.coachFromApproval;
-
-                                    // Turn to approve
-                                    const canAct = (s !== 'accepted' && s !== 'declined' && s !== 'completed') && (myApproval == null);
-                                    if (canAct) {
-                                        return h('div', { style: { display: 'flex', gap: '20px', marginTop: 12, justifyContent: 'center' } },
-                                            h('button', {
-                                                title: 'Aprobar Sparring',
-                                                className: 'glv-action-btn glv-approve',
-                                                style: { width: '60px', height: '60px', borderRadius: '50%', border: 'none', backgroundColor: '#dcfce7', color: '#16a34a', fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 4px 10px rgba(22, 163, 74, 0.15)' },
-                                                onClick: () => respond(c.id, 'accept'),
-                                                onMouseEnter: e => { e.currentTarget.style.backgroundColor = '#16a34a'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.1)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(22, 163, 74, 0.25)'; },
-                                                onMouseLeave: e => { e.currentTarget.style.backgroundColor = '#dcfce7'; e.currentTarget.style.color = '#16a34a'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 4px 10px rgba(22, 163, 74, 0.15)'; }
-                                            }, h('i', { className: 'fas fa-check' })),
-                                            h('button', {
-                                                title: 'Rechazar Reto',
-                                                className: 'glv-action-btn glv-decline',
-                                                style: { width: '60px', height: '60px', borderRadius: '50%', border: 'none', backgroundColor: '#fee2e2', color: '#dc2626', fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 4px 10px rgba(220, 38, 38, 0.15)' },
-                                                onClick: () => respond(c.id, 'decline'),
-                                                onMouseEnter: e => { e.currentTarget.style.backgroundColor = '#dc2626'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.1)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(220, 38, 38, 0.25)'; },
-                                                onMouseLeave: e => { e.currentTarget.style.backgroundColor = '#fee2e2'; e.currentTarget.style.color = '#dc2626'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 4px 10px rgba(220, 38, 38, 0.15)' }
-                                            }, h('i', { className: 'fas fa-times' }))
-                                        );
-                                    }
-
-                                    // Accepted -> Can Complete
-                                    if (s === 'accepted') {
-                                        return h('div', { style: { display: 'flex', gap: '20px', marginTop: 12, justifyContent: 'center' } },
-                                            h('button', {
+                            // Completed -> Show Rating / Allow rating if missing
+                            if (s === 'completed') {
+                                const ratingVal = c.rating || 0;
+                                if (!ratingVal) {
+                                    return h('div', {
+                                            style: {
+                                                marginTop: 12,
+                                                textAlign: 'center'
+                                            }
+                                        },
+                                        h('button', {
                                                 className: 'glv-btn-primary',
                                                 style: {
                                                     padding: '12px 24px',
@@ -2156,78 +3716,157 @@ function CoachChallenges() {
                                                     fontWeight: 700,
                                                     fontSize: '.9rem',
                                                     cursor: 'pointer',
-                                                    display: 'flex',
+                                                    display: 'inline-flex',
                                                     alignItems: 'center',
                                                     gap: 10,
                                                     boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)'
                                                 },
                                                 onClick: () => setCompletingChallengeId(c.id)
                                             },
-                                                h('i', { className: 'fas fa-flag-checkered' }),
-                                                'Finalizar y Valorar'
-                                            )
-                                        );
-                                    }
-
-                                    // Completed -> Show Rating
-                                    if (s === 'completed') {
-                                        const ratingVal = c.rating || 0;
-                                        return h('div', { style: { marginTop: 12, textAlign: 'center', padding: '16px 20px', backgroundColor: '#f0f9ff', borderRadius: '16px', border: '1px solid #bae6fd' } },
-                                            h('div', { style: { fontSize: '.75rem', color: '#0369a1', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 } },
-                                                h('i', { className: 'fas fa-flag-checkered' }),
-                                                'Sparring Finalizado'
-                                            ),
-                                            h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 8 } },
-                                                ...Array.from({ length: 5 }).map((_, i) => h('i', {
-                                                    key: i,
-                                                    className: i < ratingVal ? 'fas fa-star' : 'far fa-star',
-                                                    style: { fontSize: '1.6rem', color: i < ratingVal ? '#f59e0b' : '#d1d5db' }
-                                                })),
-                                                h('span', { style: { fontSize: '1rem', fontWeight: 800, color: '#374151', marginLeft: 10 } }, `${ratingVal}/5`)
-                                            ),
-                                            c.completedNote ? h('div', { style: { fontSize: '.85rem', color: '#475569', fontStyle: 'italic', marginTop: 6, padding: '8px 14px', backgroundColor: '#fff', borderRadius: '10px', border: '1px solid #e0f2fe' } }, `"${c.completedNote}"`) : null
-                                        );
-                                    }
-                                    return null;
-                                })()
-                            );
-                        })
-                    ),
+                                            h('i', {
+                                                className: 'fas fa-star'
+                                            }),
+                                            'Valorar'
+                                        )
+                                    );
+                                }
+                                return h('div', {
+                                        style: {
+                                            marginTop: 12,
+                                            textAlign: 'center',
+                                            padding: '16px 20px',
+                                            backgroundColor: '#f0f9ff',
+                                            borderRadius: '16px',
+                                            border: '1px solid #bae6fd'
+                                        }
+                                    },
+                                    h('div', {
+                                            style: {
+                                                fontSize: '.75rem',
+                                                color: '#0369a1',
+                                                fontWeight: 700,
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '.05em',
+                                                marginBottom: 10,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: 6
+                                            }
+                                        },
+                                        h('i', {
+                                            className: 'fas fa-flag-checkered'
+                                        }),
+                                        'Sparring Finalizado'
+                                    ),
+                                    h('div', {
+                                            style: {
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: 4,
+                                                marginBottom: 8
+                                            }
+                                        },
+                                        ...Array.from({
+                                            length: 5
+                                        }).map((_, i) => h('i', {
+                                            key: i,
+                                            className: i < ratingVal ? 'fas fa-star' : 'far fa-star',
+                                            style: {
+                                                fontSize: '1.6rem',
+                                                color: i < ratingVal ? '#f59e0b' : '#d1d5db'
+                                            }
+                                        })),
+                                        h('span', {
+                                            style: {
+                                                fontSize: '1rem',
+                                                fontWeight: 800,
+                                                color: '#374151',
+                                                marginLeft: 10
+                                            }
+                                        }, `${ratingVal}/5`)
+                                    ),
+                                    c.completedNote ? h('div', {
+                                        style: {
+                                            fontSize: '.85rem',
+                                            color: '#475569',
+                                            fontStyle: 'italic',
+                                            marginTop: 6,
+                                            padding: '8px 14px',
+                                            backgroundColor: '#fff',
+                                            borderRadius: '10px',
+                                            border: '1px solid #e0f2fe'
+                                        }
+                                    }, `"${c.completedNote}"`) : null
+                                );
+                            }
+                            return null;
+                        })()
+                    );
+                })
+            ),
 
             // Modal de Valoración
             completingChallengeId ? h('div', {
-                style: {
-                    position: 'fixed',
-                    inset: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    backdropFilter: 'blur(4px)',
-                    zIndex: 9999,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: 20
-                }
-            },
-                h('div', {
                     style: {
-                        backgroundColor: '#fff',
-                        width: '100%',
-                        maxWidth: 450,
-                        borderRadius: 24,
-                        padding: 32,
-                        boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-                        animation: 'gloveupFadeUp 0.3s ease-out'
+                        position: 'fixed',
+                        inset: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        backdropFilter: 'blur(4px)',
+                        zIndex: 9999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: 20
                     }
                 },
-                    h('h3', { style: { fontSize: '1.5rem', fontWeight: 900, marginBottom: 8, textAlign: 'center' } }, 'Finalizar Sparring'),
-                    h('p', { style: { fontSize: '.9rem', color: '#6b7280', textAlign: 'center', marginBottom: 24 } }, '¿Cómo fue el desempeño? Tu valoración ayudará a mejorar la comunidad.'),
+                h('div', {
+                        style: {
+                            backgroundColor: '#fff',
+                            width: '100%',
+                            maxWidth: 450,
+                            borderRadius: 24,
+                            padding: 32,
+                            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+                            animation: 'gloveupFadeUp 0.3s ease-out'
+                        }
+                    },
+                    h('h3', {
+                        style: {
+                            fontSize: '1.5rem',
+                            fontWeight: 900,
+                            marginBottom: 8,
+                            textAlign: 'center'
+                        }
+                    }, 'Finalizar Sparring'),
+                    h('p', {
+                        style: {
+                            fontSize: '.9rem',
+                            color: '#6b7280',
+                            textAlign: 'center',
+                            marginBottom: 24
+                        }
+                    }, '¿Cómo fue el desempeño? Tu valoración ayudará a mejorar la comunidad.'),
 
                     // Estrellas
-                    h('div', { style: { display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 24 } },
+                    h('div', {
+                            style: {
+                                display: 'flex',
+                                justifyContent: 'center',
+                                gap: 12,
+                                marginBottom: 24
+                            }
+                        },
                         ...[1, 2, 3, 4, 5].map(star => h('i', {
                             key: star,
                             className: star <= completionRating ? 'fas fa-star' : 'far fa-star',
-                            style: { fontSize: '2rem', color: star <= completionRating ? '#fbbf24' : '#d1d5db', cursor: 'pointer', transition: 'transform 0.15s' },
+                            style: {
+                                fontSize: '2rem',
+                                color: star <= completionRating ? '#fbbf24' : '#d1d5db',
+                                cursor: 'pointer',
+                                transition: 'transform 0.15s'
+                            },
                             onClick: () => setCompletionRating(star),
                             onMouseEnter: e => e.currentTarget.style.transform = 'scale(1.2)',
                             onMouseLeave: e => e.currentTarget.style.transform = 'scale(1)'
@@ -2235,23 +3874,65 @@ function CoachChallenges() {
                     ),
 
                     // Nota
-                    h('label', { style: { fontSize: '.85rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: 8 } }, 'Comentarios (Opcional)'),
+                    h('label', {
+                        style: {
+                            fontSize: '.85rem',
+                            fontWeight: 700,
+                            color: '#374151',
+                            display: 'block',
+                            marginBottom: 8
+                        }
+                    }, 'Comentarios (Opcional)'),
                     h('textarea', {
                         value: completionNote,
                         onChange: e => setCompletionNote(e.target.value),
                         placeholder: 'Ej: Muy buena técnica, respetuoso...',
-                        style: { width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid #e5e7eb', minHeight: 100, fontSize: '.9rem', fontFamily: 'inherit', marginBottom: 24, outline: 'none' }
+                        style: {
+                            width: '100%',
+                            padding: '12px 16px',
+                            borderRadius: 12,
+                            border: '1px solid #e5e7eb',
+                            minHeight: 100,
+                            fontSize: '.9rem',
+                            fontFamily: 'inherit',
+                            marginBottom: 24,
+                            outline: 'none'
+                        }
                     }),
 
                     // Botones
-                    h('div', { style: { display: 'flex', gap: 12 } },
+                    h('div', {
+                            style: {
+                                display: 'flex',
+                                gap: 12
+                            }
+                        },
                         h('button', {
                             onClick: () => setCompletingChallengeId(null),
-                            style: { flex: 1, padding: '14px', borderRadius: 12, border: '1px solid #e5e7eb', backgroundColor: '#f9fafb', color: '#374151', fontWeight: 700, cursor: 'pointer' }
+                            style: {
+                                flex: 1,
+                                padding: '14px',
+                                borderRadius: 12,
+                                border: '1px solid #e5e7eb',
+                                backgroundColor: '#f9fafb',
+                                color: '#374151',
+                                fontWeight: 700,
+                                cursor: 'pointer'
+                            }
                         }, 'Cancelar'),
                         h('button', {
                             onClick: completeSparring,
-                            style: { flex: 1, padding: '14px', borderRadius: 12, border: 'none', backgroundColor: '#111827', color: '#fff', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(17, 24, 39, 0.2)' }
+                            style: {
+                                flex: 1,
+                                padding: '14px',
+                                borderRadius: 12,
+                                border: 'none',
+                                backgroundColor: '#111827',
+                                color: '#fff',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 12px rgba(17, 24, 39, 0.2)'
+                            }
                         }, 'Finalizar')
                     )
                 )
@@ -2260,27 +3941,11 @@ function CoachChallenges() {
     );
 }
 
-const dashboardRoot = document.getElementById('coach-dashboard-root');
-if (dashboardRoot) {
-    ReactDOM.createRoot(dashboardRoot).render(h(CoachStatsDashboard, null));
-}
-
-const managementRoot = document.getElementById('coach-management-root');
-if (managementRoot) {
-    ReactDOM.createRoot(managementRoot).render(h(CoachFinance, null));
-}
-
-const gymRoot = document.getElementById('coach-gym-root');
-if (gymRoot) {
-    ReactDOM.createRoot(gymRoot).render(h(CoachManagement, null));
-}
-
-const challengesRoot = document.getElementById('coach-challenges-root');
-if (challengesRoot) {
-    ReactDOM.createRoot(challengesRoot).render(h(CoachChallenges, null));
-}
-
 const SESSION_MAINTAINED_KEY = 'gloveup_session_maintained';
+const dashboardRoot = document.getElementById('coach-dashboard-root');
+const managementRoot = document.getElementById('coach-management-root');
+const gymRoot = document.getElementById('coach-gym-root');
+const challengesRoot = document.getElementById('coach-challenges-root');
 const coachDashboardSection = document.getElementById('coach-dashboard');
 const coachManagementSection = document.getElementById('coach-management');
 const coachChallengesSection = document.getElementById('coach-challenges');
@@ -2292,9 +3957,6 @@ const coachGymNavItem = document.getElementById('coach-gym-nav-item');
 const logoutButton = document.getElementById('logout-button');
 const role = (localStorage.getItem(STORED_USER_ROLE_KEY) || '').toString().trim().toLowerCase();
 const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').toString().trim().toLowerCase();
-const isSessionMaintained =
-    sessionStorage.getItem(SESSION_MAINTAINED_KEY) === 'true' ||
-    localStorage.getItem(SESSION_MAINTAINED_KEY) === 'true';
 
 const showCoachSection = () => {
     if (!coachDashboardSection || !coachManagementSection || !coachChallengesSection || !coachGymSection) return;
@@ -2304,13 +3966,11 @@ const showCoachSection = () => {
     const inChallenges = hash === '#coach-challenges';
     const inGym = hash === '#coach-gym';
 
-    // Ocultar el header estático del dashboard si no estamos en 'Inicio'
     const staticHeader = document.querySelector('.dashboard-header');
     if (staticHeader) {
         staticHeader.style.display = isHome ? 'block' : 'none';
     }
 
-    // Show/hide sections. When hiding, also set height:0 and overflow:hidden to contain FullCalendar
     const setVisible = (el, visible) => {
         if (!el) return;
         el.style.display = visible ? 'grid' : 'none';
@@ -2331,7 +3991,7 @@ const showCoachSection = () => {
     if (coachGymNavItem) coachGymNavItem.classList.toggle('active', inGym);
 };
 
-if (role !== 'entrenador' || !email || !isSessionMaintained) {
+if (role !== 'entrenador' || !email) {
     if (coachDashboardSection) coachDashboardSection.style.display = 'grid';
     if (coachManagementSection) coachManagementSection.style.display = 'none';
     if (coachChallengesSection) coachChallengesSection.style.display = 'none';
@@ -2343,8 +4003,8 @@ if (role !== 'entrenador' || !email || !isSessionMaintained) {
         ReactDOM.createRoot(dashboardRoot).render(
             h(
                 'div', {
-                className: 'dashboard-panel'
-            },
+                    className: 'dashboard-panel'
+                },
                 h('h2', null, 'Necesitas iniciar sesión'),
                 h('p', null, 'Inicia sesión como entrenador para acceder al panel.'),
                 h('a', {
@@ -2355,6 +4015,18 @@ if (role !== 'entrenador' || !email || !isSessionMaintained) {
         );
     }
 } else {
+    if (dashboardRoot) {
+        ReactDOM.createRoot(dashboardRoot).render(h(CoachStatsDashboard, null));
+    }
+    if (managementRoot) {
+        ReactDOM.createRoot(managementRoot).render(h(CoachFinance, null));
+    }
+    if (gymRoot) {
+        ReactDOM.createRoot(gymRoot).render(h(CoachManagement, null));
+    }
+    if (challengesRoot) {
+        ReactDOM.createRoot(challengesRoot).render(h(CoachChallenges, null));
+    }
     if (coachNavItem) coachNavItem.style.display = '';
     if (coachChallengesNavItem) coachChallengesNavItem.style.display = '';
     if (coachGymNavItem) coachGymNavItem.style.display = '';

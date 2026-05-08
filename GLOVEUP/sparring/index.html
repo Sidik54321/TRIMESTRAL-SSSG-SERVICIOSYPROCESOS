@@ -180,6 +180,7 @@
         </script>
     </aside>
 
+    <div class="page-content-area">
     <div class="page-hero-section">
         <div class="hero-content">
             <h1 class="hero-title">Encuentra tu compañero de Sparring</h1>
@@ -265,6 +266,7 @@
 
         </section>
     </main>
+    </div><!-- /.page-content-area -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const homeLink = document.getElementById('nav-home-link');
@@ -339,7 +341,7 @@
     </script>
 
     <dialog class="modal" id="challenge-modal">
-        <form method="dialog" class="modal-card" id="challenge-form">
+        <form method="dialog" class="modal-card" id="challenge-form" novalidate>
             <div class="modal-header">
                 <h3 id="challenge-title">Retar a sparring</h3>
                 <button class="icon-btn" type="button" id="btn-challenge-close" aria-label="Cerrar">
@@ -629,13 +631,15 @@
                     empty: true
                 });
 
+                const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
                 dtGrid.innerHTML = cells.map((c) => {
                     if (c.empty) return '<div class="dt-cell dt-cell-empty"></div>';
                     const date = new Date(dtViewYear, dtViewMonth, c.day);
                     const isToday = sameDay(date, today);
                     const isSelected = dtSelected && sameDay(date, dtSelected);
-                    const cls = ['dt-cell', isToday ? 'today' : '', isSelected ? 'selected' : ''].filter(Boolean).join(' ');
-                    return `<button type="button" class="${cls}" data-day="${c.day}">${c.day}</button>`;
+                    const isPast = date < todayStart;
+                    const cls = ['dt-cell', isToday ? 'today' : '', isSelected ? 'selected' : '', isPast ? 'past' : ''].filter(Boolean).join(' ');
+                    return `<button type="button" class="${cls}" data-day="${c.day}" ${isPast ? 'disabled' : ''}>${c.day}</button>`;
                 }).join('');
             };
 
@@ -686,6 +690,46 @@
 
             let currentModalCoaches = [];
             let selectedCoachIds = new Set();
+            let requiredCoachIds = new Set();
+
+            const normalizeIdentifier = (raw) => String(raw || '').trim();
+
+            const findBoxerByIdentifier = (identifier) => {
+                const id = normalizeIdentifier(identifier);
+                if (!id) return null;
+                const isEmail = id.includes('@');
+                const email = isEmail ? id.toLowerCase() : '';
+                const dni = !isEmail ? id.toUpperCase() : '';
+                return allBoxeadores.find((b) => {
+                    if (!b) return false;
+                    const bEmail = (b.email || '').toString().trim().toLowerCase();
+                    const bDni = (b.dniLicencia || '').toString().trim().toUpperCase();
+                    if (email && bEmail === email) return true;
+                    if (dni && bDni === dni) return true;
+                    return false;
+                }) || null;
+            };
+
+            const prepareRequiredCoachesForChallenge = (targetIdentifier) => {
+                const meEmail = getEmail();
+                const meBoxer = findBoxerByIdentifier(meEmail);
+                const targetBoxer = findBoxerByIdentifier(targetIdentifier);
+
+                const myCoachId = meBoxer && meBoxer.entrenadorId ? String(meBoxer.entrenadorId) : '';
+                const targetCoachId = targetBoxer && targetBoxer.entrenadorId ? String(targetBoxer.entrenadorId) : '';
+
+                if (!myCoachId) {
+                    notify('No puedes enviar el reto: tu boxeador no tiene entrenador asignado.', 'error');
+                    return false;
+                }
+                if (!targetCoachId) {
+                    notify('No puedes enviar el reto: el boxeador seleccionado no tiene entrenador asignado.', 'error');
+                    return false;
+                }
+
+                requiredCoachIds = new Set([myCoachId, targetCoachId].filter(Boolean));
+                return true;
+            };
 
             const renderCoachChecklist = (coaches) => {
                 const checklist = document.getElementById('coach-checklist');
@@ -697,11 +741,24 @@
                     return;
                 }
 
-                coaches.forEach(c => {
+                const sorted = Array.isArray(coaches) ? coaches.slice().sort((a, b) => {
+                    const aId = a && a._id ? String(a._id) : '';
+                    const bId = b && b._id ? String(b._id) : '';
+                    const aReq = requiredCoachIds.has(aId);
+                    const bReq = requiredCoachIds.has(bId);
+                    if (aReq !== bReq) return aReq ? -1 : 1;
+                    const aName = String(a && a.nombre ? a.nombre : '');
+                    const bName = String(b && b.nombre ? b.nombre : '');
+                    return aName.localeCompare(bName);
+                }) : [];
+
+                sorted.forEach(c => {
                     const id = c && c._id ? String(c._id) : '';
                     const name = c && c.nombre ? String(c.nombre) : 'Entrenador';
                     const gym = c && c.gimnasio ? String(c.gimnasio) : 'Sin gimnasio';
-                    const isSelected = selectedCoachIds.has(id);
+                    const isRequired = requiredCoachIds.has(id);
+                    const isSelected = isRequired || selectedCoachIds.has(id);
+                    if (isRequired) selectedCoachIds.add(id);
 
                     const item = document.createElement('div');
                     item.className = `coach-item ${isSelected ? 'selected' : ''}`;
@@ -710,15 +767,16 @@
                         <div class="coach-checkbox-custom ${isSelected ? 'checked' : ''}">
                             <i class="fas fa-check"></i>
                         </div>
-                        <input type="checkbox" value="${encodeURIComponent(id)}" class="coach-cb" ${isSelected ? 'checked' : ''} style="display:none">
+                        <input type="checkbox" value="${encodeURIComponent(id)}" class="coach-cb" ${isSelected ? 'checked' : ''} ${isRequired ? 'disabled' : ''} style="display:none">
                         <div class="coach-info">
-                            <span class="coach-name">${name}</span>
+                            <span class="coach-name">${name}${isRequired ? ' <span style="font-size:0.75rem;opacity:0.7;">(obligatorio)</span>' : ''}</span>
                             <span class="coach-gym"><i class="fas fa-building" style="font-size:0.7rem;margin-right:4px;opacity:0.5"></i>${gym}</span>
                         </div>
                     `;
 
                     item.addEventListener('click', (e) => {
                         e.preventDefault();
+                        if (isRequired) return;
                         const cb = item.querySelector('.coach-cb');
                         const customCb = item.querySelector('.coach-checkbox-custom');
 
@@ -746,6 +804,7 @@
                     currentModalCoaches = coaches;
                     // Reset selection when opening the modal for a new challenge
                     selectedCoachIds.clear();
+                    requiredCoachIds.forEach((id) => selectedCoachIds.add(id));
                     renderCoachChecklist(coaches);
                 } catch (err) {
                     checklist.innerHTML = '<p style="padding:10px;font-size:0.8rem;color:var(--color-error, #ef4444);">Error al cargar entrenadores</p>';
@@ -933,6 +992,7 @@
                     const identifier = identifierEnc ? decodeURIComponent(identifierEnc) : '';
                     const name = nameEnc ? decodeURIComponent(nameEnc) : '';
                     if (!identifier) return;
+                    if (!prepareRequiredCoachesForChallenge(identifier)) return;
                     challengeTargetIdentifier = identifier;
                     if (challengeTitle) {
                         const r = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();
@@ -990,6 +1050,7 @@
                 coachSearch.addEventListener('input', (e) => {
                     const term = e.target.value.toLowerCase();
                     const filtered = currentModalCoaches.filter(c =>
+                        requiredCoachIds.has(String(c && c._id ? c._id : '')) ||
                         (c.nombre || '').toLowerCase().includes(term) ||
                         (c.gimnasio || '').toLowerCase().includes(term)
                     );
@@ -1067,11 +1128,12 @@
             });
             if (dtCancel) dtCancel.addEventListener('click', closeDateTimePicker);
             if (dtPrev) dtPrev.addEventListener('click', () => {
-                dtViewMonth -= 1;
-                if (dtViewMonth < 0) {
-                    dtViewMonth = 11;
-                    dtViewYear -= 1;
-                }
+                const now = new Date();
+                const prevMonth = dtViewMonth === 0 ? 11 : dtViewMonth - 1;
+                const prevYear = dtViewMonth === 0 ? dtViewYear - 1 : dtViewYear;
+                if (prevYear < now.getFullYear() || (prevYear === now.getFullYear() && prevMonth < now.getMonth())) return;
+                dtViewMonth = prevMonth;
+                dtViewYear = prevYear;
                 renderDateTimePicker();
             });
             if (dtNext) dtNext.addEventListener('click', () => {
@@ -1120,6 +1182,10 @@
                 const hour = dtHour ? Number(dtHour.value || 0) : dtSelected.getHours();
                 const minute = dtMinute ? Number(dtMinute.value || 0) : dtSelected.getMinutes();
                 const applied = new Date(dtSelected.getFullYear(), dtSelected.getMonth(), dtSelected.getDate(), hour, minute, 0, 0);
+                if (applied <= new Date()) {
+                    notify('No puedes reservar en una fecha y hora pasada', 'warning');
+                    return;
+                }
                 const iso = applied.toISOString();
                 if (challengeDatetime.dataset) challengeDatetime.dataset.iso = iso;
                 challengeDatetime.value = formatDisplayDateTime(iso);
@@ -1258,6 +1324,7 @@
                     if (encId && challengeModal && typeof ensureGymOptions === 'function') {
                         const identifier = decodeURIComponent(encId);
                         const name = encName ? decodeURIComponent(encName) : '';
+                        if (!prepareRequiredCoachesForChallenge(identifier)) return;
                         challengeTargetIdentifier = identifier;
                         if (challengeTitle) {
                             const r = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();

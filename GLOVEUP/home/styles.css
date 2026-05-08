@@ -548,6 +548,9 @@ body.theme-dark .manual-box {
 body.with-sidebar {
     padding-top: 0 !important;
     padding-left: 270px;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
 }
 
 
@@ -629,6 +632,25 @@ body.with-sidebar.sidebar-collapsed {
     padding-left: 76px;
 }
 
+/* ============================================== */
+/* APP SHELL: contenedor de scroll fijo           */
+/* ============================================== */
+
+.page-content-area {
+    position: fixed;
+    left: 270px;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.with-sidebar.sidebar-collapsed .page-content-area {
+    left: 76px;
+}
+
 /* Toggle Button */
 .sidebar-toggle {
     position: absolute;
@@ -699,6 +721,9 @@ body.with-sidebar.sidebar-collapsed {
     }
     body.with-sidebar {
         padding-left: 76px;
+    }
+    .page-content-area {
+        left: 76px;
     }
     .sidebar-toggle { display: none; }
 }
@@ -1715,6 +1740,9 @@ body.theme-dark .chat-box {
     }
     body.with-sidebar {
         padding-left: 60px;
+    }
+    .page-content-area {
+        left: 60px;
     }
     .chat-box {
         width: 290px;

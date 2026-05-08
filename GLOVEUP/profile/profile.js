@@ -373,6 +373,12 @@ function sessionPillClass(status) {
     return 'bad';
 }
 
+function formatRatingCell(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n < 1 || n > 5) return '<span class="muted">—</span>';
+    return `<strong>${n}/5</strong>`;
+}
+
 function renderSessions(data) {
     const card = $('sparring-sessions-card');
     const countEl = $('sessions-count');
@@ -397,6 +403,8 @@ function renderSessions(data) {
             const gym = escapeHtml(s.gymName || '');
             const coaches = Array.isArray(s.coachNombres) ? s.coachNombres.filter(Boolean) : [];
             const coachesCell = coaches.length ? coaches.map(escapeHtml).join('<br>') : '<span class="muted">—</span>';
+            const coachRating = formatRatingCell(s.ratingEntrenador);
+            const boxerRating = formatRatingCell(s.ratingBoxeador);
             const status = `<span class="pill ${sessionPillClass(s.status)}">${escapeHtml(sessionStatusLabel(s.status))}</span>`;
             const reviews = Array.isArray(s.reviews) ? s.reviews : [];
             const alreadyReviewed = email ? reviews.some((r) => r && String(r.byEmail || '').toLowerCase() === email) : false;
@@ -410,6 +418,8 @@ function renderSessions(data) {
                     <td>${partnerCell}</td>
                     <td>${gym}</td>
                     <td>${coachesCell}</td>
+                    <td>${coachRating}</td>
+                    <td>${boxerRating}</td>
                     <td>${status}</td>
                     <td>${action}</td>
                 </tr>
@@ -417,7 +427,7 @@ function renderSessions(data) {
         })
         .join('');
 
-    tbody.innerHTML = rows || `<tr><td colspan="6" class="muted">Todavía no tienes sesiones programadas.</td></tr>`;
+    tbody.innerHTML = rows || `<tr><td colspan="8" class="muted">Todavía no tienes sesiones programadas.</td></tr>`;
 }
 
 async function refreshSessions() {

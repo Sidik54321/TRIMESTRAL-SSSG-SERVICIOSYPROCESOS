@@ -178,6 +178,7 @@
         </script>
     </aside>
 
+    <div class="page-content-area">
     <main class="dashboard-main">
         <section id="coach-dashboard" class="dashboard-grid" style="display: none;">
             <div id="coach-dashboard-root"></div>
@@ -195,6 +196,7 @@
             <div id="coach-gym-root"></div>
         </section>
     </main>
+    </div><!-- /.page-content-area -->
 
     <!-- 🔔 Notificaciones -->
     <div class="glv-notif-container">
@@ -272,41 +274,40 @@
     <script src="../../home/chat.js"></script>
     <script src="../../home/notifications.js"></script>
     <script src="../../home/sidebar.js"></script>
-</body>
-<script defer src="../../home/onboarding.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const themeBtn = document.getElementById('theme-toggle');
-        const body = document.body;
-        const THEME_KEY = 'gloveup_theme';
+    <script defer src="../../home/onboarding.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeBtn = document.getElementById('theme-toggle');
+            const body = document.body;
+            const THEME_KEY = 'gloveup_theme';
 
-        const savedTheme = localStorage.getItem(THEME_KEY);
-        if (savedTheme === 'dark') {
-            body.classList.add('theme-dark');
-            updateThemeIcon(true);
-        }
-
-        if (themeBtn) {
-            themeBtn.addEventListener('click', () => {
-                body.classList.toggle('theme-dark');
-                const isDark = body.classList.contains('theme-dark');
-                localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
-                updateThemeIcon(isDark);
-            });
-        }
-
-        function updateThemeIcon(isDark) {
-            const icon = themeBtn.querySelector('i');
-            const text = themeBtn.querySelector('span');
-            if (icon) {
-                icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            const savedTheme = localStorage.getItem(THEME_KEY);
+            if (savedTheme === 'dark') {
+                body.classList.add('theme-dark');
+                updateThemeIcon(true);
             }
-            if (text) {
-                text.textContent = isDark ? 'Tema Claro' : 'Tema Oscuro';
+
+            if (themeBtn) {
+                themeBtn.addEventListener('click', () => {
+                    body.classList.toggle('theme-dark');
+                    const isDark = body.classList.contains('theme-dark');
+                    localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+                    updateThemeIcon(isDark);
+                });
             }
-        }
-    });
-</script>
+
+            function updateThemeIcon(isDark) {
+                const icon = themeBtn.querySelector('i');
+                const text = themeBtn.querySelector('span');
+                if (icon) {
+                    icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                }
+                if (text) {
+                    text.textContent = isDark ? 'Tema Claro' : 'Tema Oscuro';
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -212,14 +212,18 @@ export function validateSignInForm(event) {
 
             const role = (data.rol || 'usuario').toLowerCase();
             const nextUrl = role === 'entrenador' ? '../dashboard/entrenador/dashboard.html' : '../dashboard/boxeador/dashboard.html';
-            showAuthAlert({
-                title: 'Inicio de sesión',
-                message: '¡Bienvenido!',
-                autoCloseMs: 650
-            });
+            if (typeof window.showToast === 'function') {
+                window.showToast('Has iniciado sesión correctamente.', 'success', 1200);
+            } else {
+                showAuthAlert({
+                    title: 'Inicio de sesión',
+                    message: 'Has iniciado sesión correctamente.',
+                    autoCloseMs: 1000
+                });
+            }
             window.setTimeout(() => {
                 window.location.href = nextUrl;
-            }, 650);
+            }, 900);
         })
         .catch((err) => {
             const rawMessage = err && err.message ? err.message.toLowerCase() : '';
