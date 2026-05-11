@@ -278,6 +278,175 @@ body.theme-dark .pag-btn {
 }
 body.theme-dark .pag-btn:hover:not(:disabled) { background: rgba(255,255,255,0.08); }
 
+/* ——— Calendario de retos ——— */
+.challenges-calendar {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.cal-month-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+    text-transform: capitalize;
+    letter-spacing: 0.02em;
+}
+
+.cal-nav-btn {
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: var(--color-text-lighter);
+    transition: background 0.15s, color 0.15s;
+}
+
+.cal-nav-btn:hover {
+    background: var(--color-bg-light);
+    color: var(--color-text-main);
+}
+
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+}
+
+.cal-weekday {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 4px 0;
+    color: var(--color-text-lighter);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.cal-cell {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.12s;
+    position: relative;
+    gap: 2px;
+    min-width: 0;
+}
+
+.cal-cell-empty {
+    cursor: default;
+}
+
+.cal-cell:not(.cal-cell-empty):hover {
+    background: var(--color-bg-light);
+}
+
+.cal-day-num {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-main);
+    line-height: 1;
+}
+
+.cal-today .cal-day-num {
+    background: var(--color-accent);
+    color: #fff;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cal-selected {
+    background: var(--color-accent-soft) !important;
+    border: 1px solid var(--color-accent);
+}
+
+.cal-dots {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    justify-content: center;
+}
+
+.cal-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.cal-dot-confirmed { background: #059669; }
+.cal-dot-pending   { background: #d97706; }
+
+/* Detalle del día seleccionado */
+.cal-day-detail {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cal-day-detail-title {
+    margin: 0 0 4px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-text-lighter);
+    text-transform: capitalize;
+}
+
+/* Retos sin fecha */
+.cal-no-date {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Dark mode */
+body.theme-dark .cal-nav-btn {
+    border-color: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.45);
+}
+body.theme-dark .cal-nav-btn:hover {
+    background: rgba(255,255,255,0.07);
+    color: #f1f5f9;
+}
+body.theme-dark .cal-cell:not(.cal-cell-empty):hover {
+    background: rgba(255,255,255,0.06);
+}
+body.theme-dark .cal-selected {
+    background: rgba(249,115,22,0.15) !important;
+    border-color: var(--color-accent);
+}
+body.theme-dark .cal-day-num {
+    color: #e5e7eb;
+}
+
 /* ——— Dark mode ——— */
 body.theme-dark .sparring-row {
     background: rgba(255,255,255,0.04);

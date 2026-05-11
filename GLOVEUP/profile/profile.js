@@ -673,6 +673,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isCoachProfile = isCoach && !isViewMode;
     const tab = getTabParam();
     const isSparringsTab = tab === 'sparrings';
+    const fromParam = getFromParam();
 
     const roleTitle = $('profile-role-title');
     if (roleTitle) roleTitle.textContent = isCoachProfile ? 'Entrenador' : 'Boxeador';
@@ -716,7 +717,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (boxerOnlyGym) boxerOnlyGym.style.display = '';
         setFormReadonly(true);
     } else {
-        if (backSparringBtn) backSparringBtn.style.display = isSparringsTab && !isCoachProfile ? '' : 'none';
+        if (backSparringBtn) backSparringBtn.style.display = (isSparringsTab && !isCoachProfile) || fromParam === 'settings' ? '' : 'none';
         if (saveBtn) saveBtn.style.display = isSparringsTab && !isCoachProfile ? 'none' : '';
         if (lookupBanner) lookupBanner.style.display = 'none';
         if (boxerOnlyLevel) boxerOnlyLevel.style.display = 'none';
@@ -727,7 +728,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (backSparringBtn) {
         backSparringBtn.addEventListener('click', () => {
-            if (window.history.length > 1) {
+            if (fromParam === 'settings') {
+                window.location.href = '../settings/index.html';
+            } else if (window.history.length > 1) {
                 window.history.back();
             } else {
                 window.location.href = '../home/dashboard.html';

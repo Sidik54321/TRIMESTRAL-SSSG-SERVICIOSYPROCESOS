@@ -164,6 +164,116 @@ function ChallengeRow({ challenge, dir }) {
     );
 }
 
+// ——— Calendario de retos ———
+function ChallengesCalendar({ upcomingChallenges, pendingChallenges, sent }) {
+    const now = new Date();
+    const [calYear, setCalYear] = useState(now.getFullYear());
+    const [calMonth, setCalMonth] = useState(now.getMonth());
+    const [selectedDay, setSelectedDay] = useState(null);
+
+    const dayMap = {};
+    upcomingChallenges.forEach(c => {
+        if (!c.scheduledAt) return;
+        const d = new Date(c.scheduledAt);
+        if (d.getFullYear() === calYear && d.getMonth() === calMonth) {
+            const day = d.getDate();
+            if (!dayMap[day]) dayMap[day] = [];
+            dayMap[day].push({ ...c, _type: 'confirmed' });
+        }
+    });
+    pendingChallenges.forEach(c => {
+        if (!c.scheduledAt) return;
+        const d = new Date(c.scheduledAt);
+        if (d.getFullYear() === calYear && d.getMonth() === calMonth) {
+            const day = d.getDate();
+            if (!dayMap[day]) dayMap[day] = [];
+            const dir = sent.find(s => s.id === c.id) ? 'sent' : 'recv';
+            dayMap[day].push({ ...c, _dir: dir, _type: 'pending' });
+        }
+    });
+
+    const prevMonth = () => {
+        setSelectedDay(null);
+        if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11); }
+        else setCalMonth(m => m - 1);
+    };
+    const nextMonth = () => {
+        setSelectedDay(null);
+        if (calMonth === 11) { setCalYear(y => y + 1); setCalMonth(0); }
+        else setCalMonth(m => m + 1);
+    };
+
+    const monthLabel = new Date(calYear, calMonth, 1)
+        .toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    const firstDayOfWeek = (new Date(calYear, calMonth, 1).getDay() + 6) % 7; // lunes=0
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const todayDate = now.getDate();
+    const isCurrentMonthYear = calYear === now.getFullYear() && calMonth === now.getMonth();
+    const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+
+    const cells = [];
+    for (let i = 0; i < firstDayOfWeek; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+    const selectedEvents = selectedDay ? (dayMap[selectedDay] || []) : [];
+    const noDates = pendingChallenges.filter(c => !c.scheduledAt);
+
+    return h('div', { className: 'challenges-calendar' },
+        h('div', { className: 'cal-header' },
+            h('button', { className: 'cal-nav-btn', onClick: prevMonth },
+                h('i', { className: 'fas fa-chevron-left' })
+            ),
+            h('span', { className: 'cal-month-label' }, monthLabel),
+            h('button', { className: 'cal-nav-btn', onClick: nextMonth },
+                h('i', { className: 'fas fa-chevron-right' })
+            )
+        ),
+        h('div', { className: 'cal-grid' },
+            ...weekDays.map(d => h('div', { key: d, className: 'cal-weekday' }, d)),
+            ...cells.map((day, i) => {
+                if (!day) return h('div', { key: `e-${i}`, className: 'cal-cell cal-cell-empty' });
+                const events = dayMap[day] || [];
+                const isToday = isCurrentMonthYear && day === todayDate;
+                const isSelected = selectedDay === day;
+                const hasConfirmed = events.some(e => e._type === 'confirmed');
+                const hasPending = events.some(e => e._type === 'pending');
+                let cls = 'cal-cell';
+                if (isToday) cls += ' cal-today';
+                if (isSelected) cls += ' cal-selected';
+                if (events.length) cls += ' cal-has-events';
+                return h('div', { key: day, className: cls, onClick: () => setSelectedDay(isSelected ? null : day) },
+                    h('span', { className: 'cal-day-num' }, day),
+                    events.length > 0 && h('div', { className: 'cal-dots' },
+                        hasConfirmed && h('span', { className: 'cal-dot cal-dot-confirmed' }),
+                        hasPending && h('span', { className: 'cal-dot cal-dot-pending' })
+                    )
+                );
+            })
+        ),
+        selectedDay && selectedEvents.length > 0 && h('div', { className: 'cal-day-detail' },
+            h('p', { className: 'cal-day-detail-title' },
+                h('i', { className: 'fas fa-calendar-day', style: { marginRight: '6px', opacity: 0.6 } }),
+                `${selectedDay} de ${monthLabel}`
+            ),
+            h('ul', { className: 'sparring-list' },
+                ...selectedEvents.map((c, i) => h(ChallengeRow, { key: c.id || i, challenge: c, dir: c._dir || 'recv' }))
+            )
+        ),
+        noDates.length > 0 && h('div', { className: 'cal-no-date' },
+            h('p', { className: 'challenge-group-label' },
+                h('i', { className: 'fas fa-hourglass-half' }),
+                ` Sin fecha (${noDates.length})`
+            ),
+            h('ul', { className: 'sparring-list' },
+                ...noDates.map((c, i) => {
+                    const dir = sent.find(s => s.id === c.id) ? 'sent' : 'recv';
+                    return h(ChallengeRow, { key: c.id || i, challenge: c, dir });
+                })
+            )
+        )
+    );
+}
+
 function EmptyState({ icon, text }) {
     return h('div', { className: 'empty-state' },
         h('i', { className: icon }),
@@ -191,8 +301,6 @@ function Pagination({ page, total, pageSize, onPrev, onNext }) {
 function BoxerDashboard() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [upcomingPage, setUpcomingPage] = useState(0);
-    const [pendingPage, setPendingPage] = useState(0);
 
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
 
@@ -282,7 +390,7 @@ function BoxerDashboard() {
                     )
             ),
 
-            // Retos
+            // Retos — calendario
             h('div', { className: 'dashboard-panel challenges-panel' },
                 h('h2', null,
                     h('i', { className: 'fas fa-calendar-check', style: { marginRight: '8px', opacity: 0.5 } }),
@@ -290,47 +398,7 @@ function BoxerDashboard() {
                 ),
                 upcomingChallenges.length === 0 && pendingChallenges.length === 0
                     ? h(EmptyState, { icon: 'fas fa-calendar-alt', text: 'Sin retos activos. Lanza un reto para programar tu próxima sesión.' })
-                    : h('div', { className: 'challenges-sections' },
-                        upcomingChallenges.length > 0 && h('div', { className: 'challenge-group' },
-                            h('p', { className: 'challenge-group-label' },
-                                h('i', { className: 'fas fa-check-circle' }),
-                                ` Confirmados (${upcomingChallenges.length})`
-                            ),
-                            h('ul', { className: 'sparring-list' },
-                                ...upcomingChallenges
-                                    .slice(upcomingPage * CHALLENGE_PAGE_SIZE, (upcomingPage + 1) * CHALLENGE_PAGE_SIZE)
-                                    .map((c, i) => h(ChallengeRow, { key: c.id || `up-${i}`, challenge: c, dir: c._dir }))
-                            ),
-                            h(Pagination, {
-                                page: upcomingPage,
-                                total: upcomingChallenges.length,
-                                pageSize: CHALLENGE_PAGE_SIZE,
-                                onPrev: () => setUpcomingPage(p => Math.max(0, p - 1)),
-                                onNext: () => setUpcomingPage(p => p + 1)
-                            })
-                        ),
-                        pendingChallenges.length > 0 && h('div', { className: 'challenge-group' },
-                            h('p', { className: 'challenge-group-label' },
-                                h('i', { className: 'fas fa-hourglass-half' }),
-                                ` Pendientes (${pendingChallenges.length})`
-                            ),
-                            h('ul', { className: 'sparring-list' },
-                                ...pendingChallenges
-                                    .slice(pendingPage * CHALLENGE_PAGE_SIZE, (pendingPage + 1) * CHALLENGE_PAGE_SIZE)
-                                    .map((c, i) => {
-                                        const dir = sent.find(s => s.id === c.id) ? 'sent' : 'recv';
-                                        return h(ChallengeRow, { key: c.id || `pend-${i}`, challenge: c, dir });
-                                    })
-                            ),
-                            h(Pagination, {
-                                page: pendingPage,
-                                total: pendingChallenges.length,
-                                pageSize: CHALLENGE_PAGE_SIZE,
-                                onPrev: () => setPendingPage(p => Math.max(0, p - 1)),
-                                onNext: () => setPendingPage(p => p + 1)
-                            })
-                        )
-                    )
+                    : h(ChallengesCalendar, { upcomingChallenges, pendingChallenges, sent })
             )
         )
     );
