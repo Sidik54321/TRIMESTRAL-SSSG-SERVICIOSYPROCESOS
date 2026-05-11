@@ -9,14 +9,24 @@ const _glv_h = window.location.hostname;
 const _glv_apiHost = (_glv_h === '127.0.0.1' || _glv_h === 'localhost' || _glv_h === '') ? 'localhost' : _glv_h;
 const API_BASE_URL = (localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${_glv_apiHost}:3000` : '')).replace(/\/+$/, '');
 
-const requestJson = (path) => fetch(`${API_BASE_URL}${path}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' }
-}).then(async (res) => {
-    const payload = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(payload.error || `Error ${res.status}`);
-    return payload;
-});
+const requestJson = (path, options = {}) => {
+    const method = options.method || 'GET';
+    const config = { method, headers: { 'Content-Type': 'application/json' } };
+    if (options.body !== undefined) config.body = JSON.stringify(options.body);
+    return fetch(`${API_BASE_URL}${path}`, config).then(async (res) => {
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(payload.error || `Error ${res.status}`);
+        return payload;
+    });
+};
+
+const toIsoDate = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return '';
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 const inCurrentMonth = (str) => {
     if (!str || typeof str !== 'string') return false;
@@ -138,142 +148,6 @@ function SparringRow({ session, userEmail }) {
     );
 }
 
-// ——— Fila de reto pendiente ———
-function ChallengeRow({ challenge, dir }) {
-    const rival = dir === 'sent'
-        ? (challenge.toNombre || challenge.toEmail || '—')
-        : (challenge.fromNombre || challenge.fromEmail || '—');
-    const date = challenge.scheduledAt || challenge.createdAt || '';
-
-    return h('li', { className: 'sparring-row' },
-        h('div', { className: 'sparring-row-left' },
-            h('div', { className: `sparring-avatar ${dir === 'sent' ? 'avatar-sent' : 'avatar-recv'}` },
-                h('i', { className: dir === 'sent' ? 'fas fa-paper-plane' : 'fas fa-inbox' })
-            ),
-            h('div', null,
-                h('strong', { className: 'sparring-rival' }, rival),
-                h('span', { className: 'sparring-gym' },
-                    dir === 'sent' ? 'Reto enviado' : 'Reto recibido'
-                )
-            )
-        ),
-        h('div', { className: 'sparring-row-right' },
-            h('span', { className: `sparring-status ${statusClass(challenge.status)}` }, statusLabel(challenge.status)),
-            h('span', { className: 'sparring-date' }, fmtDate(date))
-        )
-    );
-}
-
-// ——— Calendario de retos ———
-function ChallengesCalendar({ upcomingChallenges, pendingChallenges, sent }) {
-    const now = new Date();
-    const [calYear, setCalYear] = useState(now.getFullYear());
-    const [calMonth, setCalMonth] = useState(now.getMonth());
-    const [selectedDay, setSelectedDay] = useState(null);
-
-    const dayMap = {};
-    upcomingChallenges.forEach(c => {
-        if (!c.scheduledAt) return;
-        const d = new Date(c.scheduledAt);
-        if (d.getFullYear() === calYear && d.getMonth() === calMonth) {
-            const day = d.getDate();
-            if (!dayMap[day]) dayMap[day] = [];
-            dayMap[day].push({ ...c, _type: 'confirmed' });
-        }
-    });
-    pendingChallenges.forEach(c => {
-        if (!c.scheduledAt) return;
-        const d = new Date(c.scheduledAt);
-        if (d.getFullYear() === calYear && d.getMonth() === calMonth) {
-            const day = d.getDate();
-            if (!dayMap[day]) dayMap[day] = [];
-            const dir = sent.find(s => s.id === c.id) ? 'sent' : 'recv';
-            dayMap[day].push({ ...c, _dir: dir, _type: 'pending' });
-        }
-    });
-
-    const prevMonth = () => {
-        setSelectedDay(null);
-        if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11); }
-        else setCalMonth(m => m - 1);
-    };
-    const nextMonth = () => {
-        setSelectedDay(null);
-        if (calMonth === 11) { setCalYear(y => y + 1); setCalMonth(0); }
-        else setCalMonth(m => m + 1);
-    };
-
-    const monthLabel = new Date(calYear, calMonth, 1)
-        .toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-    const firstDayOfWeek = (new Date(calYear, calMonth, 1).getDay() + 6) % 7; // lunes=0
-    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-    const todayDate = now.getDate();
-    const isCurrentMonthYear = calYear === now.getFullYear() && calMonth === now.getMonth();
-    const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-
-    const cells = [];
-    for (let i = 0; i < firstDayOfWeek; i++) cells.push(null);
-    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-
-    const selectedEvents = selectedDay ? (dayMap[selectedDay] || []) : [];
-    const noDates = pendingChallenges.filter(c => !c.scheduledAt);
-
-    return h('div', { className: 'challenges-calendar' },
-        h('div', { className: 'cal-header' },
-            h('button', { className: 'cal-nav-btn', onClick: prevMonth },
-                h('i', { className: 'fas fa-chevron-left' })
-            ),
-            h('span', { className: 'cal-month-label' }, monthLabel),
-            h('button', { className: 'cal-nav-btn', onClick: nextMonth },
-                h('i', { className: 'fas fa-chevron-right' })
-            )
-        ),
-        h('div', { className: 'cal-grid' },
-            ...weekDays.map(d => h('div', { key: d, className: 'cal-weekday' }, d)),
-            ...cells.map((day, i) => {
-                if (!day) return h('div', { key: `e-${i}`, className: 'cal-cell cal-cell-empty' });
-                const events = dayMap[day] || [];
-                const isToday = isCurrentMonthYear && day === todayDate;
-                const isSelected = selectedDay === day;
-                const hasConfirmed = events.some(e => e._type === 'confirmed');
-                const hasPending = events.some(e => e._type === 'pending');
-                let cls = 'cal-cell';
-                if (isToday) cls += ' cal-today';
-                if (isSelected) cls += ' cal-selected';
-                if (events.length) cls += ' cal-has-events';
-                return h('div', { key: day, className: cls, onClick: () => setSelectedDay(isSelected ? null : day) },
-                    h('span', { className: 'cal-day-num' }, day),
-                    events.length > 0 && h('div', { className: 'cal-dots' },
-                        hasConfirmed && h('span', { className: 'cal-dot cal-dot-confirmed' }),
-                        hasPending && h('span', { className: 'cal-dot cal-dot-pending' })
-                    )
-                );
-            })
-        ),
-        selectedDay && selectedEvents.length > 0 && h('div', { className: 'cal-day-detail' },
-            h('p', { className: 'cal-day-detail-title' },
-                h('i', { className: 'fas fa-calendar-day', style: { marginRight: '6px', opacity: 0.6 } }),
-                `${selectedDay} de ${monthLabel}`
-            ),
-            h('ul', { className: 'sparring-list' },
-                ...selectedEvents.map((c, i) => h(ChallengeRow, { key: c.id || i, challenge: c, dir: c._dir || 'recv' }))
-            )
-        ),
-        noDates.length > 0 && h('div', { className: 'cal-no-date' },
-            h('p', { className: 'challenge-group-label' },
-                h('i', { className: 'fas fa-hourglass-half' }),
-                ` Sin fecha (${noDates.length})`
-            ),
-            h('ul', { className: 'sparring-list' },
-                ...noDates.map((c, i) => {
-                    const dir = sent.find(s => s.id === c.id) ? 'sent' : 'recv';
-                    return h(ChallengeRow, { key: c.id || i, challenge: c, dir });
-                })
-            )
-        )
-    );
-}
-
 function EmptyState({ icon, text }) {
     return h('div', { className: 'empty-state' },
         h('i', { className: icon }),
@@ -281,19 +155,278 @@ function EmptyState({ icon, text }) {
     );
 }
 
-const CHALLENGE_PAGE_SIZE = 5;
+// ——— Construir eventos automáticos del boxeador ———
+function buildBoxerAutoEvents(sessions, upcomingChallenges, email) {
+    const events = [];
+    const myEmail = (email || '').toLowerCase();
 
-function Pagination({ page, total, pageSize, onPrev, onNext }) {
-    const totalPages = Math.ceil(total / pageSize);
-    if (totalPages <= 1) return null;
-    return h('div', { className: 'challenge-pagination' },
-        h('button', { className: 'pag-btn', onClick: onPrev, disabled: page === 0 },
-            h('i', { className: 'fas fa-chevron-left' })
-        ),
-        h('span', { className: 'pag-info' }, `${page + 1} / ${totalPages}`),
-        h('button', { className: 'pag-btn', onClick: onNext, disabled: page >= totalPages - 1 },
-            h('i', { className: 'fas fa-chevron-right' })
+    sessions.forEach((s, idx) => {
+        const date = toIsoDate(s.scheduledAt || s.completedAt || s.createdAt || '');
+        if (!date) return;
+        const isA = (s.boxerAEmail || '').toLowerCase() === myEmail;
+        const rival = isA ? (s.boxerBNombre || s.boxerBEmail || 'Rival') : (s.boxerANombre || s.boxerAEmail || 'Rival');
+        const gym = s.gymName || '';
+        events.push({
+            id: `session-${s.id || idx}`,
+            title: `Sparring: ${rival}${gym ? ` · ${gym}` : ''}`,
+            start: date,
+            allDay: true,
+            classNames: ['gloveup-event--sparring'],
+            extendedProps: { kind: 'sparring', rival, gym, status: s.status }
+        });
+    });
+
+    upcomingChallenges.forEach((c, idx) => {
+        const date = toIsoDate(c.scheduledAt || '');
+        if (!date) return;
+        const rival = c._dir === 'sent'
+            ? (c.toNombre || c.toEmail || 'Rival')
+            : (c.fromNombre || c.fromEmail || 'Rival');
+        events.push({
+            id: `challenge-${c.id || idx}`,
+            title: `Reto confirmado: ${rival}`,
+            start: date,
+            allDay: true,
+            classNames: ['gloveup-event--reto'],
+            extendedProps: { kind: 'reto', rival, dir: c._dir }
+        });
+    });
+
+    return events;
+}
+
+// ——— Calendario FullCalendar del boxeador ———
+function BoxerCalendar({ sessions, upcomingChallenges, email, refreshKey }) {
+    const elRef = useRef(null);
+    const calRef = useRef(null);
+    const [customEvents, setCustomEvents] = useState([]);
+    const [details, setDetails] = useState('Haz clic en un día para añadir un evento o en uno existente para verlo.');
+    const [showModal, setShowModal] = useState(false);
+    const [editingEvent, setEditingEvent] = useState(null);
+    const [formTitle, setFormTitle] = useState('');
+    const [formStart, setFormStart] = useState('');
+    const [formEnd, setFormEnd] = useState('');
+    const [formColor, setFormColor] = useState('#f97316');
+    const [formTipo, setFormTipo] = useState('personalizado');
+    const [formNotas, setFormNotas] = useState('');
+    const [formLoading, setFormLoading] = useState(false);
+    const [formError, setFormError] = useState('');
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    const loadCustomEvents = () => {
+        requestJson(`/api/boxeadores/me/calendar-events?email=${encodeURIComponent(email)}`)
+            .then(data => setCustomEvents(Array.isArray(data) ? data : []))
+            .catch(() => {});
+    };
+
+    useEffect(() => { if (email) loadCustomEvents(); }, [email, refreshKey]);
+
+    const openCreateModal = (dateStr) => {
+        setEditingEvent(null);
+        setFormTitle('');
+        setFormStart(dateStr || toIsoDate(new Date()));
+        setFormEnd('');
+        setFormColor('#f97316');
+        setFormTipo('personalizado');
+        setFormNotas('');
+        setFormError('');
+        setShowModal(true);
+    };
+
+    const openEditModal = (ev) => {
+        const dbId = ev.extendedProps && ev.extendedProps.dbId;
+        if (!dbId) {
+            const rival = ev.extendedProps && ev.extendedProps.rival || '';
+            const gym = ev.extendedProps && ev.extendedProps.gym || '';
+            const parts = [ev.startStr ? fmtDate(ev.startStr.slice(0, 10)) : '', ev.title];
+            if (rival) parts.push(`Rival: ${rival}`);
+            if (gym) parts.push(`Gym: ${gym}`);
+            setDetails(parts.filter(Boolean).join(' · '));
+            return;
+        }
+        setEditingEvent({ id: dbId, fcEvent: ev });
+        setFormTitle(ev.title || '');
+        setFormStart(ev.startStr ? ev.startStr.slice(0, 10) : '');
+        setFormEnd(ev.endStr ? ev.endStr.slice(0, 10) : '');
+        setFormColor(ev.backgroundColor || (ev.extendedProps && ev.extendedProps.color) || '#f97316');
+        setFormTipo((ev.extendedProps && ev.extendedProps.tipo) || 'personalizado');
+        setFormNotas((ev.extendedProps && ev.extendedProps.notas) || '');
+        setFormError('');
+        setShowModal(true);
+    };
+
+    const closeModal = () => { setShowModal(false); setEditingEvent(null); setFormError(''); setShowDeleteConfirm(false); };
+
+    const saveEvent = async () => {
+        if (!formTitle.trim() || !formStart) { setFormError('El título y la fecha son obligatorios.'); return; }
+        setFormLoading(true); setFormError('');
+        try {
+            const body = { title: formTitle.trim(), start: formStart, end: formEnd || '', allDay: true, color: formColor, tipo: formTipo, notas: formNotas.trim() };
+            if (editingEvent) {
+                await requestJson(`/api/boxeadores/me/calendar-events/${editingEvent.id}?email=${encodeURIComponent(email)}`, { method: 'PUT', body });
+            } else {
+                await requestJson(`/api/boxeadores/me/calendar-events?email=${encodeURIComponent(email)}`, { method: 'POST', body });
+            }
+            closeModal();
+            loadCustomEvents();
+        } catch (err) {
+            setFormError(err && err.message ? err.message : 'Error al guardar.');
+        } finally { setFormLoading(false); }
+    };
+
+    const deleteEvent = async () => {
+        if (!editingEvent) return;
+        setFormLoading(true);
+        try {
+            await requestJson(`/api/boxeadores/me/calendar-events/${editingEvent.id}?email=${encodeURIComponent(email)}`, { method: 'DELETE' });
+            closeModal();
+            loadCustomEvents();
+        } catch (err) {
+            setFormError(err && err.message ? err.message : 'Error al eliminar.');
+        } finally { setFormLoading(false); }
+    };
+
+    // Inicializar FullCalendar
+    useEffect(() => {
+        const el = elRef.current;
+        const FC = window.FullCalendar;
+        if (!el || !FC || !FC.Calendar) return;
+        if (!calRef.current) {
+            calRef.current = new FC.Calendar(el, {
+                initialView: 'dayGridMonth',
+                height: 'auto',
+                locale: 'es',
+                firstDay: 1,
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listMonth' },
+                dateClick: (info) => openCreateModal(info.dateStr),
+                eventClick: (info) => openEditModal(info.event)
+            });
+            calRef.current.render();
+        }
+        return () => {
+            if (calRef.current) { calRef.current.destroy(); calRef.current = null; }
+        };
+    }, []);
+
+    // Sincronizar eventos en el calendario
+    useEffect(() => {
+        if (!calRef.current) return;
+        const autoEvents = buildBoxerAutoEvents(sessions, upcomingChallenges, email);
+        const dbEvents = customEvents.map(ev => ({
+            id: `db-${ev._id}`,
+            title: ev.title,
+            start: ev.start,
+            end: ev.end || undefined,
+            allDay: ev.allDay !== false,
+            backgroundColor: ev.color || '#f97316',
+            borderColor: ev.color || '#f97316',
+            classNames: ['gloveup-event--personalizado'],
+            extendedProps: { dbId: ev._id, kind: 'personalizado', tipo: ev.tipo, notas: ev.notas, color: ev.color }
+        }));
+        calRef.current.removeAllEvents();
+        [...autoEvents, ...dbEvents].forEach(e => calRef.current.addEvent(e));
+    }, [sessions, upcomingChallenges, customEvents, email]);
+
+    const colorOptions = [
+        { value: '#f97316', label: 'Naranja' },
+        { value: '#3b82f6', label: 'Azul' },
+        { value: '#22c55e', label: 'Verde' },
+        { value: '#ef4444', label: 'Rojo' },
+        { value: '#8b5cf6', label: 'Morado' },
+        { value: '#111827', label: 'Negro' }
+    ];
+
+    const tipoOptions = [
+        { value: 'personalizado', label: 'Personalizado' },
+        { value: 'entrenamiento', label: 'Entrenamiento' },
+        { value: 'competicion', label: 'Competición' },
+        { value: 'descanso', label: 'Descanso' }
+    ];
+
+    const fieldStyle = { width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e5e7eb', fontSize: '.9rem', boxSizing: 'border-box' };
+    const labelStyle = { display: 'block', fontSize: '.8rem', fontWeight: 700, marginBottom: 6, color: '#374151' };
+
+    const modal = showModal ? h('div', {
+            style: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 },
+            onClick: (e) => { if (e.target === e.currentTarget) closeModal(); }
+        },
+        h('div', { style: { backgroundColor: '#fff', borderRadius: 20, padding: 32, maxWidth: 480, width: '90%', boxShadow: '0 25px 50px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' } },
+            h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 } },
+                h('h3', { style: { margin: 0, fontSize: '1.2rem', fontWeight: 800 } }, editingEvent ? 'Editar evento' : 'Nuevo evento'),
+                h('button', { onClick: closeModal, style: { background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#6b7280' } }, '\xd7')
+            ),
+            formError ? h('div', { style: { padding: '10px 14px', borderRadius: 12, backgroundColor: '#fee2e2', color: '#b91c1c', fontSize: '.85rem', fontWeight: 600, marginBottom: 16 } }, formError) : null,
+            h('label', { style: labelStyle }, 'Título *'),
+            h('input', { type: 'text', value: formTitle, placeholder: 'Ej: Entrenamiento especial', onChange: (e) => setFormTitle(e.target.value), style: { ...fieldStyle, marginBottom: 16 } }),
+            h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 } },
+                h('div', null,
+                    h('label', { style: labelStyle }, 'Fecha inicio *'),
+                    h('input', { type: 'date', value: formStart, onChange: (e) => setFormStart(e.target.value), style: fieldStyle })
+                ),
+                h('div', null,
+                    h('label', { style: labelStyle }, 'Fecha fin'),
+                    h('input', { type: 'date', value: formEnd, onChange: (e) => setFormEnd(e.target.value), style: fieldStyle })
+                )
+            ),
+            h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 } },
+                h('div', null,
+                    h('label', { style: labelStyle }, 'Tipo'),
+                    h('select', { value: formTipo, onChange: (e) => setFormTipo(e.target.value), style: { ...fieldStyle, backgroundColor: '#fff' } },
+                        ...tipoOptions.map(o => h('option', { key: o.value, value: o.value }, o.label))
+                    )
+                ),
+                h('div', null,
+                    h('label', { style: labelStyle }, 'Color'),
+                    h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 4 } },
+                        ...colorOptions.map(c => h('button', {
+                            key: c.value, type: 'button', title: c.label,
+                            onClick: () => setFormColor(c.value),
+                            style: { width: 28, height: 28, borderRadius: '50%', backgroundColor: c.value, border: formColor === c.value ? '3px solid #111827' : '2px solid #e5e7eb', cursor: 'pointer', transition: 'all .15s' }
+                        }))
+                    )
+                )
+            ),
+            h('label', { style: labelStyle }, 'Notas'),
+            h('textarea', { value: formNotas, placeholder: 'Notas opcionales...', onChange: (e) => setFormNotas(e.target.value), rows: 3, style: { ...fieldStyle, resize: 'vertical', marginBottom: 20, fontFamily: 'inherit' } }),
+            h('div', { style: { display: 'flex', gap: 10 } },
+                h('button', { className: 'btn btn-primary', disabled: formLoading, onClick: saveEvent, style: { flex: 2, padding: '12px', fontSize: '.9rem', fontWeight: 700, borderRadius: 12 } },
+                    h('i', { className: `fas ${editingEvent ? 'fa-save' : 'fa-plus'}`, style: { marginRight: 6 } }),
+                    formLoading ? 'Guardando...' : (editingEvent ? 'Guardar cambios' : 'Crear evento')
+                ),
+                editingEvent ? h('button', { className: 'btn btn-secondary', disabled: formLoading, onClick: () => { setFormError(''); setShowDeleteConfirm(true); }, style: { flex: 1, padding: '12px', fontSize: '.9rem', color: '#ef4444', borderColor: '#ef4444', borderRadius: 12 } },
+                    h('i', { className: 'fas fa-trash', style: { marginRight: 6 } }),
+                    'Eliminar'
+                ) : null
+            )
         )
+    ) : null;
+
+    const deleteConfirm = showDeleteConfirm ? h('div', {
+            style: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 },
+            onClick: (e) => { if (!formLoading && e.target === e.currentTarget) setShowDeleteConfirm(false); }
+        },
+        h('div', { style: { backgroundColor: '#fff', borderRadius: 16, padding: 24, maxWidth: 400, width: '90%', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.3)' } },
+            h('i', { className: 'fas fa-exclamation-triangle', style: { fontSize: '3rem', color: '#ef4444', marginBottom: 16, display: 'block' } }),
+            h('h3', { style: { margin: '0 0 12px', fontSize: '1.2rem', fontWeight: 800 } }, '¿Eliminar este evento?'),
+            h('p', { style: { margin: '0 0 24px', fontSize: '.95rem', color: '#6b7280' } }, 'Esta acción no se puede deshacer.'),
+            formError ? h('div', { style: { padding: '10px', borderRadius: 12, backgroundColor: '#fee2e2', color: '#b91c1c', fontSize: '.85rem', fontWeight: 600, marginBottom: 16 } }, formError) : null,
+            h('div', { style: { display: 'flex', gap: 10 } },
+                h('button', { className: 'btn btn-secondary', disabled: formLoading, onClick: () => setShowDeleteConfirm(false), style: { flex: 1, padding: '12px', borderRadius: 12 } }, 'Cancelar'),
+                h('button', { className: 'btn btn-primary', disabled: formLoading, onClick: deleteEvent, style: { flex: 1, padding: '12px', backgroundColor: '#ef4444', borderColor: '#ef4444', borderRadius: 12 } },
+                    formLoading ? 'Eliminando...' : 'Sí, eliminar'
+                )
+            )
+        )
+    ) : null;
+
+    return h(React.Fragment, null,
+        h('p', { className: 'cal-fc-hint' },
+            h('i', { className: 'fas fa-info-circle', style: { marginRight: 5, opacity: 0.5 } }),
+            details
+        ),
+        h('div', { ref: elRef, className: 'boxer-fullcalendar' }),
+        modal,
+        deleteConfirm
     );
 }
 
@@ -301,6 +434,7 @@ function Pagination({ page, total, pageSize, onPrev, onNext }) {
 function BoxerDashboard() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [calRefreshKey] = useState(0);
 
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
 
@@ -314,7 +448,6 @@ function BoxerDashboard() {
             .catch(() => setLoading(false));
     }, []);
 
-    // Datos derivados
     const sessions = profile && Array.isArray(profile.sparringSessions) ? profile.sparringSessions : [];
     const sent = profile && Array.isArray(profile.sparringChallengesSent) ? profile.sparringChallengesSent : [];
     const received = profile && Array.isArray(profile.sparringChallengesReceived) ? profile.sparringChallengesReceived : [];
@@ -330,17 +463,13 @@ function BoxerDashboard() {
     ];
 
     const recentSessions = [...sessions]
-        .sort((a, b) => {
-            const da = new Date(a.scheduledAt || a.completedAt || a.createdAt || 0);
-            const db = new Date(b.scheduledAt || b.completedAt || b.createdAt || 0);
-            return db - da;
-        })
+        .sort((a, b) => new Date(b.scheduledAt || b.completedAt || b.createdAt || 0) - new Date(a.scheduledAt || a.completedAt || a.createdAt || 0))
         .slice(0, 5);
 
     const upcomingChallenges = [
         ...sent.filter(c => c.status === 'accepted').map(c => ({ ...c, _dir: 'sent' })),
         ...received.filter(c => c.status === 'accepted').map(c => ({ ...c, _dir: 'recv' }))
-    ].sort((a, b) => new Date(a.scheduledAt || 0) - new Date(b.scheduledAt || 0)).slice(0, 5);
+    ].sort((a, b) => new Date(a.scheduledAt || 0) - new Date(b.scheduledAt || 0));
 
     if (loading) {
         return h('div', { className: 'dashboard-loading' },
@@ -390,15 +519,15 @@ function BoxerDashboard() {
                     )
             ),
 
-            // Retos — calendario
+            // Calendario de retos y eventos
             h('div', { className: 'dashboard-panel challenges-panel' },
                 h('h2', null,
                     h('i', { className: 'fas fa-calendar-check', style: { marginRight: '8px', opacity: 0.5 } }),
-                    'Retos'
+                    'Mi calendario'
                 ),
-                upcomingChallenges.length === 0 && pendingChallenges.length === 0
-                    ? h(EmptyState, { icon: 'fas fa-calendar-alt', text: 'Sin retos activos. Lanza un reto para programar tu próxima sesión.' })
-                    : h(ChallengesCalendar, { upcomingChallenges, pendingChallenges, sent })
+                email
+                    ? h(BoxerCalendar, { sessions, upcomingChallenges, email, refreshKey: calRefreshKey })
+                    : h(EmptyState, { icon: 'fas fa-calendar-alt', text: 'No se pudo cargar el calendario.' })
             )
         )
     );

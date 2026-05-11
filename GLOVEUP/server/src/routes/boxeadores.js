@@ -659,4 +659,77 @@ router.post('/', async (req, res) => {
     }
 });
 
+// ──────── Calendar Events CRUD ────────
+
+async function requireBoxeadorByEmail(email) {
+    const raw = (email || '').toString().trim().toLowerCase();
+    if (!raw) throw Object.assign(new Error('Email requerido'), { status: 400 });
+    const boxer = await Boxeador.findOne({ email: raw });
+    if (!boxer) throw Object.assign(new Error('Perfil no encontrado'), { status: 404 });
+    return boxer;
+}
+
+router.get('/me/calendar-events', async (req, res) => {
+    try {
+        const boxer = await requireBoxeadorByEmail(req.query.email);
+        return res.json(Array.isArray(boxer.calendarEvents) ? boxer.calendarEvents : []);
+    } catch (err) {
+        return res.status(err.status || 400).json({ error: err.message });
+    }
+});
+
+router.post('/me/calendar-events', async (req, res) => {
+    try {
+        const boxer = await requireBoxeadorByEmail(req.query.email);
+        const { title, start, end, allDay, color, tipo, notas } = req.body || {};
+        if (!title || !start) return res.status(400).json({ error: 'Titulo y fecha de inicio son obligatorios.' });
+        boxer.calendarEvents.push({
+            title,
+            start,
+            end: end || '',
+            allDay: allDay !== false,
+            color: color || '#f97316',
+            tipo: tipo || 'personalizado',
+            notas: notas || ''
+        });
+        await boxer.save();
+        return res.status(201).json(boxer.calendarEvents[boxer.calendarEvents.length - 1]);
+    } catch (err) {
+        return res.status(err.status || 400).json({ error: err.message });
+    }
+});
+
+router.put('/me/calendar-events/:eventId', async (req, res) => {
+    try {
+        const boxer = await requireBoxeadorByEmail(req.query.email);
+        const ev = boxer.calendarEvents.id(req.params.eventId);
+        if (!ev) return res.status(404).json({ error: 'Evento no encontrado.' });
+        const { title, start, end, allDay, color, tipo, notas } = req.body || {};
+        if (title !== undefined) ev.title = title;
+        if (start !== undefined) ev.start = start;
+        if (end !== undefined) ev.end = end;
+        if (allDay !== undefined) ev.allDay = allDay;
+        if (color !== undefined) ev.color = color;
+        if (tipo !== undefined) ev.tipo = tipo;
+        if (notas !== undefined) ev.notas = notas;
+        await boxer.save();
+        return res.json(ev);
+    } catch (err) {
+        return res.status(err.status || 400).json({ error: err.message });
+    }
+});
+
+router.delete('/me/calendar-events/:eventId', async (req, res) => {
+    try {
+        const boxer = await requireBoxeadorByEmail(req.query.email);
+        const ev = boxer.calendarEvents.id(req.params.eventId);
+        if (!ev) return res.status(404).json({ error: 'Evento no encontrado.' });
+        ev.deleteOne();
+        await boxer.save();
+        return res.json({ ok: true });
+    } catch (err) {
+        return res.status(err.status || 400).json({ error: err.message });
+    }
+});
+
 export default router;

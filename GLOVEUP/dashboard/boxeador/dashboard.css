@@ -278,173 +278,93 @@ body.theme-dark .pag-btn {
 }
 body.theme-dark .pag-btn:hover:not(:disabled) { background: rgba(255,255,255,0.08); }
 
-/* ——— Calendario de retos ——— */
-.challenges-calendar {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
-
-.cal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-}
-
-.cal-month-label {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--color-text-main);
-    text-transform: capitalize;
-    letter-spacing: 0.02em;
-}
-
-.cal-nav-btn {
-    background: none;
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    width: 28px;
-    height: 28px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    color: var(--color-text-lighter);
-    transition: background 0.15s, color 0.15s;
-}
-
-.cal-nav-btn:hover {
-    background: var(--color-bg-light);
-    color: var(--color-text-main);
-}
-
-.cal-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 3px;
-}
-
-.cal-weekday {
-    font-size: 0.68rem;
-    font-weight: 700;
-    text-align: center;
-    padding: 4px 0;
-    color: var(--color-text-lighter);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.cal-cell {
-    aspect-ratio: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.12s;
-    position: relative;
-    gap: 2px;
-    min-width: 0;
-}
-
-.cal-cell-empty {
-    cursor: default;
-}
-
-.cal-cell:not(.cal-cell-empty):hover {
-    background: var(--color-bg-light);
-}
-
-.cal-day-num {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--color-text-main);
-    line-height: 1;
-}
-
-.cal-today .cal-day-num {
-    background: var(--color-accent);
-    color: #fff;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.cal-selected {
-    background: var(--color-accent-soft) !important;
-    border: 1px solid var(--color-accent);
-}
-
-.cal-dots {
-    display: flex;
-    gap: 3px;
-    align-items: center;
-    justify-content: center;
-}
-
-.cal-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    display: inline-block;
-    flex-shrink: 0;
-}
-
-.cal-dot-confirmed { background: #059669; }
-.cal-dot-pending   { background: #d97706; }
-
-/* Detalle del día seleccionado */
-.cal-day-detail {
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px solid var(--color-border);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.cal-day-detail-title {
-    margin: 0 0 4px;
+/* ——— FullCalendar del boxeador ——— */
+.boxer-fullcalendar {
     font-size: 0.78rem;
-    font-weight: 700;
+}
+
+.cal-fc-hint {
+    margin: 0 0 10px;
+    font-size: 0.75rem;
     color: var(--color-text-lighter);
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    line-height: 1.4;
+}
+
+/* Tipo sparring — verde */
+.gloveup-event--sparring {
+    background-color: #059669 !important;
+    border-color: #059669 !important;
+    color: #fff !important;
+}
+
+/* Tipo reto confirmado — naranja */
+.gloveup-event--reto {
+    background-color: #f97316 !important;
+    border-color: #f97316 !important;
+    color: #fff !important;
+}
+
+/* Eventos personalizados — usan color del backend */
+.gloveup-event--personalizado {
+    color: #fff !important;
+}
+
+/* Ajustes del toolbar de FullCalendar */
+.boxer-fullcalendar .fc-toolbar-title {
+    font-size: 0.95rem !important;
+    font-weight: 800;
     text-transform: capitalize;
 }
 
-/* Retos sin fecha */
-.cal-no-date {
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px solid var(--color-border);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.boxer-fullcalendar .fc-button {
+    font-size: 0.75rem !important;
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
 }
 
-/* Dark mode */
-body.theme-dark .cal-nav-btn {
-    border-color: rgba(255,255,255,0.15);
-    color: rgba(255,255,255,0.45);
+.boxer-fullcalendar .fc-daygrid-day-number,
+.boxer-fullcalendar .fc-col-header-cell-cushion {
+    font-size: 0.75rem;
 }
-body.theme-dark .cal-nav-btn:hover {
-    background: rgba(255,255,255,0.07);
-    color: #f1f5f9;
+
+.boxer-fullcalendar .fc-event {
+    cursor: pointer;
+    border-radius: 4px !important;
+    font-size: 0.7rem !important;
 }
-body.theme-dark .cal-cell:not(.cal-cell-empty):hover {
-    background: rgba(255,255,255,0.06);
+
+/* Dark mode FullCalendar */
+body.theme-dark .boxer-fullcalendar .fc-theme-standard td,
+body.theme-dark .boxer-fullcalendar .fc-theme-standard th,
+body.theme-dark .boxer-fullcalendar .fc-theme-standard .fc-scrollgrid {
+    border-color: rgba(255,255,255,0.1) !important;
 }
-body.theme-dark .cal-selected {
-    background: rgba(249,115,22,0.15) !important;
-    border-color: var(--color-accent);
+body.theme-dark .boxer-fullcalendar .fc-daygrid-day-number,
+body.theme-dark .boxer-fullcalendar .fc-col-header-cell-cushion,
+body.theme-dark .boxer-fullcalendar .fc-toolbar-title {
+    color: #e5e7eb !important;
 }
-body.theme-dark .cal-day-num {
-    color: #e5e7eb;
+body.theme-dark .boxer-fullcalendar .fc-button-primary {
+    background-color: rgba(255,255,255,0.08) !important;
+    border-color: rgba(255,255,255,0.15) !important;
+    color: #e5e7eb !important;
+}
+body.theme-dark .boxer-fullcalendar .fc-button-primary:hover {
+    background-color: rgba(255,255,255,0.15) !important;
+}
+body.theme-dark .boxer-fullcalendar .fc-button-primary.fc-button-active {
+    background-color: var(--glv-accent, #f97316) !important;
+    border-color: var(--glv-accent, #f97316) !important;
+    color: #fff !important;
+}
+body.theme-dark .boxer-fullcalendar .fc-daygrid-day.fc-day-today {
+    background-color: rgba(249,115,22,0.1) !important;
+}
+body.theme-dark .boxer-fullcalendar .fc-list-event-dot {
+    border-color: var(--glv-accent, #f97316) !important;
 }
 
 /* ——— Dark mode ——— */
