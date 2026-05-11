@@ -278,14 +278,23 @@ body.theme-dark .pag-btn {
 }
 body.theme-dark .pag-btn:hover:not(:disabled) { background: rgba(255,255,255,0.08); }
 
-/* ——— FullCalendar del boxeador ——— */
+/* ——— FullCalendar del boxeador (compacto + responsive) ——— */
+
+/* El panel no debe desbordarse */
+.challenges-panel {
+    min-width: 0;
+    overflow: hidden;
+}
+
 .boxer-fullcalendar {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .cal-fc-hint {
-    margin: 0 0 10px;
-    font-size: 0.75rem;
+    margin: 0 0 8px;
+    font-size: 0.7rem;
     color: var(--color-text-lighter);
     display: flex;
     align-items: flex-start;
@@ -312,35 +321,110 @@ body.theme-dark .pag-btn:hover:not(:disabled) { background: rgba(255,255,255,0.0
     color: #fff !important;
 }
 
-/* Ajustes del toolbar de FullCalendar */
+/* ——— Toolbar compacto ——— */
+.boxer-fullcalendar .fc-toolbar {
+    gap: 6px !important;
+    flex-wrap: wrap;
+    margin-bottom: 8px !important;
+}
+
+.boxer-fullcalendar .fc-toolbar-chunk {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .boxer-fullcalendar .fc-toolbar-title {
-    font-size: 0.95rem !important;
+    font-size: 0.82rem !important;
     font-weight: 800;
     text-transform: capitalize;
+    white-space: nowrap;
 }
 
 .boxer-fullcalendar .fc-button {
-    font-size: 0.75rem !important;
-    padding: 4px 8px !important;
-    border-radius: 8px !important;
+    font-size: 0.68rem !important;
+    padding: 3px 7px !important;
+    border-radius: 6px !important;
+    line-height: 1.4 !important;
 }
 
-.boxer-fullcalendar .fc-daygrid-day-number,
+.boxer-fullcalendar .fc-button .fc-icon {
+    font-size: 0.8em !important;
+}
+
+/* ——— Cabecera días de la semana ——— */
 .boxer-fullcalendar .fc-col-header-cell-cushion {
-    font-size: 0.75rem;
+    font-size: 0.65rem !important;
+    padding: 3px 2px !important;
+    font-weight: 700;
 }
 
+/* ——— Celdas de días ——— */
+.boxer-fullcalendar .fc-daygrid-day {
+    min-height: 0 !important;
+}
+
+.boxer-fullcalendar .fc-daygrid-day-frame {
+    min-height: 32px !important;
+    padding: 1px !important;
+}
+
+.boxer-fullcalendar .fc-daygrid-day-number {
+    font-size: 0.68rem !important;
+    padding: 2px 4px !important;
+    line-height: 1.2;
+}
+
+/* ——— Eventos ——— */
 .boxer-fullcalendar .fc-event {
     cursor: pointer;
-    border-radius: 4px !important;
-    font-size: 0.7rem !important;
+    border-radius: 3px !important;
+    font-size: 0.62rem !important;
+    padding: 1px 3px !important;
+    line-height: 1.3 !important;
 }
 
-/* Dark mode FullCalendar */
+.boxer-fullcalendar .fc-daygrid-event-dot {
+    width: 6px !important;
+    height: 6px !important;
+}
+
+/* ——— Vista lista ——— */
+.boxer-fullcalendar .fc-list-event td {
+    font-size: 0.72rem !important;
+    padding: 5px 8px !important;
+}
+
+.boxer-fullcalendar .fc-list-day-cushion {
+    font-size: 0.7rem !important;
+    padding: 4px 8px !important;
+}
+
+/* ——— Responsive: cuando el panel es muy estrecho ——— */
+@media (max-width: 600px) {
+    .boxer-fullcalendar .fc-toolbar {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    .boxer-fullcalendar .fc-toolbar-title {
+        font-size: 0.75rem !important;
+    }
+
+    .boxer-fullcalendar .fc-daygrid-day-frame {
+        min-height: 26px !important;
+    }
+
+    .boxer-fullcalendar .fc-event {
+        font-size: 0.55rem !important;
+    }
+}
+
+/* ——— Dark mode FullCalendar ——— */
 body.theme-dark .boxer-fullcalendar .fc-theme-standard td,
 body.theme-dark .boxer-fullcalendar .fc-theme-standard th,
 body.theme-dark .boxer-fullcalendar .fc-theme-standard .fc-scrollgrid {
-    border-color: rgba(255,255,255,0.1) !important;
+    border-color: rgba(255,255,255,0.08) !important;
 }
 body.theme-dark .boxer-fullcalendar .fc-daygrid-day-number,
 body.theme-dark .boxer-fullcalendar .fc-col-header-cell-cushion,
@@ -361,10 +445,16 @@ body.theme-dark .boxer-fullcalendar .fc-button-primary.fc-button-active {
     color: #fff !important;
 }
 body.theme-dark .boxer-fullcalendar .fc-daygrid-day.fc-day-today {
-    background-color: rgba(249,115,22,0.1) !important;
+    background-color: rgba(249,115,22,0.08) !important;
 }
 body.theme-dark .boxer-fullcalendar .fc-list-event-dot {
     border-color: var(--glv-accent, #f97316) !important;
+}
+body.theme-dark .boxer-fullcalendar .fc-list-day-cushion {
+    background-color: rgba(255,255,255,0.04) !important;
+}
+body.theme-dark .boxer-fullcalendar .fc-list-event:hover td {
+    background-color: rgba(255,255,255,0.06) !important;
 }
 
 /* ——— Dark mode ——— */
