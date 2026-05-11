@@ -315,3 +315,28 @@ body.theme-dark.theme-entrenador .pill.ok { background: linear-gradient(135deg, 
 body.theme-dark.theme-entrenador .chip.active { background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-color: #3b82f6; }
 body.theme-dark.theme-entrenador .icon-btn:hover { background: #3b82f6; border-color: #3b82f6; }
 
+.challenge-pagination {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.challenge-page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--text);
+    font-size: 13px;
+    font-family: var(--font-main);
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+.challenge-page-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.challenge-page-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; cursor: default; }
+

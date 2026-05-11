@@ -21,6 +21,10 @@ let profileState = {
     sparringHistory: []
 };
 
+const CHALLENGES_PAGE_SIZE = 5;
+let challengesReceivedPage = 1;
+let challengesSentPage = 1;
+
 function $(id) {
     return document.getElementById(id);
 }
@@ -280,6 +284,39 @@ async function loadChallenges(email) {
     return requestJson(`/boxeadores/challenges?email=${encodeURIComponent(email)}`);
 }
 
+function renderChallengePagination(containerId, currentPage, totalPages, onPageChange) {
+    const container = $(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+    if (totalPages <= 1) return;
+
+    const addBtn = (page, label, active, disabled) => {
+        const el = document.createElement(active || disabled ? 'span' : 'button');
+        el.className = 'challenge-page-btn' + (active ? ' active' : '');
+        el.textContent = label;
+        if (disabled) el.style.opacity = '0.4';
+        if (!active && !disabled) {
+            el.type = 'button';
+            el.addEventListener('click', () => onPageChange(page));
+        }
+        container.appendChild(el);
+    };
+
+    addBtn(Math.max(1, currentPage - 1), '<', false, currentPage === 1);
+    if (totalPages <= 7) {
+        for (let p = 1; p <= totalPages; p++) addBtn(p, String(p), p === currentPage, false);
+    } else {
+        addBtn(1, '1', currentPage === 1, false);
+        const left = Math.max(2, currentPage - 1);
+        const right = Math.min(totalPages - 1, currentPage + 1);
+        if (left > 2) { const e = document.createElement('span'); e.textContent = '...'; container.appendChild(e); }
+        for (let p = left; p <= right; p++) addBtn(p, String(p), p === currentPage, false);
+        if (right < totalPages - 1) { const e = document.createElement('span'); e.textContent = '...'; container.appendChild(e); }
+        addBtn(totalPages, String(totalPages), currentPage === totalPages, false);
+    }
+    addBtn(Math.min(totalPages, currentPage + 1), '>', false, currentPage === totalPages);
+}
+
 function renderChallenges(data) {
     const card = $('sparring-challenges-card');
     const countEl = $('challenges-count');
@@ -291,9 +328,12 @@ function renderChallenges(data) {
     const sent = Array.isArray(data && data.sent) ? data.sent : [];
     countEl.textContent = String(received.length + sent.length);
 
-    receivedTbody.innerHTML = received
-        .slice()
-        .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
+    const sortedReceived = received.slice().sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    const totalPagesReceived = Math.max(1, Math.ceil(sortedReceived.length / CHALLENGES_PAGE_SIZE));
+    challengesReceivedPage = Math.min(challengesReceivedPage, totalPagesReceived);
+    const pageReceived = sortedReceived.slice((challengesReceivedPage - 1) * CHALLENGES_PAGE_SIZE, challengesReceivedPage * CHALLENGES_PAGE_SIZE);
+
+    receivedTbody.innerHTML = pageReceived
         .map((x) => {
             const who = `<strong>${escapeHtml(x.fromNombre || '')}</strong><div class="muted">${escapeHtml(x.fromEmail || '')}</div>`;
             const desc = escapeHtml(x.preset || '');
@@ -320,9 +360,17 @@ function renderChallenges(data) {
         })
         .join('') || `<tr><td colspan="5" class="muted">No tienes retos recibidos.</td></tr>`;
 
-    sentTbody.innerHTML = sent
-        .slice()
-        .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
+    renderChallengePagination('challenges-received-pagination', challengesReceivedPage, totalPagesReceived, (p) => {
+        challengesReceivedPage = p;
+        renderChallenges(data);
+    });
+
+    const sortedSent = sent.slice().sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    const totalPagesSent = Math.max(1, Math.ceil(sortedSent.length / CHALLENGES_PAGE_SIZE));
+    challengesSentPage = Math.min(challengesSentPage, totalPagesSent);
+    const pageSent = sortedSent.slice((challengesSentPage - 1) * CHALLENGES_PAGE_SIZE, challengesSentPage * CHALLENGES_PAGE_SIZE);
+
+    sentTbody.innerHTML = pageSent
         .map((x) => {
             const who = `<strong>${escapeHtml(x.toNombre || '')}</strong><div class="muted">${escapeHtml(x.toEmail || '')}</div>`;
             const desc = escapeHtml(x.preset || '');
@@ -341,6 +389,11 @@ function renderChallenges(data) {
             `;
         })
         .join('') || `<tr><td colspan="4" class="muted">No has enviado retos todavía.</td></tr>`;
+
+    renderChallengePagination('challenges-sent-pagination', challengesSentPage, totalPagesSent, (p) => {
+        challengesSentPage = p;
+        renderChallenges(data);
+    });
 }
 
 async function refreshChallenges() {
@@ -386,7 +439,9 @@ function renderSessions(data) {
     if (!card || !countEl || !tbody) return;
 
     const email = getEmail();
-    const sessions = Array.isArray(data && data.sessions) ? data.sessions : [];
+    const sessions = Array.isArray(data && data.sessions)
+        ? data.sessions.filter(s => (s.status || '').toLowerCase() !== 'completed')
+        : [];
     countEl.textContent = String(sessions.length);
 
     const rows = sessions
