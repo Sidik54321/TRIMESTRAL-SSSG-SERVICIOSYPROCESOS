@@ -312,11 +312,52 @@
         @media (max-width: 1024px) {
             .gym-layout-grid {
                 grid-template-columns: 1fr;
+                gap: 20px;
             }
 
             .gym-sidebar {
                 position: static;
-                order: 2;
+                order: -1;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+
+            .gallery-card,
+            .info-card {
+                flex: 1 1 260px;
+                min-width: 0;
+            }
+
+            .carousel-container {
+                aspect-ratio: 16 / 9;
+            }
+
+            .gym-detail-content {
+                padding: 20px 14px 40px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .gym-sidebar {
+                flex-direction: column;
+            }
+
+            .carousel-container {
+                aspect-ratio: 4 / 3;
+            }
+
+            .gym-detail-hero {
+                padding: 30px 16px 22px;
+            }
+
+            .gym-detail-hero h1 {
+                font-size: 1.5rem;
+            }
+
+            .gym-detail-hero .gym-meta {
+                gap: 10px;
+                font-size: 0.82rem;
             }
         }
 
@@ -388,19 +429,44 @@
 
         @media (max-width: 600px) {
             .sparring-card {
-                grid-template-columns: 1fr;
-                text-align: center;
-                justify-items: center;
-                gap: 8px;
+                grid-template-columns: auto 1fr auto;
+                grid-template-rows: auto auto;
+                gap: 6px 10px;
+                padding: 12px;
+            }
+
+            .card-rank {
+                grid-column: 1;
+                grid-row: 1 / span 2;
+                align-self: center;
+            }
+
+            .card-flag {
+                display: none;
+            }
+
+            .card-name {
+                grid-column: 2;
+                grid-row: 1;
+            }
+
+            .card-stars {
+                grid-column: 2;
+                grid-row: 2;
             }
 
             .card-action {
-                width: 100%;
+                grid-column: 3;
+                grid-row: 1 / span 2;
                 flex-direction: column;
+                align-self: center;
+                gap: 4px;
             }
 
-            .gym-detail-hero {
-                padding: 40px 20px 30px;
+            .view-profile-button,
+            .challenge-button {
+                padding: 6px 10px;
+                font-size: 0.72em;
             }
         }
     </style>
@@ -544,6 +610,8 @@
             </button>
         </div>
     </aside>
+
+    <div class="page-content-area">
 
     <!-- HERO SECTION -->
     <section class="gym-detail-hero" id="gym-hero">
@@ -911,6 +979,8 @@
             }
         });
     </script>
+
+    </div><!-- /.page-content-area -->
 
     <!-- 🔔 Notificaciones -->
     <div class="glv-notif-container">

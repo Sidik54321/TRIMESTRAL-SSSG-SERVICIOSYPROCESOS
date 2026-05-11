@@ -1,7 +1,7 @@
-import mongoose from 'mongoose';
-import Boxeador from '../models/Boxeador.js';
-import Entrenador from '../models/Entrenador.js';
-import Usuario from '../models/Usuario.js';
+import mongoose from '/mongoose';
+import Boxeador from '/models/Boxeador.js';
+import Entrenador from '/models/Entrenador.js';
+import Usuario from '/models/Usuario.js';
 import {
     createRequire
 } from 'module';
@@ -80,34 +80,52 @@ const makeRandomName = (seed, role) => {
 
 async function seedFromFile() {
     const docs = require('../../data/boxeadores.json');
-    const ops = docs.map((d) => ({
-        updateOne: {
-            filter: {
-                email: d.email.toLowerCase().trim()
-            },
-            update: {
-                $set: {
-                    nombre: d.nombre,
-                    email: d.email.toLowerCase().trim(),
-                    nivel: d.nivel || 'Amateur',
-                    alias: d.alias || '',
-                    disciplina: d.disciplina || 'Boxeo',
-                    peso: d.peso || '',
-                    ubicacion: d.ubicacion || '',
-                    boxrecId: d.boxrecId || '',
-                    foto: d.foto || '',
-                    record: d.record || '',
-                    altura: d.altura || '',
-                    alcance: d.alcance || '',
-                    password: d.password || ''
-                }
-            },
-            upsert: true
-        }
-    }));
 
-    await Boxeador.bulkWrite(ops);
-    console.log('Seed de boxeadores (archivo) completada');
+    for (const d of docs) {
+        const email = d.email.toLowerCase().trim();
+
+        const usuario = await Usuario.findOneAndUpdate({
+            email
+        }, {
+            $set: {
+                nombre: d.nombre,
+                email,
+                password: d.password || '',
+                rol: 'boxeador',
+                dniLicencia: d.dniLicencia || ''
+            }
+        }, {
+            new: true,
+            upsert: true,
+            setDefaultsOnInsert: true
+        });
+
+        await Boxeador.findOneAndUpdate({
+            email
+        }, {
+            $set: {
+                nombre: d.nombre,
+                email,
+                nivel: d.nivel || 'Amateur',
+                alias: d.alias || '',
+                disciplina: d.disciplina || 'Boxeo',
+                peso: d.peso || '',
+                ubicacion: d.ubicacion || '',
+                boxrecId: d.boxrecId || '',
+                foto: d.foto || '',
+                record: d.record || '',
+                altura: d.altura || '',
+                alcance: d.alcance || '',
+                usuarioId: usuario._id
+            }
+        }, {
+            new: true,
+            upsert: true,
+            setDefaultsOnInsert: true
+        });
+    }
+
+    console.log(`Seed de boxeadores (archivo) completada: ${docs.length} boxeadores + usuarios de login.`);
 }
 
 async function seedDemo() {

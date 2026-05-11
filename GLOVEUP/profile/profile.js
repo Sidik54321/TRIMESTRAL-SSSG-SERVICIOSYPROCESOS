@@ -350,10 +350,10 @@ function renderChallenges(data) {
             ` : '';
             return `
                 <tr>
-                    <td>${who}</td>
-                    <td>${desc}${gym}${when}${x.note ? `<div class="muted">${escapeHtml(x.note)}</div>` : ''}</td>
-                    <td>${coachesCell}</td>
-                    <td>${pill}</td>
+                    <td data-label="De">${who}</td>
+                    <td data-label="Detalles">${desc}${gym}${when}${x.note ? `<div class="muted">${escapeHtml(x.note)}</div>` : ''}</td>
+                    <td data-label="Entrenadores">${coachesCell}</td>
+                    <td data-label="Estado">${pill}</td>
                     <td>${actions}</td>
                 </tr>
             `;
@@ -381,10 +381,10 @@ function renderChallenges(data) {
             const coachesCell = coaches.length ? coaches.map(escapeHtml).join('<br>') : '<span class="muted">—</span>';
             return `
                 <tr>
-                    <td>${who}</td>
-                    <td>${desc}${gym}${when}${x.note ? `<div class="muted">${escapeHtml(x.note)}</div>` : ''}</td>
-                    <td>${coachesCell}</td>
-                    <td>${pill}</td>
+                    <td data-label="Para">${who}</td>
+                    <td data-label="Detalles">${desc}${gym}${when}${x.note ? `<div class="muted">${escapeHtml(x.note)}</div>` : ''}</td>
+                    <td data-label="Entrenadores">${coachesCell}</td>
+                    <td data-label="Estado">${pill}</td>
                 </tr>
             `;
         })
@@ -469,13 +469,13 @@ function renderSessions(data) {
             ` : '<span class="muted">—</span>';
             return `
                 <tr>
-                    <td>${when}</td>
-                    <td>${partnerCell}</td>
-                    <td>${gym}</td>
-                    <td>${coachesCell}</td>
-                    <td>${coachRating}</td>
-                    <td>${boxerRating}</td>
-                    <td>${status}</td>
+                    <td data-label="Fecha">${when}</td>
+                    <td data-label="Partner">${partnerCell}</td>
+                    <td data-label="Gimnasio">${gym}</td>
+                    <td data-label="Entrenadores">${coachesCell}</td>
+                    <td data-label="Val. entrenador">${coachRating}</td>
+                    <td data-label="Val. boxeador">${boxerRating}</td>
+                    <td data-label="Estado">${status}</td>
                     <td>${action}</td>
                 </tr>
             `;
@@ -531,10 +531,10 @@ function renderHistory(sessions) {
         const note = escapeHtml(isMeA ? (s.noteBoxeador || '') : (s.noteBoxeador || ''));
         return `
             <tr>
-                <td>${date}</td>
-                <td><strong>${partnerName}</strong></td>
-                <td>${gym}</td>
-                <td class="muted">${note}</td>
+                <td data-label="Fecha">${date}</td>
+                <td data-label="Partner"><strong>${partnerName}</strong></td>
+                <td data-label="Gimnasio">${gym}</td>
+                <td data-label="Notas" class="muted">${note}</td>
             </tr>
         `;
     }).join('');

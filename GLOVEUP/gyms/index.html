@@ -206,8 +206,9 @@
         <div class="content-layout">
             <!-- Sidebar de Filtros -->
             <aside class="filter-sidebar">
-                <h2><i class="fas fa-filter"></i> Filtros</h2>
+                <h2 id="filter-toggle-btn"><i class="fas fa-filter"></i> Filtros <i class="fas fa-chevron-down filter-chevron"></i></h2>
 
+                <div class="filter-body" id="filter-body">
                 <div class="filter-group">
                     <h3><i class="fas fa-map-marker-alt"></i> Ubicación</h3>
                     <div class="search-input-wrapper">
@@ -266,7 +267,33 @@
                 </div>
 
                 <button class="apply-filters">Aplicar Filtros</button>
+                </div>
             </aside>
+            <script>
+                (function() {
+                    var btn = document.getElementById('filter-toggle-btn');
+                    var body = document.getElementById('filter-body');
+                    var chevron = btn ? btn.querySelector('.filter-chevron') : null;
+                    function isMobile() { return window.innerWidth <= 1200; }
+                    function collapse() {
+                        body.classList.add('filter-collapsed');
+                        if (chevron) chevron.style.transform = 'rotate(-90deg)';
+                    }
+                    function expand() {
+                        body.classList.remove('filter-collapsed');
+                        if (chevron) chevron.style.transform = '';
+                    }
+                    if (isMobile()) collapse();
+                    if (btn) btn.addEventListener('click', function() {
+                        if (!isMobile()) return;
+                        body.classList.contains('filter-collapsed') ? expand() : collapse();
+                    });
+                    window.addEventListener('resize', function() {
+                        if (!isMobile()) expand();
+                        else if (!body.classList.contains('filter-collapsed')) {}
+                    });
+                })();
+            </script>
 
             <!-- Lista de Gimnasios y Mapa Integrado -->
             <section class="results-container">
