@@ -240,6 +240,44 @@
 .challenge-group-label .fa-check-circle { color: #059669; }
 .challenge-group-label .fa-hourglass-half { color: #d97706; }
 
+.challenge-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 8px 0 4px;
+}
+
+.pag-btn {
+    background: none;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #374151;
+    transition: background 0.15s;
+}
+
+.pag-btn:hover:not(:disabled) { background: rgba(0,0,0,0.06); }
+.pag-btn:disabled { opacity: 0.35; cursor: default; }
+
+.pag-info {
+    font-size: 0.8rem;
+    color: #6b7280;
+    min-width: 40px;
+    text-align: center;
+}
+
+body.theme-dark .pag-btn {
+    border-color: rgba(255,255,255,0.15);
+    color: #d1d5db;
+}
+body.theme-dark .pag-btn:hover:not(:disabled) { background: rgba(255,255,255,0.08); }
+
 /* ——— Dark mode ——— */
 body.theme-dark .sparring-row {
     background: rgba(255,255,255,0.04);

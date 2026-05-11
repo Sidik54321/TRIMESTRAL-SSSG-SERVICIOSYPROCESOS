@@ -171,10 +171,28 @@ function EmptyState({ icon, text }) {
     );
 }
 
+const CHALLENGE_PAGE_SIZE = 5;
+
+function Pagination({ page, total, pageSize, onPrev, onNext }) {
+    const totalPages = Math.ceil(total / pageSize);
+    if (totalPages <= 1) return null;
+    return h('div', { className: 'challenge-pagination' },
+        h('button', { className: 'pag-btn', onClick: onPrev, disabled: page === 0 },
+            h('i', { className: 'fas fa-chevron-left' })
+        ),
+        h('span', { className: 'pag-info' }, `${page + 1} / ${totalPages}`),
+        h('button', { className: 'pag-btn', onClick: onNext, disabled: page >= totalPages - 1 },
+            h('i', { className: 'fas fa-chevron-right' })
+        )
+    );
+}
+
 // ——— Dashboard principal ———
 function BoxerDashboard() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [upcomingPage, setUpcomingPage] = useState(0);
+    const [pendingPage, setPendingPage] = useState(0);
 
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
 
@@ -276,25 +294,41 @@ function BoxerDashboard() {
                         upcomingChallenges.length > 0 && h('div', { className: 'challenge-group' },
                             h('p', { className: 'challenge-group-label' },
                                 h('i', { className: 'fas fa-check-circle' }),
-                                ' Confirmados'
+                                ` Confirmados (${upcomingChallenges.length})`
                             ),
                             h('ul', { className: 'sparring-list' },
-                                ...upcomingChallenges.map((c, i) =>
-                                    h(ChallengeRow, { key: c.id || `up-${i}`, challenge: c, dir: c._dir })
-                                )
-                            )
+                                ...upcomingChallenges
+                                    .slice(upcomingPage * CHALLENGE_PAGE_SIZE, (upcomingPage + 1) * CHALLENGE_PAGE_SIZE)
+                                    .map((c, i) => h(ChallengeRow, { key: c.id || `up-${i}`, challenge: c, dir: c._dir }))
+                            ),
+                            h(Pagination, {
+                                page: upcomingPage,
+                                total: upcomingChallenges.length,
+                                pageSize: CHALLENGE_PAGE_SIZE,
+                                onPrev: () => setUpcomingPage(p => Math.max(0, p - 1)),
+                                onNext: () => setUpcomingPage(p => p + 1)
+                            })
                         ),
                         pendingChallenges.length > 0 && h('div', { className: 'challenge-group' },
                             h('p', { className: 'challenge-group-label' },
                                 h('i', { className: 'fas fa-hourglass-half' }),
-                                ' Pendientes'
+                                ` Pendientes (${pendingChallenges.length})`
                             ),
                             h('ul', { className: 'sparring-list' },
-                                ...pendingChallenges.slice(0, 5).map((c, i) => {
-                                    const dir = sent.find(s => s.id === c.id) ? 'sent' : 'recv';
-                                    return h(ChallengeRow, { key: c.id || `pend-${i}`, challenge: c, dir });
-                                })
-                            )
+                                ...pendingChallenges
+                                    .slice(pendingPage * CHALLENGE_PAGE_SIZE, (pendingPage + 1) * CHALLENGE_PAGE_SIZE)
+                                    .map((c, i) => {
+                                        const dir = sent.find(s => s.id === c.id) ? 'sent' : 'recv';
+                                        return h(ChallengeRow, { key: c.id || `pend-${i}`, challenge: c, dir });
+                                    })
+                            ),
+                            h(Pagination, {
+                                page: pendingPage,
+                                total: pendingChallenges.length,
+                                pageSize: CHALLENGE_PAGE_SIZE,
+                                onPrev: () => setPendingPage(p => Math.max(0, p - 1)),
+                                onNext: () => setPendingPage(p => p + 1)
+                            })
                         )
                     )
             )

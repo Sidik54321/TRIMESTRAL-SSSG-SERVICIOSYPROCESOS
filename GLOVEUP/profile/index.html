@@ -189,9 +189,6 @@
                 <p class="muted" id="profile-subtitle">Tus datos y tu historial de sparrings.</p>
             </div>
             <div class="page-actions">
-                <button class="btn btn-secondary" id="btn-add-sparring" type="button">
-                    <i class="fas fa-plus"></i> Añadir sparring
-                </button>
                 <button class="btn btn-secondary" id="btn-back-sparring" type="button" style="display: none;">
                     <i class="fas fa-arrow-left"></i> Sparring
                 </button>
@@ -426,9 +423,8 @@
                 <div id="empty-state" class="empty hidden">
                     <div class="empty-inner">
                         <div class="empty-icon"><i class="fas fa-clipboard-list"></i></div>
-                        <p><strong>Aún no tienes sparrings guardados.</strong></p>
-                        <p class="muted">Añade tus sesiones para llevar un historial.</p>
-                        <button class="btn btn-primary" id="btn-add-first" type="button">Añadir el primero</button>
+                        <p><strong>Aún no tienes sparrings completados.</strong></p>
+                        <p class="muted">Aquí aparecerán automáticamente tus sesiones de sparring una vez que se completen.</p>
                     </div>
                 </div>
 
@@ -438,9 +434,8 @@
                             <tr>
                                 <th>Fecha</th>
                                 <th>Partner</th>
-                                <th>Ubicación</th>
+                                <th>Gimnasio</th>
                                 <th>Notas</th>
-                                <th></th>
                             </tr>
                         </thead>
                         <tbody id="sparring-tbody"></tbody>
@@ -449,41 +444,6 @@
             </div>
         </section>
         </main>
-
-        <dialog class="modal" id="sparring-modal">
-            <form method="dialog" class="modal-card" id="sparring-form">
-                <div class="modal-header">
-                    <h3>Añadir sparring</h3>
-                    <button class="icon-btn" value="cancel" aria-label="Cerrar">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-
-                <div class="modal-body">
-                    <div class="field">
-                        <label>Fecha</label>
-                        <input id="sp-date" type="date" required>
-                    </div>
-                    <div class="field">
-                        <label>Partner</label>
-                        <input id="sp-partner" type="text" placeholder='Ej: "Manuel García"' required>
-                    </div>
-                    <div class="field">
-                        <label>Ubicación</label>
-                        <input id="sp-place" type="text" placeholder="Gimnasio / Ciudad">
-                    </div>
-                    <div class="field">
-                        <label>Notas</label>
-                        <textarea id="sp-notes" rows="3" placeholder="Qué trabajaste, sensaciones, objetivos..."></textarea>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" value="cancel" type="button" id="btn-cancel">Cancelar</button>
-                    <button class="btn btn-primary" value="default" type="submit">Guardar sparring</button>
-                </div>
-            </form>
-        </dialog>
 
         <dialog class="modal" id="session-review-modal">
             <form method="dialog" class="modal-card" id="session-review-form">

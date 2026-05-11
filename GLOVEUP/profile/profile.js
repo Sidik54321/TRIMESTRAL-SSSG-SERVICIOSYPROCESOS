@@ -438,21 +438,26 @@ async function refreshSessions() {
         const data = await loadSessions(email);
         card.style.display = '';
         renderSessions(data);
+        renderHistory(Array.isArray(data && data.sessions) ? data.sessions : []);
     } catch (err) {
         card.style.display = 'none';
+        renderHistory([]);
     }
 }
 
-function renderHistory() {
+function renderHistory(sessions) {
     const tbody = $('sparring-tbody');
     const empty = $('empty-state');
     const tableWrap = $('table-wrap');
     const count = $('sparring-count');
-    const history = Array.isArray(profileState.sparringHistory) ? profileState.sparringHistory : [];
+    const email = getEmail();
 
-    count.textContent = `${history.length} registro${history.length === 1 ? '' : 's'}`;
+    const completed = Array.isArray(sessions) ? sessions.filter(s => (s.status || '').toLowerCase() === 'completed') : [];
+    completed.sort((a, b) => String(b.completedAt || b.scheduledAt || '').localeCompare(String(a.completedAt || a.scheduledAt || '')));
 
-    if (history.length === 0) {
+    count.textContent = `${completed.length} registro${completed.length === 1 ? '' : 's'}`;
+
+    if (completed.length === 0) {
         empty.classList.remove('hidden');
         tableWrap.classList.add('hidden');
         tbody.innerHTML = '';
@@ -462,37 +467,22 @@ function renderHistory() {
     empty.classList.add('hidden');
     tableWrap.classList.remove('hidden');
 
-    tbody.innerHTML = history
-        .slice()
-        .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-        .map((item) => {
-            const safeNotes = (item.notes || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-            return `
-                <tr>
-                    <td>${formatDate(item.date)}</td>
-                    <td><strong>${item.partner || ''}</strong></td>
-                    <td>${item.place || ''}</td>
-                    <td class="muted">${safeNotes}</td>
-                    <td>
-                        <div class="row-actions">
-                            <button class="link-danger" type="button" data-delete-id="${item.id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        })
-        .join('');
-
-    tbody.querySelectorAll('[data-delete-id]').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-            const id = btn.getAttribute('data-delete-id');
-            profileState.sparringHistory = history.filter((x) => x.id !== id);
-            await saveProfileForm(false);
-            renderHistory();
-        });
-    });
+    tbody.innerHTML = completed.map((s) => {
+        const aEmail = (s.boxerAEmail || '').toLowerCase();
+        const isMeA = email && email === aEmail;
+        const partnerName = escapeHtml(isMeA ? (s.boxerBNombre || s.boxerBEmail || '—') : (s.boxerANombre || s.boxerAEmail || '—'));
+        const date = escapeHtml(formatDate((s.completedAt || s.scheduledAt || '').slice(0, 10)));
+        const gym = escapeHtml(s.gymName || '—');
+        const note = escapeHtml(isMeA ? (s.noteBoxeador || '') : (s.noteBoxeador || ''));
+        return `
+            <tr>
+                <td>${date}</td>
+                <td><strong>${partnerName}</strong></td>
+                <td>${gym}</td>
+                <td class="muted">${note}</td>
+            </tr>
+        `;
+    }).join('');
 }
 
 async function loadProfileFromApi() {
@@ -520,7 +510,6 @@ async function loadProfileFromApi() {
         sparringHistory: Array.isArray(data.sparringHistory) ? data.sparringHistory : []
     };
     applyProfileToForm(profileState);
-    renderHistory();
 }
 
 function getCoachPayload() {
@@ -614,42 +603,6 @@ async function removePhoto() {
     await saveProfileForm(false);
 }
 
-function openSparringModal() {
-    const modal = $('sparring-modal');
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-
-    $('sp-date').value = `${yyyy}-${mm}-${dd}`;
-    $('sp-partner').value = '';
-    $('sp-place').value = '';
-    $('sp-notes').value = '';
-
-    modal.showModal();
-}
-
-function closeSparringModal() {
-    $('sparring-modal').close();
-}
-
-async function addSparringFromForm(e) {
-    e.preventDefault();
-
-    const item = {
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-        date: $('sp-date').value,
-        partner: $('sp-partner').value.trim(),
-        place: $('sp-place').value.trim(),
-        notes: $('sp-notes').value.trim()
-    };
-
-    profileState.sparringHistory = Array.isArray(profileState.sparringHistory) ? profileState.sparringHistory : [];
-    profileState.sparringHistory.push(item);
-    await saveProfileForm(false);
-    renderHistory();
-    closeSparringModal();
-}
 
 document.addEventListener('DOMContentLoaded', async () => {
     const ok = isSessionOk();
@@ -681,7 +634,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pageTitle = $('profile-title');
     const backSparringBtn = $('btn-back-sparring');
     const saveBtn = $('btn-save-profile');
-    const addSparringBtn = $('btn-add-sparring');
     const photoUploadLabel = $('photo-upload-label');
     const removePhotoBtn = $('btn-remove-photo');
     const profileCard = $('profile-card');
@@ -699,7 +651,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (pageTitle) pageTitle.textContent = 'Perfil de Boxeador';
         if (backSparringBtn) backSparringBtn.style.display = fromParam === 'sparring' ? '' : 'none';
         if (saveBtn) saveBtn.style.display = 'none';
-        if (addSparringBtn) addSparringBtn.style.display = 'none';
         if (photoUploadLabel) photoUploadLabel.style.display = 'none';
         if (removePhotoBtn) removePhotoBtn.style.display = 'none';
         if (profileCard) profileCard.style.display = '';
@@ -751,7 +702,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (historyCard) historyCard.style.display = showMySparrings ? '' : 'none';
     if (challengesCard) challengesCard.style.display = showMySparrings ? '' : 'none';
     if (sessionsCard) sessionsCard.style.display = showMySparrings ? '' : 'none';
-    if (addSparringBtn) addSparringBtn.style.display = showMySparrings ? '' : 'none';
     if (pageTitle && showMySparrings) pageTitle.textContent = 'Mis Sparrings';
 
     try {
@@ -915,17 +865,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 notify(err.message || 'No se pudo quitar la foto', 'error');
             }
         });
-    }
-
-    if (!isCoachProfile && !isViewMode) {
-        const addSparringButton = $('btn-add-sparring');
-        if (addSparringButton) addSparringButton.addEventListener('click', openSparringModal);
-        const addFirstBtn = $('btn-add-first');
-        if (addFirstBtn) addFirstBtn.addEventListener('click', openSparringModal);
-        const cancelBtn = $('btn-cancel');
-        if (cancelBtn) cancelBtn.addEventListener('click', closeSparringModal);
-        const sparringForm = $('sparring-form');
-        if (sparringForm) sparringForm.addEventListener('submit', addSparringFromForm);
     }
 
     if (!isCoachProfile) {
