@@ -1,7 +1,7 @@
 /**
  * GloveUp — Onboarding "Primeros Pasos"
  * Se persiste en localStorage con clave individualizada por email.
- * Puede inserir el widget en el dashboard O renderizar la página completa (#full-page).
+ * Los pasos completados desaparecen de la lista.
  */
 
 (function () {
@@ -23,7 +23,7 @@
             title: 'Completa tu perfil',
             desc:  'Añade tu foto, peso, disciplina y ubicación para que otros te encuentren más fácil.',
             action: 'Ir a Mi Perfil',
-            href:  '../../profile/index.html',
+            href:  '../profile/index.html',
             check: async (email) => {
                 try {
                     const r = await fetch(`${API()}/api/boxeadores/me?email=${encodeURIComponent(email)}`);
@@ -38,7 +38,7 @@
             title: 'Busca tu primer sparring',
             desc:  'Usa el buscador para encontrar compañeros de combate por nivel, peso y ubicación.',
             action: 'Buscar Sparring',
-            href:  '../../sparring/index.html',
+            href:  '../sparring/index.html',
             check: async () => false
         },
         {
@@ -47,7 +47,7 @@
             title: 'Reta a alguien',
             desc:  'Envía tu primer reto de sparring. Usa los filtros para encontrar al rival perfecto.',
             action: 'Ir al buscador',
-            href:  '../../sparring/index.html',
+            href:  '../sparring/index.html',
             check: async (email) => {
                 try {
                     const r = await fetch(`${API()}/api/boxeadores/challenges?email=${encodeURIComponent(email)}`);
@@ -62,7 +62,7 @@
             title: 'Explora un gimnasio',
             desc:  'Conoce los gimnasios disponibles, sus precios y entrenadores.',
             action: 'Ver Gimnasios',
-            href:  '../../gyms/index.html',
+            href:  '../gyms/index.html',
             check: async () => false
         }
     ];
@@ -74,7 +74,7 @@
             title: 'Completa tu perfil de entrenador',
             desc:  'Añade tu especialidad, precio mensual y foto para que los boxeadores puedan encontrarte.',
             action: 'Ir a Mi Perfil',
-            href:  '../../profile/index.html',
+            href:  '../profile/index.html',
             check: async (email) => {
                 try {
                     const r = await fetch(`${API()}/api/entrenadores/me?email=${encodeURIComponent(email)}`);
@@ -87,9 +87,9 @@
             id: 'create_gym',
             icon: 'fas fa-dumbbell',
             title: 'Crea tu gimnasio',
-            desc:  'Registra el gimnasio donde entrenas: nombre, ubicación y descripción. Esto permite que los boxeadores te encuentren.',
+            desc:  'Registra el gimnasio donde entrenas: nombre, ubicación y descripción.',
             action: 'Ver Gimnasios',
-            href:  '../../gyms/index.html',
+            href:  '../gyms/index.html',
             check: async (email) => {
                 try {
                     const r = await fetch(`${API()}/api/gimnasios`);
@@ -104,7 +104,7 @@
             title: 'Añade tu primer boxeador',
             desc:  'Registra un boxeador bajo tu gestión usando su email o DNI/Licencia.',
             action: 'Ir a Gestión',
-            href:  '../../dashboard/entrenador/dashboard.html#coach-management',
+            href:  '../dashboard/entrenador/dashboard.html#coach-management',
             check: async (email) => {
                 try {
                     const r = await fetch(`${API()}/api/entrenadores/me/boxeadores?email=${encodeURIComponent(email)}`);
@@ -119,7 +119,7 @@
             title: 'Busca sparrings para tus pupilos',
             desc:  'Explora el buscador y contacta con entrenadores de otros boxeadores.',
             action: 'Buscar Sparring',
-            href:  '../../sparring/index.html',
+            href:  '../sparring/index.html',
             check: async () => false
         },
         {
@@ -128,7 +128,7 @@
             title: 'Visita la sección de gimnasios',
             desc:  'Explora instalaciones disponibles en el mapa para tus sesiones.',
             action: 'Ver Gimnasios',
-            href:  '../../gyms/index.html',
+            href:  '../gyms/index.html',
             check: async () => false
         }
     ];
@@ -147,29 +147,25 @@
         saveDoneSet(email, s);
     }
 
-    // ── Build HTML de tarjetas ───────────────────────────────────────────────
-    function buildHTML(steps, doneSet, pct, isFullPage) {
-        const cardsHtml = steps.map(step => {
-            const done = doneSet.has(step.id);
-            return `
-            <div class="onboarding-card${done ? ' done' : ''}" data-step="${step.id}" data-href="${step.href}">
+    // ── Build HTML: sólo pasos pendientes ────────────────────────────────────
+    function buildHTML(steps, doneSet, pct) {
+        const pending = steps.filter(s => !doneSet.has(s.id));
+
+        const cardsHtml = pending.map(step => `
+            <div class="onboarding-card" data-step="${step.id}" data-href="${step.href}">
+                <button class="onboarding-card-dismiss" data-step="${step.id}" title="Marcar como hecho">
+                    <i class="fas fa-times"></i>
+                </button>
                 <div class="onboarding-card-icon"><i class="${step.icon}"></i></div>
                 <div class="onboarding-card-title">${step.title}</div>
                 <div class="onboarding-card-desc">${step.desc}</div>
-                ${done
-                    ? `<span class="onboarding-card-action"><i class="fas fa-check-circle"></i> Completado</span>`
-                    : `<span class="onboarding-card-action">${step.action} <i class="fas fa-arrow-right"></i></span>`
-                }
-            </div>`;
-        }).join('');
+                <span class="onboarding-card-action">${step.action} <i class="fas fa-arrow-right"></i></span>
+            </div>`
+        ).join('');
 
-        const allDone = doneSet.size >= steps.length;
+        const allDone = pending.length === 0;
 
         return `
-        <div class="onboarding-header">
-            <h2>🥊 Primeros Pasos en GloveUp</h2>
-            <p>Sigue estos pasos para sacar el máximo provecho de la plataforma.</p>
-        </div>
         <div class="onboarding-progress-wrap">
             <span class="onboarding-progress-label">Tu Progreso</span>
             <div class="onboarding-progress-track">
@@ -178,16 +174,19 @@
             <span class="onboarding-progress-pct">${pct}%</span>
         </div>
         ${allDone
-            ? `<div style="text-align:center;padding:40px 20px;">
-                    <div style="font-size:3rem;margin-bottom:12px;">🎉</div>
-                    <h3 style="font-family:var(--font-heading,'Outfit',sans-serif);font-size:1.4rem;font-weight:800;margin:0 0 8px">¡Todo listo!</h3>
-                    <p style="color:var(--color-text-light,#64748b);margin:0">Has completado todos los pasos de configuración inicial.</p>
+            ? `<div style="text-align:center;padding:48px 20px;">
+                    <div style="font-size:3.5rem;margin-bottom:14px;">🎉</div>
+                    <h3 style="font-family:var(--font-heading,'Outfit',sans-serif);font-size:1.5rem;font-weight:800;margin:0 0 8px">¡Todo listo!</h3>
+                    <p style="color:var(--color-text-light,#64748b);margin:0 0 20px">Has completado todos los pasos de configuración inicial.</p>
+                    <a href="../sparring/index.html" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;padding:12px 24px;border-radius:99px;font-weight:700;text-decoration:none;font-size:0.9rem;">
+                        <i class="fas fa-fist-raised"></i> Buscar Sparring
+                    </a>
                </div>`
             : `<div class="onboarding-cards">${cardsHtml}</div>`
         }`;
     }
 
-    // ── Render en un contenedor dado ─────────────────────────────────────────
+    // ── Render ───────────────────────────────────────────────────────────────
     async function renderOnboarding(containerEl, isDashboardWidget) {
         const email = (localStorage.getItem(LS_EMAIL) || '').trim().toLowerCase();
         const role  = (localStorage.getItem(LS_ROLE)  || 'usuario').toLowerCase();
@@ -211,19 +210,36 @@
         const totalSteps = steps.length;
         const pct = Math.round((totalDone / totalSteps) * 100);
 
-        // En widget del dashboard: si todos completos, ocultar
+        // Widget del dashboard: si todos completos, ocultar
         if (isDashboardWidget && totalDone >= totalSteps) {
             if (containerEl && containerEl.parentNode) containerEl.parentNode.removeChild(containerEl);
             return;
         }
 
-        containerEl.innerHTML = buildHTML(steps, doneSet, pct, !isDashboardWidget);
+        containerEl.innerHTML = buildHTML(steps, doneSet, pct);
 
-        // Eventos de clic en tarjetas pendientes
-        containerEl.querySelectorAll('.onboarding-card:not(.done)').forEach(card => {
-            card.addEventListener('click', () => {
+        // Clic en tarjeta → marcar hecho + navegar
+        containerEl.querySelectorAll('.onboarding-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('.onboarding-card-dismiss')) return;
                 markDone(email, card.dataset.step);
                 window.location.href = card.dataset.href;
+            });
+        });
+
+        // Clic en "×" → marcar hecho + animar desaparición + re-render
+        containerEl.querySelectorAll('.onboarding-card-dismiss').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const stepId = btn.dataset.step;
+                const card = btn.closest('.onboarding-card');
+                markDone(email, stepId);
+                if (card) {
+                    card.classList.add('dismissing');
+                    setTimeout(() => renderOnboarding(containerEl, isDashboardWidget), 260);
+                } else {
+                    renderOnboarding(containerEl, isDashboardWidget);
+                }
             });
         });
     }

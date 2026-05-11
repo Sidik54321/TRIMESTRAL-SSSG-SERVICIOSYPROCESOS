@@ -169,6 +169,44 @@
     color: #22c55e;
 }
 
+/* Dismiss button */
+.onboarding-card-dismiss {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.06);
+    color: var(--color-text-light, #64748b);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    opacity: 0;
+    transition: opacity 0.2s, background 0.2s;
+    z-index: 2;
+}
+
+.onboarding-card:hover .onboarding-card-dismiss {
+    opacity: 1;
+}
+
+.onboarding-card-dismiss:hover {
+    background: rgba(239,68,68,0.15);
+    color: #ef4444;
+}
+
+/* Exit animation when dismissed */
+.onboarding-card.dismissing {
+    opacity: 0;
+    transform: scale(0.92);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+}
+
 /* Dark mode */
 body.theme-dark .onboarding-card {
     background: var(--color-bg-card, #1e293b);

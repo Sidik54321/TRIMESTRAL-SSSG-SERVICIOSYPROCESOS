@@ -1729,243 +1729,227 @@ body.theme-dark .chat-box {
 
 @media (max-width: 380px) {
     .dashboard-main {
-        padding: 16px 12px 30px;
+        padding: 14px 8px 20px;
     }
     .find-sparring-section h2 {
-        font-size: 2em;
-    }
-    .main-sidebar {
-        width: 60px;
-        padding: 16px 8px;
-    }
-    body.with-sidebar {
-        padding-left: 60px;
-    }
-    .page-content-area {
-        left: 60px;
+        font-size: 1.8em;
     }
     .chat-box {
-        width: 290px;
+        width: calc(100vw - 52px - 12px);
     }
 }
 
 /* ============================================== */
-/* MOBILE — Barra de navegación inferior (≤640px) */
+/* MOBILE — Sidebar compacto a la izquierda       */
 /* ============================================== */
 
 @media (max-width: 640px) {
 
-    /* Sidebar → Bottom Nav */
-    .main-sidebar {
-        top: auto;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
-        height: 64px;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-around;
-        padding: 0 8px;
-        border-right: none;
-        border-top: 1px solid var(--color-border);
-        z-index: 1200;
-        animation: none;
-        overflow: hidden;
+    html, body {
+        overflow-x: hidden;
+        width: 100%;
     }
 
-    .sidebar-header,
+    /* Sidebar compacto vertical a la izquierda */
+    .main-sidebar {
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: auto !important;
+        width: 52px !important;
+        min-width: 52px !important;
+        max-width: 52px !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        flex-direction: column !important;
+        padding: 10px 6px !important;
+        border-right: 1px solid var(--color-border) !important;
+        border-top: none !important;
+        overflow: hidden !important;
+        animation: none !important;
+    }
+
+    /* Logo pequeño centrado */
+    .sidebar-header {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        margin: 0 0 8px !important;
+        padding-bottom: 8px !important;
+        border-bottom: 1px solid var(--color-border) !important;
+    }
+    .sidebar-header img {
+        width: 32px !important;
+        height: 32px !important;
+        margin: 0 !important;
+    }
+    .sidebar-header .app-name {
+        display: none !important;
+    }
+
+    /* Manuals y toggle ocultos */
     .sidebar-manuals,
     .sidebar-toggle {
         display: none !important;
     }
 
+    /* Nav vertical compacta */
     .sidebar-nav {
-        display: flex;
-        flex-direction: row;
-        flex: 1;
-        overflow: visible;
-        padding: 0;
-        margin: 0;
+        flex: 1 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding: 0 !important;
+        margin: 0 0 6px !important;
+        display: flex !important;
+        flex-direction: column !important;
     }
 
     .sidebar-nav ul {
-        flex-direction: row;
-        flex: 1;
-        justify-content: space-around;
-        align-items: center;
-        gap: 0;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2px !important;
+        align-items: stretch !important;
     }
 
     .sidebar-nav li {
-        flex: 1;
-        display: flex;
-        justify-content: center;
+        flex: 0 !important;
+        margin: 0 !important;
     }
 
     .sidebar-nav li a {
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 6px 4px;
-        border-radius: var(--radius-sm);
-        font-size: 0.6rem;
-        gap: 2px;
-        width: 100%;
-        text-align: center;
+        flex-direction: row !important;
+        justify-content: center !important;
+        align-items: center !important;
+        padding: 10px 6px !important;
+        border-radius: var(--radius-sm) !important;
+        height: auto !important;
+        gap: 0 !important;
     }
 
     .sidebar-nav li a span {
-        display: block !important;
-        font-size: 0.55rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 56px;
+        display: none !important;
     }
 
     .sidebar-nav li a i {
         margin-right: 0 !important;
-        font-size: 1.15rem;
-        width: auto;
-        display: block;
+        font-size: 1.1rem !important;
+        width: auto !important;
     }
 
     .sidebar-nav li a::before {
-        display: none;
+        display: none !important;
     }
 
+    /* Footer con iconos compactos */
     .sidebar-footer {
-        display: flex;
-        flex-direction: row;
-        border-top: none;
-        padding: 0;
-        gap: 0;
+        display: flex !important;
+        flex-direction: column !important;
+        border-top: 1px solid var(--color-border) !important;
+        padding: 6px 0 0 !important;
+        gap: 2px !important;
+        flex-shrink: 0 !important;
     }
 
     .sidebar-footer .sidebar-btn {
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 6px 8px;
-        font-size: 0.55rem;
-        gap: 2px;
+        justify-content: center !important;
+        padding: 10px 6px !important;
+        border-radius: var(--radius-sm) !important;
+    }
+
+    .sidebar-footer .sidebar-btn span {
+        display: none !important;
     }
 
     .sidebar-footer .sidebar-btn i {
         margin-right: 0 !important;
-        font-size: 1.15rem;
-        width: auto;
+        font-size: 1.1rem !important;
+        width: auto !important;
     }
 
-    .sidebar-footer .sidebar-btn span {
-        display: block !important;
-        font-size: 0.55rem;
-    }
-
-    /* Contenido principal: sin padding-left, pero con padding-bottom para la nav */
+    /* Contenido principal: desplazado por el sidebar */
     body.with-sidebar {
-        padding-left: 0 !important;
-        padding-bottom: 68px !important;
+        padding-left: 52px !important;
+        padding-bottom: 0 !important;
     }
 
     body.with-sidebar.sidebar-collapsed {
-        padding-left: 0 !important;
+        padding-left: 52px !important;
     }
 
-    /* Dashboard */
+    .page-content-area {
+        left: 52px !important;
+        bottom: 0 !important;
+    }
+
+    /* Dashboard ajustes */
     .dashboard-main {
-        padding: 16px 12px 24px;
+        padding: 14px 10px 20px !important;
     }
 
     .dashboard-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 12px;
-        margin-bottom: 20px;
+        gap: 10px;
+        margin-bottom: 16px;
     }
 
     .dashboard-title-block h1 {
-        font-size: 1.4rem;
+        font-size: 1.25rem;
     }
 
     .dashboard-quick-actions {
         width: 100%;
-        justify-content: flex-start;
         flex-wrap: wrap;
         gap: 8px;
     }
 
     .dashboard-metrics {
         grid-template-columns: 1fr;
-        gap: 14px;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .metric-card {
+        padding: 16px 14px;
+    }
+
+    .btn {
+        padding: 10px 16px;
+        font-size: 0.8em;
+    }
+
+    h2 {
+        font-size: 1.6em;
         margin-bottom: 24px;
     }
 
-    /* Cards */
-    .metric-card {
-        padding: 18px 16px;
-        border-radius: var(--radius-lg);
-    }
-
-    /* Botones */
-    .btn {
-        padding: 11px 20px;
-        font-size: 0.82em;
-    }
-
-    /* Tipografía */
-    h2 {
-        font-size: 1.8em;
-        margin-bottom: 28px;
-    }
-
-    /* Chat box → pantalla completa móvil */
+    /* Chat */
     .chat-fab-container {
-        bottom: 148px;
-        right: 16px;
+        bottom: 20px;
+        right: 14px;
     }
 
     .chat-box {
-        position: fixed;
-        bottom: 68px;
-        right: 0;
-        left: 0;
-        width: 100%;
-        height: 60vh;
-        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-        border-left: none;
-        border-right: none;
-        border-bottom: none;
+        width: calc(100vw - 52px - 16px);
+        right: 8px;
+        left: auto;
+        bottom: 70px;
     }
 
     /* Notificaciones */
     .glv-notif-container {
-        bottom: 216px !important;
-        right: 16px !important;
+        bottom: 80px !important;
+        right: 14px !important;
     }
 
     .glv-notif-panel {
         right: 0 !important;
-        left: 0 !important;
-        bottom: 68px !important;
-        width: 100% !important;
-        border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
-    }
-
-    /* Modales → pantalla completa */
-    dialog {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin: 0 !important;
-        border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
-        position: fixed !important;
-        bottom: 0 !important;
-        top: auto !important;
-        max-height: 90vh;
-        overflow-y: auto;
+        left: 52px !important;
+        bottom: auto !important;
+        top: 8px !important;
+        width: auto !important;
+        max-height: 80vh !important;
+        border-radius: var(--radius-xl) !important;
     }
 
     /* Footer */
@@ -1993,108 +1977,18 @@ body.theme-dark .chat-box {
 }
 
 @media (max-width: 640px) {
-    /* Forzar que el cuerpo no tenga scroll lateral y el contenido sea full width */
-    html, body {
-        overflow-x: hidden !important;
-        width: 100% !important;
-    }
-
+    /* Refuerzo: sidebar izquierdo compacto también en bloque final */
     body.with-sidebar {
-        padding-left: 0 !important;
-        padding-bottom: 66px !important; /* Espacio para la nav de abajo */
+        padding-left: 52px !important;
+        padding-bottom: 0 !important;
     }
 
-    /* Convertir el sidebar en Bottom Nav */
-    .main-sidebar {
-        position: fixed !important;
-        top: auto !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
-        height: 64px !important;
-        flex-direction: row !important;
-        padding: 0 !important;
-        border-right: none !important;
-        border-top: 1px solid var(--color-border) !important;
-        background: var(--glass-bg) !important;
-        backdrop-filter: var(--glass-blur) !important;
-        z-index: 9999 !important;
-        transform: none !important;
+    .page-content-area {
+        left: 52px !important;
     }
 
-    /* Ocultar elementos innecesarios en la barra inferior */
-    .sidebar-header, 
-    .sidebar-manuals, 
-    .sidebar-toggle,
-    .manual-box,
-    .sidebar-manuals span,
-    .sidebar-manuals h4 {
-        display: none !important;
-    }
-
-    /* Ajustar navegación horizontal */
-    .sidebar-nav {
-        flex: 1 !important;
-        overflow: visible !important;
-        padding: 0 4px !important;
-        margin: 0 !important;
-        display: flex !important;
-    }
-
-    .sidebar-nav ul {
-        display: flex !important;
-        flex-direction: row !important;
-        width: 100% !important;
-        justify-content: space-around !important;
-        align-items: center !important;
-        gap: 0 !important;
-    }
-
-    .sidebar-nav li {
-        flex: 1 !important;
-        margin: 0 !important;
-    }
-
-    .sidebar-nav li a {
-        flex-direction: column !important;
-        padding: 4px 2px !important;
-        font-size: 10px !important;
-        height: 100% !important;
-        background: transparent !important;
-        gap: 2px !important;
-    }
-
-    .sidebar-nav li a i {
-        margin-right: 0 !important;
-        font-size: 1.2rem !important;
-        margin-bottom: 0 !important;
-    }
-
-    .sidebar-nav li a span {
-        display: block !important;
-        font-size: 8px !important;
-        text-transform: uppercase;
-        font-weight: 700;
-        letter-spacing: 0;
-    }
-
-    .sidebar-nav li a::before {
-        display: none !important;
-    }
-
-    /* Ocultar footer (ajustes/cerrar sesión) y moverlos a un menu si fuera necesario, 
-       por ahora los dejamos en el fondo de la nav si caben o los ocultamos */
-    .sidebar-footer {
-        display: none !important; 
-    }
-
-    /* Contenido del Dashboard */
     .dashboard-main {
-        padding: 16px 12px !important;
-        width: 100% !important;
+        padding: 14px 10px !important;
     }
 
     .dashboard-metrics {
@@ -2108,7 +2002,6 @@ body.theme-dark .chat-box {
         gap: 8px !important;
     }
 
-    /* Widgets como el calendario */
     .gloveup-calendar {
         padding: 8px !important;
         border-radius: 12px !important;
