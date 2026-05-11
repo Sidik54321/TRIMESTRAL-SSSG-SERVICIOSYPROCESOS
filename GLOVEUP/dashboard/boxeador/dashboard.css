@@ -73,12 +73,6 @@
     line-height: 1;
 }
 
-.donut-pct {
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: var(--color-text-lighter);
-    margin-top: 2px;
-}
 
 /* Stagger entrada */
 .dashboard-metrics .metric-card:nth-child(1) { animation-delay: 80ms;  }
@@ -217,6 +211,34 @@
     line-height: 1.5;
     max-width: 240px;
 }
+
+/* ——— Grupos de retos ——— */
+.challenges-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.challenge-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.challenge-group-label {
+    margin: 0 0 2px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-lighter);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.challenge-group-label .fa-check-circle { color: #059669; }
+.challenge-group-label .fa-hourglass-half { color: #d97706; }
 
 /* ——— Dark mode ——— */
 body.theme-dark .sparring-row {

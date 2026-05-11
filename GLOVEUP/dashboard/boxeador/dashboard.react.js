@@ -52,7 +52,6 @@ function MetricDoughnut({ label, value, max, color }) {
 
     const safeValue = Number.isFinite(Number(value)) ? Number(value) : 0;
     const safeMax = Number.isFinite(Number(max)) && Number(max) > 0 ? Number(max) : 1;
-    const pct = Math.round(Math.min(100, (safeValue / safeMax) * 100));
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -93,8 +92,7 @@ function MetricDoughnut({ label, value, max, color }) {
     return h('div', { className: 'donut-wrapper' },
         h('canvas', { ref: canvasRef, width: 96, height: 96 }),
         h('div', { className: 'donut-center' },
-            h('span', { className: 'donut-value' }, String(safeValue)),
-            h('span', { className: 'donut-pct' }, `${pct}%`)
+            h('span', { className: 'donut-value' }, String(safeValue))
         )
     );
 }
@@ -266,22 +264,38 @@ function BoxerDashboard() {
                     )
             ),
 
-            // Próximos / retos
-            h('div', { className: 'dashboard-panel' },
+            // Retos
+            h('div', { className: 'dashboard-panel challenges-panel' },
                 h('h2', null,
                     h('i', { className: 'fas fa-calendar-check', style: { marginRight: '8px', opacity: 0.5 } }),
-                    'Próximos y retos'
+                    'Retos'
                 ),
                 upcomingChallenges.length === 0 && pendingChallenges.length === 0
-                    ? h(EmptyState, { icon: 'fas fa-calendar-alt', text: 'Sin sparrings programados. Lanza un reto para reservar tu próxima sesión.' })
-                    : h('ul', { className: 'sparring-list' },
-                        ...upcomingChallenges.map((c, i) =>
-                            h(ChallengeRow, { key: c.id || `up-${i}`, challenge: c, dir: c._dir })
+                    ? h(EmptyState, { icon: 'fas fa-calendar-alt', text: 'Sin retos activos. Lanza un reto para programar tu próxima sesión.' })
+                    : h('div', { className: 'challenges-sections' },
+                        upcomingChallenges.length > 0 && h('div', { className: 'challenge-group' },
+                            h('p', { className: 'challenge-group-label' },
+                                h('i', { className: 'fas fa-check-circle' }),
+                                ' Confirmados'
+                            ),
+                            h('ul', { className: 'sparring-list' },
+                                ...upcomingChallenges.map((c, i) =>
+                                    h(ChallengeRow, { key: c.id || `up-${i}`, challenge: c, dir: c._dir })
+                                )
+                            )
                         ),
-                        ...pendingChallenges.slice(0, Math.max(0, 5 - upcomingChallenges.length)).map((c, i) => {
-                            const dir = sent.find(s => s.id === c.id) ? 'sent' : 'recv';
-                            return h(ChallengeRow, { key: c.id || `pend-${i}`, challenge: c, dir });
-                        })
+                        pendingChallenges.length > 0 && h('div', { className: 'challenge-group' },
+                            h('p', { className: 'challenge-group-label' },
+                                h('i', { className: 'fas fa-hourglass-half' }),
+                                ' Pendientes'
+                            ),
+                            h('ul', { className: 'sparring-list' },
+                                ...pendingChallenges.slice(0, 5).map((c, i) => {
+                                    const dir = sent.find(s => s.id === c.id) ? 'sent' : 'recv';
+                                    return h(ChallengeRow, { key: c.id || `pend-${i}`, challenge: c, dir });
+                                })
+                            )
+                        )
                     )
             )
         )
