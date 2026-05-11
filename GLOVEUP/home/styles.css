@@ -2727,6 +2727,10 @@ body.theme-dark .sidebar-header .app-name {
     background-clip: text;
 }
 
+body.theme-dark .sidebar-header img {
+    filter: brightness(0) invert(1) drop-shadow(0 2px 4px rgba(255, 255, 255, 0.15));
+}
+
 body.theme-dark .sidebar-nav li a {
     color: var(--color-text-light);
 }

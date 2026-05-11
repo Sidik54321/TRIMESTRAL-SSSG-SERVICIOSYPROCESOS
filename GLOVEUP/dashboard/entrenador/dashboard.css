@@ -494,3 +494,96 @@ body.theme-dark .coach-calendar-details {
         gap: 12px;
     }
 }
+
+@media (max-width: 640px) {
+    /* Más margen lateral en el área principal */
+    .dashboard-main {
+        padding: 16px 14px 28px !important;
+    }
+
+    /* Más espacio entre paneles */
+    #coach-dashboard.dashboard-grid,
+    #coach-management.dashboard-grid,
+    #coach-challenges.dashboard-grid,
+    #coach-gym.dashboard-grid {
+        gap: 20px;
+    }
+
+    /* Más padding dentro de cada panel */
+    #coach-dashboard .dashboard-panel,
+    #coach-management .dashboard-panel,
+    #coach-challenges .dashboard-panel,
+    #coach-gym .dashboard-panel {
+        padding: 20px 16px 18px;
+    }
+
+    /* Títulos de panel más grandes y con más margen inferior */
+    #coach-dashboard .dashboard-panel h2,
+    #coach-management .dashboard-panel h2,
+    #coach-challenges .dashboard-panel h2,
+    #coach-gym .dashboard-panel h2 {
+        font-size: 1rem;
+        margin-bottom: 16px;
+    }
+
+    /* Más espacio y padding en las metric cards */
+    #coach-dashboard .dashboard-metrics,
+    #coach-management .dashboard-metrics {
+        gap: 14px;
+    }
+
+    #coach-dashboard .metric-card,
+    #coach-management .metric-card {
+        padding: 20px 16px;
+    }
+
+    /* Nombres y emails sin truncar en móvil */
+    .coach-boxer-name,
+    .coach-boxer-email-text {
+        white-space: normal;
+        max-width: 100%;
+        font-size: 0.88rem;
+    }
+
+    /* Tarjeta de boxeador con más padding y separación */
+    .coach-boxer-card {
+        padding: 16px 14px;
+        gap: 14px;
+    }
+
+    /* Meta info en columna para que no se amontone */
+    .coach-boxer-meta {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    /* Pills de calendario más pequeñas */
+    .coach-calendar-legend {
+        gap: 6px;
+    }
+
+    .coach-calendar-pill {
+        font-size: 0.65rem;
+        padding: 5px 8px;
+    }
+
+    /* Gráfico de ingresos más alto para que se lea bien */
+    .coach-line-chart {
+        height: 200px;
+    }
+
+    /* Input de filtro a ancho completo */
+    .coach-filter-input {
+        min-width: 0;
+        width: 100%;
+    }
+
+    /* Acciones de asignación en columna */
+    .coach-boxers-assign-actions {
+        flex-direction: column;
+    }
+    .coach-boxers-assign-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
