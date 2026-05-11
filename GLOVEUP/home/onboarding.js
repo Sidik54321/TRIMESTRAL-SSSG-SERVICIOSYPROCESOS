@@ -217,6 +217,7 @@
         }
 
         containerEl.innerHTML = buildHTML(steps, doneSet, pct);
+        hideSidebarIfDone();
 
         // Clic en tarjeta → marcar hecho + navegar
         containerEl.querySelectorAll('.onboarding-card').forEach(card => {
@@ -254,10 +255,30 @@
     // ── Exponer para uso externo ─────────────────────────────────────────────
     window.GlvOnboarding = { markDone, getDoneSet };
 
+    // ── Ocultar enlace del sidebar si todos los pasos están hechos ───────────
+    function hideSidebarIfDone() {
+        const email = (localStorage.getItem(LS_EMAIL) || '').trim().toLowerCase();
+        const role  = (localStorage.getItem(LS_ROLE)  || 'usuario').toLowerCase();
+        if (!email) return;
+
+        const steps   = role === 'entrenador' ? STEPS_ENTRENADOR : STEPS_BOXEADOR;
+        const doneSet = getDoneSet(email);
+        const allDone = steps.every(s => doneSet.has(s.id));
+
+        if (allDone) {
+            const navItem = document.getElementById('nav-primeros-pasos');
+            if (navItem) navItem.style.display = 'none';
+        }
+    }
+
     // ── Detectar contexto ────────────────────────────────────────────────────
     if (document.getElementById('onboarding-full-root')) {
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initFullPage);
         else initFullPage();
     }
+
+    // Ocultar sidebar en todas las páginas
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hideSidebarIfDone);
+    else hideSidebarIfDone();
 
 })();
