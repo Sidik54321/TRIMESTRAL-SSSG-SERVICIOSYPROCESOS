@@ -671,7 +671,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const viewIdentifier = getViewIdentifier();
     const isViewMode = Boolean(viewIdentifier);
     const isCoachProfile = isCoach && !isViewMode;
-    const fromParam = getFromParam();
     const tab = getTabParam();
     const isSparringsTab = tab === 'sparrings';
 
@@ -704,7 +703,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (isViewMode) {
         if (pageTitle) pageTitle.textContent = 'Perfil de Boxeador';
-        if (backSparringBtn) backSparringBtn.style.display = fromParam === 'sparring' ? '' : 'none';
+        if (backSparringBtn) backSparringBtn.style.display = '';
         if (saveBtn) saveBtn.style.display = 'none';
         if (photoUploadLabel) photoUploadLabel.style.display = 'none';
         if (removePhotoBtn) removePhotoBtn.style.display = 'none';
@@ -717,7 +716,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (boxerOnlyGym) boxerOnlyGym.style.display = '';
         setFormReadonly(true);
     } else {
-        if (backSparringBtn) backSparringBtn.style.display = 'none';
+        if (backSparringBtn) backSparringBtn.style.display = isSparringsTab && !isCoachProfile ? '' : 'none';
         if (saveBtn) saveBtn.style.display = isSparringsTab && !isCoachProfile ? 'none' : '';
         if (lookupBanner) lookupBanner.style.display = 'none';
         if (boxerOnlyLevel) boxerOnlyLevel.style.display = 'none';
@@ -728,7 +727,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (backSparringBtn) {
         backSparringBtn.addEventListener('click', () => {
-            window.location.href = '../sparring/index.html';
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '../home/dashboard.html';
+            }
         });
     }
 
