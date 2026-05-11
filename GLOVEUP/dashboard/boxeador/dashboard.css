@@ -1,80 +1,241 @@
 @import url("../../home/styles.css");
 
-/* ============================================== */
+/* ============================================================ */
+/* DASHBOARD BOXER — ESTILOS                                    */
+/* ============================================================ */
 
+.dashboard-main {
+    padding-bottom: 140px;
+}
 
-/* DASHBOARD BOXER — CLEAN B&W STYLES             */
+.main-sidebar { overflow: hidden; }
+.sidebar-nav  { overflow: visible; }
 
+/* ——— Carga ——— */
+.dashboard-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 80px 0;
+    color: var(--color-text-lighter);
+    font-size: 0.9rem;
+}
 
-/* ============================================== */
+.spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--color-bg-light);
+    border-top-color: var(--color-accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
 
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* Metric cards with charts — hide bar */
-
+/* ——— Metric cards con doughnut ——— */
 .dashboard-metrics .metric-card.has-chart .metric-bar {
     display: none;
 }
 
-.dashboard-metrics .metric-chart {
-    margin-top: 16px;
-    margin-bottom: 8px;
-    height: 90px;
+/* Contenedor del donut */
+.donut-wrapper {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+    margin: 18px auto 10px;
+    width: 96px;
+    height: 96px;
 }
 
-.dashboard-metrics .metric-chart canvas {
-    width: 100% !important;
-    height: 90px !important;
+.donut-wrapper canvas {
     display: block;
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.04));
 }
 
-
-/* Staggered card entry */
-
-.dashboard-metrics .metric-card:nth-child(1) {
-    animation-delay: 100ms;
+/* Texto centrado sobre el canvas */
+.donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
 }
 
-.dashboard-metrics .metric-card:nth-child(2) {
-    animation-delay: 200ms;
+.donut-value {
+    font-family: var(--font-heading);
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: var(--color-text-main);
+    line-height: 1;
 }
 
-.dashboard-metrics .metric-card:nth-child(3) {
-    animation-delay: 300ms;
+.donut-pct {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--color-text-lighter);
+    margin-top: 2px;
 }
 
-.dashboard-metrics .metric-card:nth-child(4) {
-    animation-delay: 400ms;
+/* Stagger entrada */
+.dashboard-metrics .metric-card:nth-child(1) { animation-delay: 80ms;  }
+.dashboard-metrics .metric-card:nth-child(2) { animation-delay: 180ms; }
+.dashboard-metrics .metric-card:nth-child(3) { animation-delay: 280ms; }
+
+.dashboard-grid .dashboard-panel:nth-child(1) { animation-delay: 350ms; }
+.dashboard-grid .dashboard-panel:nth-child(2) { animation-delay: 450ms; }
+
+/* ——— Lista de sparrings ——— */
+.sparring-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-
-/* Removed nth-child gradient overrides to allow global orange tertiary accent */
-
-
-/* Dashboard panels stagger */
-
-.dashboard-grid .dashboard-panel:nth-child(1) {
-    animation-delay: 350ms;
+.sparring-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-light);
+    border: 1px solid var(--color-border);
+    transition: background var(--transition-fast), transform var(--transition-fast);
 }
 
-.dashboard-grid .dashboard-panel:nth-child(2) {
-    animation-delay: 450ms;
+.sparring-row:hover {
+    background: var(--color-bg-card);
+    transform: translateX(2px);
 }
 
+.sparring-row-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
 
-/* Removed nth-child gradient overrides for dark theme to allow global orange tertiary accent */
+.sparring-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
 
-.main-sidebar {
+.sparring-avatar.avatar-sent {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.sparring-avatar.avatar-recv {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.sparring-rival {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
 }
 
-.sidebar-nav {
-    overflow: visible;
+.sparring-gym {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--color-text-lighter);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
 }
 
-.dashboard-main {
-    padding-bottom: 140px;
+.sparring-row-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.sparring-date {
+    font-size: 0.72rem;
+    color: var(--color-text-lighter);
+}
+
+/* ——— Badges de estado ——— */
+.sparring-status {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 9px;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-pending   { background: rgba(245,158,11,0.12); color: #d97706; }
+.status-accepted  { background: rgba(16,185,129,0.12);  color: #059669; }
+.status-completed { background: rgba(59,130,246,0.12);  color: #2563eb; }
+.status-rejected  { background: rgba(239,68,68,0.12);   color: #dc2626; }
+.status-cancelled { background: rgba(100,116,139,0.12); color: #64748b; }
+
+/* ——— Estado vacío ——— */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 32px 16px;
+    color: var(--color-text-lighter);
+    text-align: center;
+}
+
+.empty-state i {
+    font-size: 1.8rem;
+    opacity: 0.3;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    max-width: 240px;
+}
+
+/* ——— Dark mode ——— */
+body.theme-dark .sparring-row {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.08);
+}
+
+body.theme-dark .sparring-row:hover {
+    background: rgba(255,255,255,0.07);
+}
+
+body.theme-dark .donut-value {
+    color: #f1f5f9;
+}
+
+body.theme-dark .donut-pct {
+    color: rgba(255,255,255,0.35);
+}
+
+body.theme-dark .dashboard-loading {
+    color: rgba(255,255,255,0.35);
 }
