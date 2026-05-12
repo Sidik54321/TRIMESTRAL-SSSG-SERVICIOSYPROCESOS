@@ -239,6 +239,20 @@ router.put('/me', async (req, res) => {
     }
 });
 
+router.post('/me/leave-gym', async (req, res) => {
+    try {
+        const coach = await requireCoachByEmail(req.query.email);
+        if (!coach.gimnasio) return res.status(400).json({ error: 'No perteneces a ningún gimnasio' });
+
+        coach.gimnasio = '';
+        await coach.save();
+
+        return res.json({ ok: true });
+    } catch (err) {
+        return res.status(err.status || 400).json({ error: err.message });
+    }
+});
+
 // ──────── Calendar Events CRUD ────────
 
 // GET  /me/calendar-events  — lista los eventos personalizados del entrenador

@@ -715,6 +715,11 @@
                 const meBoxer = findBoxerByIdentifier(meEmail);
                 const targetBoxer = findBoxerByIdentifier(targetIdentifier);
 
+                if (!meBoxer || !meBoxer.gimnasio) {
+                    notify('Debes pertenecer a un gimnasio para poder enviar retos.', 'error');
+                    return false;
+                }
+
                 const myCoachId = meBoxer && meBoxer.entrenadorId ? String(meBoxer.entrenadorId) : '';
                 const targetCoachId = targetBoxer && targetBoxer.entrenadorId ? String(targetBoxer.entrenadorId) : '';
 
@@ -909,6 +914,9 @@
                 const start = (safePage - 1) * PAGE_SIZE;
                 const pageItems = filteredBoxeadores.slice(start, start + PAGE_SIZE);
 
+                const meBoxer = !isCoachRole ? findBoxerByIdentifier(getEmail()) : null;
+                const myHasGym = !!(meBoxer && meBoxer.gimnasio);
+
                 pageItems.forEach((boxeador, index) => {
                     const card = document.createElement('div');
                     card.className = 'sparring-card';
@@ -937,8 +945,8 @@
                     const canViewProfile = Boolean(identifierRaw);
                     const isMe = identifierRaw.toLowerCase() === (localStorage.getItem('gloveup_user_email') || '').toLowerCase();
                     const nameEnc = boxeador && boxeador.nombre ? encodeURIComponent(String(boxeador.nombre)) : '';
-                    const challengeLabel = isMe ? 'Tú' : 'Retar';
-                    const canChallenge = !isCoachRole && canViewProfile && !isMe;
+                    const challengeLabel = isMe ? 'Tú' : (!myHasGym && !isCoachRole ? 'Sin gimnasio' : 'Retar');
+                    const canChallenge = !isCoachRole && canViewProfile && !isMe && myHasGym;
 
                     card.innerHTML = `
                         <div class="card-rank"><span>#${globalIndex}</span>${globalIndex === 1 ? '<i class="fas fa-crown"></i>' : ''}</div>
@@ -957,7 +965,7 @@
                         </div>
                         <div class="card-action">
                             <button class="view-profile-button" ${canViewProfile ? `data-identifier-enc="${identifierEnc}"` : 'disabled'}>${canViewProfile ? 'Ver Perfil' : 'Sin perfil'}</button>
-                            <button class="challenge-button" ${canChallenge ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>${challengeLabel}</button>
+                            <button class="challenge-button" ${canChallenge ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'} ${!isCoachRole && !isMe && !myHasGym ? 'title="Necesitas pertenecer a un gimnasio para enviar retos"' : ''}>${challengeLabel}</button>
                         </div>
                     `;
 
@@ -1324,6 +1332,11 @@
                     if (encId && challengeModal && typeof ensureGymOptions === 'function') {
                         const identifier = decodeURIComponent(encId);
                         const name = encName ? decodeURIComponent(encName) : '';
+                        const myEmail = (localStorage.getItem('gloveup_user_email') || '').trim().toLowerCase();
+                        if (identifier.trim().toLowerCase() === myEmail) {
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                            return;
+                        }
                         if (!prepareRequiredCoachesForChallenge(identifier)) return;
                         challengeTargetIdentifier = identifier;
                         if (challengeTitle) {

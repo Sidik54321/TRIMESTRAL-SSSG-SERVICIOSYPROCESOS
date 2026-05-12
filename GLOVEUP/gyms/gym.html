@@ -938,6 +938,10 @@
                     const identifierEnc = identifierRaw ? encodeURIComponent(identifierRaw) : '';
                     const canViewProfile = Boolean(identifierRaw);
                     const nameEnc = boxeador.nombre ? encodeURIComponent(String(boxeador.nombre)) : '';
+                    const sessionDni = (localStorage.getItem('gloveup_user_dni') || '').trim().toUpperCase();
+                    const isMe = identifierRaw.toLowerCase() === sessionEmail ||
+                        (sessionDni && identifierRaw.toUpperCase() === sessionDni);
+                    const canChallenge = canViewProfile && role !== 'entrenador' && !isMe;
 
                     card.innerHTML = `
                         <div class="card-rank"><span>#${globalIndex}</span>${globalIndex === 1 ? '<i class="fas fa-crown"></i>' : ''}</div>
@@ -954,7 +958,7 @@
                         </div>
                         <div class="card-action">
                             <button class="view-profile-button" ${canViewProfile ? `data-identifier-enc="${identifierEnc}"` : 'disabled'}>${canViewProfile ? 'Ver Perfil' : 'Sin perfil'}</button>
-                            <button class="challenge-button" ${canViewProfile && role !== 'entrenador' ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>Retar</button>
+                            <button class="challenge-button" ${canChallenge ? `data-identifier-enc="${identifierEnc}" data-name-enc="${nameEnc}"` : 'disabled'}>${isMe ? 'Tú' : 'Retar'}</button>
                         </div>
                     `;
                     listEl.appendChild(card);
@@ -969,6 +973,9 @@
                     }
                     const challengeBtn = e.target.closest('.challenge-button');
                     if (challengeBtn && challengeBtn.dataset.identifierEnc) {
+                        const targetId = decodeURIComponent(challengeBtn.dataset.identifierEnc).toLowerCase().trim();
+                        const sessionDniCheck = (localStorage.getItem('gloveup_user_dni') || '').trim().toUpperCase();
+                        if (targetId === sessionEmail || targetId.toUpperCase() === sessionDniCheck) return;
                         window.location.href = '../sparring/index.html?action=challenge&id=' + challengeBtn.dataset.identifierEnc + '&name=' + (challengeBtn.dataset.nameEnc || '');
                     }
                 });

@@ -204,6 +204,12 @@ router.post('/challenges', async (req, res) => {
             });
         }
 
+        if (!fromTrainer && !from.gimnasio) {
+            return res.status(403).json({
+                error: 'Debes pertenecer a un gimnasio para poder enviar retos.'
+            });
+        }
+
         if ((to.email || '').toString().trim().toLowerCase() === fromEmail) {
             return res.status(400).json({
                 error: 'No puedes retarte a ti mismo'
@@ -567,6 +573,42 @@ router.get('/me', async (req, res) => {
         return res.status(400).json({
             error: err.message
         });
+    }
+});
+
+router.post('/me/leave-gym', async (req, res) => {
+    try {
+        const email = (req.query.email || '').toString().trim().toLowerCase();
+        if (!email) return res.status(400).json({ error: 'Email requerido' });
+
+        const boxer = await Boxeador.findOne({ email });
+        if (!boxer) return res.status(404).json({ error: 'Boxeador no encontrado' });
+        if (!boxer.gimnasio) return res.status(400).json({ error: 'No perteneces a ningún gimnasio' });
+
+        const coachId = boxer.entrenadorId;
+        const gymName = boxer.gimnasio;
+
+        boxer.gimnasio = '';
+        boxer.entrenadorId = undefined;
+        boxer.fechaInscripcion = undefined;
+        await boxer.save();
+
+        if (coachId) {
+            const coach = await Entrenador.findById(coachId).lean();
+            if (coach && coach.email) {
+                await crearNotificacion({
+                    para: coach.email,
+                    tipo: 'gimnasio',
+                    titulo: `${boxer.nombre || email} ha abandonado el gimnasio`,
+                    cuerpo: `${boxer.nombre || email} ha decidido abandonar ${gymName}.`,
+                    de: email
+                });
+            }
+        }
+
+        return res.json({ ok: true });
+    } catch (err) {
+        return res.status(400).json({ error: err.message });
     }
 });
 

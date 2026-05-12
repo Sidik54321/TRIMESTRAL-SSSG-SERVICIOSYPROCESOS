@@ -2961,8 +2961,8 @@ function CoachChallenges() {
         // En cualquier otra pestaña, ocultamos lo completado y lo archivado
         const visible = challenges.filter(c => c.status !== 'completed' && !archivedIds.includes(c.id));
 
-        if (filter === 'pending') return visible.filter(c => isPendingStatus(c.status) && !hasIApproved(c));
-        if (filter === 'accepted') return visible.filter(c => c.status === 'accepted' || (isPendingStatus(c.status) && hasIApproved(c)));
+        if (filter === 'pending') return visible.filter(c => isPendingStatus(c.status));
+        if (filter === 'accepted') return visible.filter(c => c.status === 'accepted');
         if (filter === 'declined') return visible.filter(c => c.status === 'declined');
         return visible;
     }, [challenges, filter, archivedIds]);
@@ -3012,7 +3012,6 @@ function CoachChallenges() {
                 kind: 'ok',
                 text: `Reto ${action === 'accept' ? 'aprobado' : 'rechazado'} correctamente.`
             });
-            if (action === 'accept') setFilter('accepted');
             load();
         } catch (err) {
             setMessage({
@@ -3119,9 +3118,9 @@ function CoachChallenges() {
                         tab.key === 'history' ?
                         challenges.filter(c => archivedIds.includes(c.id)).length :
                         tab.key === 'pending' ?
-                        challenges.filter(c => isPendingStatus(c.status) && c.status !== 'completed' && !archivedIds.includes(c.id) && !hasIApproved(c)).length :
+                        challenges.filter(c => isPendingStatus(c.status) && c.status !== 'completed' && !archivedIds.includes(c.id)).length :
                         tab.key === 'accepted' ?
-                        challenges.filter(c => (c.status === 'accepted' || (isPendingStatus(c.status) && hasIApproved(c))) && !archivedIds.includes(c.id)).length :
+                        challenges.filter(c => c.status === 'accepted' && !archivedIds.includes(c.id)).length :
                         challenges.filter(c => c.status === tab.key && !archivedIds.includes(c.id)).length;
                     const isActive = filter === tab.key;
                     return h('button', {

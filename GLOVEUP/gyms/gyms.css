@@ -94,6 +94,10 @@
 .view-options { display: flex; background: var(--color-bg-card); padding: 4px; border-radius: var(--radius-full); border: 1px solid var(--color-border); }
 .view-btn { border: none; background: transparent; padding: 8px 16px; border-radius: var(--radius-full); font-size: .82em; font-weight: 600; color: var(--color-text-light); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all var(--transition-fast); }
 .view-btn.active { background: linear-gradient(135deg, var(--color-accent), #374151); color: #fff; box-shadow: var(--shadow-accent); }
+.my-gym-section-header { display: flex; align-items: center; gap: 10px; font-family: var(--font-heading); font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--color-accent, #f59e0b); margin-bottom: 14px; }
+.my-gym-section-header i { font-size: 1.1em; }
+.my-gym-divider { display: flex; align-items: center; gap: 14px; margin: 28px 0 22px; color: var(--color-text-lighter); font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.my-gym-divider::before, .my-gym-divider::after { content: ''; flex: 1; height: 1px; background: var(--color-border); }
 .gym-list { display: flex; flex-direction: column; gap: 20px; }
 .gym-card { background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-sm); display: flex; min-height: 180px; transition: all var(--transition-base); width: 100%; animation: gloveupFadeUp 400ms cubic-bezier(.2,.8,.2,1) both; }
 .gym-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--color-border-hover); }

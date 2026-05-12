@@ -64,6 +64,68 @@ async function loadGymsFromApi() {
     }
 }
 
+async function loadCurrentUserGym() {
+    const email = (localStorage.getItem('gloveup_user_email') || '').trim().toLowerCase();
+    const role = (localStorage.getItem('gloveup_user_role') || '').toLowerCase();
+    if (!email || (role !== 'boxeador' && role !== 'entrenador')) return null;
+    try {
+        let gymName = '';
+        if (role === 'boxeador') {
+            const data = await requestJson(`/api/boxeadores/me?email=${encodeURIComponent(email)}`);
+            gymName = data && data.gimnasio ? String(data.gimnasio) : '';
+        } else {
+            const data = await requestJson(`/api/entrenadores/me?email=${encodeURIComponent(email)}`);
+            gymName = data && data.gimnasio ? String(data.gimnasio) : '';
+        }
+        return gymName ? { name: gymName, key: normalizeGymKey(gymName), email, role } : null;
+    } catch {
+        return null;
+    }
+}
+
+function showConfirm(message) {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+
+        const modal = document.createElement('div');
+        modal.style.cssText = 'background:var(--color-bg,#1a1a2e);color:var(--color-text,#f1f5f9);border-radius:14px;padding:28px 24px 22px;max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.45);border:1px solid var(--color-border,rgba(255,255,255,.08));';
+        modal.innerHTML = `
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <i class="fas fa-exclamation-triangle" style="color:#f59e0b;font-size:1.4rem;flex-shrink:0;"></i>
+                <p style="margin:0;font-size:.95rem;line-height:1.5;">${message}</p>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button id="glv-confirm-cancel" style="padding:8px 18px;border-radius:8px;border:1px solid var(--color-border,rgba(255,255,255,.15));background:transparent;color:var(--color-text,#f1f5f9);font-size:.875rem;font-weight:600;cursor:pointer;">Cancelar</button>
+                <button id="glv-confirm-ok" style="padding:8px 18px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-size:.875rem;font-weight:700;cursor:pointer;">Abandonar</button>
+            </div>
+        `;
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        const close = (result) => { overlay.remove(); resolve(result); };
+        modal.querySelector('#glv-confirm-ok').addEventListener('click', () => close(true));
+        modal.querySelector('#glv-confirm-cancel').addEventListener('click', () => close(false));
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(false); });
+    });
+}
+
+async function leaveGym(email, role) {
+    const confirmed = await showConfirm('¿Seguro que quieres abandonar el gimnasio? Esta acción no se puede deshacer.');
+    if (!confirmed) return;
+    try {
+        const endpoint = role === 'boxeador'
+            ? `/api/boxeadores/me/leave-gym?email=${encodeURIComponent(email)}`
+            : `/api/entrenadores/me/leave-gym?email=${encodeURIComponent(email)}`;
+        await requestJson(endpoint, { method: 'POST' });
+        window.location.reload();
+    } catch (err) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Error al abandonar el gimnasio: ' + (err && err.message ? err.message : 'Error desconocido'), 'error');
+        }
+    }
+}
+
 async function loadBoxers() {
     try {
         const items = await requestJson('/api/boxeadores');
@@ -202,11 +264,17 @@ function initGymsMap() {
     }
 }
 
-function buildGymCard(gym) {
+function buildGymCard(gym, userGym) {
+    const isMyGym = userGym && userGym.key === gym.key;
+
     const card = document.createElement('div');
     card.className = 'gym-card';
     card.dataset.name = gym.name;
     card.dataset.city = gym.city || '';
+    if (isMyGym) {
+        card.style.border = '2px solid var(--color-accent, #f59e0b)';
+        card.style.boxShadow = '0 0 0 3px rgba(245,158,11,0.15)';
+    }
 
     const image = document.createElement('div');
     image.className = 'gym-image';
@@ -215,6 +283,14 @@ function buildGymCard(gym) {
     image.style.backgroundImage = `url('${mainFoto || fallbackImage}')`;
     image.style.backgroundSize = 'cover';
     image.style.backgroundPosition = 'center';
+
+    if (isMyGym) {
+        const myBadge = document.createElement('div');
+        myBadge.style.cssText = 'position:absolute;top:10px;left:10px;background:#f59e0b;color:#fff;font-size:.7rem;font-weight:800;text-transform:uppercase;padding:4px 10px;border-radius:20px;letter-spacing:.05em;display:flex;align-items:center;gap:5px;box-shadow:0 2px 6px rgba(0,0,0,.2);';
+        myBadge.innerHTML = '<i class="fas fa-map-marker-alt"></i> Mi Gimnasio';
+        image.style.position = 'relative';
+        image.appendChild(myBadge);
+    }
 
     const favBtn = document.createElement('button');
     favBtn.className = 'fav-btn';
@@ -292,6 +368,17 @@ function buildGymCard(gym) {
     footer.appendChild(price);
     footer.appendChild(viewBtn);
 
+    if (isMyGym) {
+        const leaveBtn = document.createElement('button');
+        leaveBtn.type = 'button';
+        leaveBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Abandonar';
+        leaveBtn.style.cssText = 'padding:8px 14px;border-radius:8px;border:1px solid #ef4444;background:transparent;color:#ef4444;font-size:.8rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s;';
+        leaveBtn.addEventListener('mouseenter', () => { leaveBtn.style.background = '#ef4444'; leaveBtn.style.color = '#fff'; });
+        leaveBtn.addEventListener('mouseleave', () => { leaveBtn.style.background = 'transparent'; leaveBtn.style.color = '#ef4444'; });
+        leaveBtn.addEventListener('click', (e) => { e.stopPropagation(); leaveGym(userGym.email, userGym.role); });
+        footer.appendChild(leaveBtn);
+    }
+
     info.appendChild(header);
     info.appendChild(location);
     if (metaTags.hasChildNodes()) info.appendChild(metaTags);
@@ -324,33 +411,51 @@ async function initGymsUi() {
     const paginationEl = document.getElementById('gyms-pagination');
     if (!listEl || !paginationEl) return;
 
-    const apiGyms = await loadGymsFromApi();
+    const [apiGyms, userGym] = await Promise.all([loadGymsFromApi(), loadCurrentUserGym()]);
     const merged = [];
     const seen = new Set();
     apiGyms.forEach((g) => {
         const key = g.key || normalizeGymKey(g.name);
         if (!key || seen.has(key)) return;
         seen.add(key);
-        merged.push({
-            ...g,
-            key
-        });
+        merged.push({ ...g, key });
     });
     defaultGyms.forEach((g) => {
         const key = normalizeGymKey(g.name);
         if (!key || seen.has(key)) return;
         seen.add(key);
-        merged.push({
-            ...g,
-            key
-        });
+        merged.push({ ...g, key });
     });
+
+    // Pin the user's gym first
+    if (userGym) {
+        merged.sort((a, b) => {
+            const aIsMine = a.key === userGym.key ? -1 : 0;
+            const bIsMine = b.key === userGym.key ? 1 : 0;
+            return aIsMine + bIsMine;
+        });
+    }
+
     gyms = merged.slice();
 
+    const myGymSection = document.getElementById('my-gym-section');
+    const myGymContainer = document.getElementById('my-gym-card-container');
+
     listEl.innerHTML = '';
+    if (myGymContainer) myGymContainer.innerHTML = '';
+
     gyms.forEach((g) => {
-        listEl.appendChild(buildGymCard(g));
+        const isMyGym = userGym && userGym.key === g.key;
+        if (isMyGym && myGymContainer) {
+            myGymContainer.appendChild(buildGymCard(g, userGym));
+        } else {
+            listEl.appendChild(buildGymCard(g, userGym));
+        }
     });
+
+    if (myGymSection && myGymContainer && myGymContainer.hasChildNodes()) {
+        myGymSection.style.display = '';
+    }
 
     const allCards = Array.from(listEl.querySelectorAll('.gym-card'));
     const pageSize = 10;
