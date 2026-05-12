@@ -210,6 +210,22 @@ router.post('/challenges', async (req, res) => {
             });
         }
 
+        // Límite de 5 retos enviados por semana (lunes a domingo) para boxeadores
+        if (!fromTrainer) {
+            const weekStart = new Date();
+            weekStart.setHours(0, 0, 0, 0);
+            const day = weekStart.getDay();
+            weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1));
+            const sentThisWeek = (from.sparringChallengesSent || []).filter(
+                (c) => new Date(c.createdAt) >= weekStart
+            );
+            if (sentThisWeek.length >= 5) {
+                return res.status(429).json({
+                    error: 'Has alcanzado el límite de 5 retos por semana. Podrás enviar más retos a partir del próximo lunes.'
+                });
+            }
+        }
+
         const coaches = await Entrenador.find({
             _id: {
                 $in: coachIds
