@@ -77,7 +77,12 @@ async function loadCurrentUserGym() {
             const data = await requestJson(`/api/entrenadores/me?email=${encodeURIComponent(email)}`);
             gymName = data && data.gimnasio ? String(data.gimnasio) : '';
         }
-        return gymName ? { name: gymName, key: normalizeGymKey(gymName), email, role } : null;
+        return gymName ? {
+            name: gymName,
+            key: normalizeGymKey(gymName),
+            email,
+            role
+        } : null;
     } catch {
         return null;
     }
@@ -103,10 +108,15 @@ function showConfirm(message) {
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
 
-        const close = (result) => { overlay.remove(); resolve(result); };
+        const close = (result) => {
+            overlay.remove();
+            resolve(result);
+        };
         modal.querySelector('#glv-confirm-ok').addEventListener('click', () => close(true));
         modal.querySelector('#glv-confirm-cancel').addEventListener('click', () => close(false));
-        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(false); });
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close(false);
+        });
     });
 }
 
@@ -114,10 +124,12 @@ async function leaveGym(email, role) {
     const confirmed = await showConfirm('¿Seguro que quieres abandonar el gimnasio? Esta acción no se puede deshacer.');
     if (!confirmed) return;
     try {
-        const endpoint = role === 'boxeador'
-            ? `/api/boxeadores/me/leave-gym?email=${encodeURIComponent(email)}`
-            : `/api/entrenadores/me/leave-gym?email=${encodeURIComponent(email)}`;
-        await requestJson(endpoint, { method: 'POST' });
+        const endpoint = role === 'boxeador' ?
+            `/api/boxeadores/me/leave-gym?email=${encodeURIComponent(email)}` :
+            `/api/entrenadores/me/leave-gym?email=${encodeURIComponent(email)}`;
+        await requestJson(endpoint, {
+            method: 'POST'
+        });
         window.location.reload();
     } catch (err) {
         if (typeof window.showToast === 'function') {
@@ -165,27 +177,148 @@ const gymMarkersMap = {};
 function focusGymOnMap(gymKey) {
     const marker = gymMarkersMap[gymKey];
     const mapSection = document.querySelector('.map-section-container');
-    if (mapSection) mapSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (mapSection) mapSection.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+    });
     if (marker) setTimeout(() => marker.openPopup(), 400);
 }
 
 window.glvFocusGymOnMap = focusGymOnMap;
 
+let leafletLoadPromise = null;
+
+function ensureLeafletLoaded() {
+    if (window.L) return Promise.resolve(true);
+    if (leafletLoadPromise) return leafletLoadPromise;
+
+    leafletLoadPromise = new Promise((resolve) => {
+        const existing = Array.from(document.querySelectorAll('script[src]'))
+            .some((s) => String(s.getAttribute('src') || '').includes('leaflet'));
+        const hasCss = Array.from(document.querySelectorAll('link[rel="stylesheet"][href]'))
+            .some((l) => String(l.getAttribute('href') || '').includes('leaflet'));
+
+        if (!hasCss) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';
+            document.head.appendChild(link);
+        }
+
+        const waitForLeaflet = (ms) => {
+            const startedAt = Date.now();
+            return new Promise((r) => {
+                const tick = () => {
+                    if (window.L) return r(true);
+                    if (Date.now() - startedAt >= ms) return r(false);
+                    setTimeout(tick, 60);
+                };
+                tick();
+            });
+        };
+
+        waitForLeaflet(existing ? 1200 : 0).then((ok) => {
+            if (ok || window.L) return resolve(true);
+            if (document.getElementById('glv-leaflet-js')) return waitForLeaflet(1200).then((ok2) => resolve(Boolean(ok2 && window.L)));
+
+            const script = document.createElement('script');
+            script.id = 'glv-leaflet-js';
+            script.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+            script.async = true;
+            script.onload = () => resolve(Boolean(window.L));
+            script.onerror = () => resolve(false);
+            document.head.appendChild(script);
+        });
+    });
+
+    return leafletLoadPromise;
+}
+
+function renderOsmIframeMap(mapContainer, lat, lng) {
+    if (!mapContainer) return;
+    const safeLat = Number(lat);
+    const safeLng = Number(lng);
+    if (!Number.isFinite(safeLat) || !Number.isFinite(safeLng)) return;
+
+    const delta = 0.06;
+    const bbox = `${(safeLng - delta).toFixed(6)},${(safeLat - delta).toFixed(6)},${(safeLng + delta).toFixed(6)},${(safeLat + delta).toFixed(6)}`;
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${safeLat},${safeLng}`;
+    iframe.style.cssText = 'width:100%;height:100%;border:0;display:block;border-radius:inherit;';
+    iframe.setAttribute('loading', 'lazy');
+    iframe.setAttribute('title', 'Mapa de gimnasios');
+    mapContainer.innerHTML = '';
+    mapContainer.appendChild(iframe);
+}
+
 async function initGymsMap() {
     const mapContainer = document.getElementById('gyms-map');
-    if (!mapContainer || !window.L) return;
+    if (!mapContainer) return;
+
+    if (window._glvGymsMap && typeof window._glvGymsMap.invalidateSize === 'function') {
+        if (mapContainer.dataset.glvMapBroken === '1') {
+            try {
+                window._glvGymsMap.remove();
+            } catch {}
+            window._glvGymsMap = null;
+        } else {
+            setTimeout(() => window._glvGymsMap.invalidateSize(), 60);
+            return;
+        }
+    }
+
+    await ensureLeafletLoaded();
+    if (!window.L) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('No se pudo cargar el mapa. Revisa tu conexión a internet.', 'error');
+        }
+        const fallbackCenter = [40.4168, -3.7038];
+        renderOsmIframeMap(mapContainer, fallbackCenter[0], fallbackCenter[1]);
+        return;
+    }
 
     const validGyms = gyms.filter((g) => typeof g.lat === 'number' && typeof g.lng === 'number');
-    const defaultCenter = validGyms.length > 0
-        ? [validGyms[0].lat, validGyms[0].lng]
-        : [40.4168, -3.7038];
+    const defaultCenter = validGyms.length > 0 ? [validGyms[0].lat, validGyms[0].lng] : [40.4168, -3.7038];
 
     const map = L.map(mapContainer).setView(defaultCenter, validGyms.length > 0 ? 11 : 6);
+    window._glvGymsMap = map;
+    mapContainer.dataset.glvMapBroken = '0';
+    map.whenReady(() => {
+        map.invalidateSize();
+    });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19
     }).addTo(map);
+
+    let hasLoadedTile = false;
+    let tileErrors = 0;
+    tiles.on('tileload', () => {
+        hasLoadedTile = true;
+    });
+    tiles.on('tileerror', () => {
+        tileErrors += 1;
+    });
+
+    setTimeout(() => {
+        const anyLoadedTile = Boolean(mapContainer.querySelector('.leaflet-tile-loaded'));
+        if (hasLoadedTile || anyLoadedTile) return;
+        mapContainer.dataset.glvMapBroken = '1';
+        try {
+            map.remove();
+        } catch {}
+        window._glvGymsMap = null;
+        if (typeof window.showToast === 'function') {
+            window.showToast(
+                tileErrors > 0 ?
+                'No se pudieron cargar los tiles del mapa. Mostrando vista alternativa.' :
+                'El mapa no se pudo renderizar. Mostrando vista alternativa.',
+                'error'
+            );
+        }
+        renderOsmIframeMap(mapContainer, defaultCenter[0], defaultCenter[1]);
+    }, 3500);
 
     const gymIcon = L.divIcon({
         className: '',
@@ -197,7 +330,9 @@ async function initGymsMap() {
     validGyms.forEach((gym) => {
         const gymKey = gym.key || slugify(gym.name);
         const directionsUrl = `https://www.openstreetmap.org/directions?from=&to=${gym.lat},${gym.lng}`;
-        const marker = L.marker([gym.lat, gym.lng], { icon: gymIcon }).addTo(map);
+        const marker = L.marker([gym.lat, gym.lng], {
+            icon: gymIcon
+        }).addTo(map);
         gymMarkersMap[gymKey] = marker;
         marker.bindPopup(`
             <div style="font-family:sans-serif;min-width:160px;padding:4px 0;">
@@ -230,14 +365,21 @@ async function initGymsMap() {
                 }).addTo(map).bindPopup('Tu ubicación');
 
                 if (validGyms.length > 0) {
-                    const allPoints = [[userLat, userLng], ...validGyms.map((g) => [g.lat, g.lng])];
-                    map.fitBounds(L.latLngBounds(allPoints), { padding: [30, 30] });
+                    const allPoints = [
+                        [userLat, userLng], ...validGyms.map((g) => [g.lat, g.lng])
+                    ];
+                    map.fitBounds(L.latLngBounds(allPoints), {
+                        padding: [30, 30]
+                    });
                 } else {
                     map.setView([userLat, userLng], 13);
                 }
             },
-            () => {},
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            () => {}, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 60000
+            }
         );
     }
 
@@ -251,8 +393,11 @@ async function initGymsMap() {
         if (!q) return;
         try {
             const res = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`,
-                { headers: { 'Accept-Language': 'es' } }
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`, {
+                    headers: {
+                        'Accept-Language': 'es'
+                    }
+                }
             );
             const data = await res.json();
             if (data && data.length > 0) {
@@ -353,7 +498,7 @@ function buildGymCard(gym, userGym) {
         locBadge.innerHTML = '<i class="fas fa-map-pin" style="margin-right:3px;font-size:.65rem;"></i>En el mapa';
         location.appendChild(locBadge);
     };
-    
+
     // Gym Meta Tags (Trainer & Hours)
     const metaTags = document.createElement('div');
     metaTags.style.display = 'flex';
@@ -404,8 +549,14 @@ function buildGymCard(gym, userGym) {
         mapBtn.type = 'button';
         mapBtn.innerHTML = '<i class="fas fa-map-marked-alt"></i> Ver en mapa';
         mapBtn.style.cssText = 'padding:8px 14px;border-radius:8px;border:1px solid #f59e0b;background:transparent;color:#f59e0b;font-size:.8rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s;';
-        mapBtn.addEventListener('mouseenter', () => { mapBtn.style.background = '#f59e0b'; mapBtn.style.color = '#fff'; });
-        mapBtn.addEventListener('mouseleave', () => { mapBtn.style.background = 'transparent'; mapBtn.style.color = '#f59e0b'; });
+        mapBtn.addEventListener('mouseenter', () => {
+            mapBtn.style.background = '#f59e0b';
+            mapBtn.style.color = '#fff';
+        });
+        mapBtn.addEventListener('mouseleave', () => {
+            mapBtn.style.background = 'transparent';
+            mapBtn.style.color = '#f59e0b';
+        });
         mapBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             const key = gym.key || normalizeGymKey(gym.name);
@@ -419,9 +570,18 @@ function buildGymCard(gym, userGym) {
         leaveBtn.type = 'button';
         leaveBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Abandonar';
         leaveBtn.style.cssText = 'padding:8px 14px;border-radius:8px;border:1px solid #ef4444;background:transparent;color:#ef4444;font-size:.8rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s;';
-        leaveBtn.addEventListener('mouseenter', () => { leaveBtn.style.background = '#ef4444'; leaveBtn.style.color = '#fff'; });
-        leaveBtn.addEventListener('mouseleave', () => { leaveBtn.style.background = 'transparent'; leaveBtn.style.color = '#ef4444'; });
-        leaveBtn.addEventListener('click', (e) => { e.stopPropagation(); leaveGym(userGym.email, userGym.role); });
+        leaveBtn.addEventListener('mouseenter', () => {
+            leaveBtn.style.background = '#ef4444';
+            leaveBtn.style.color = '#fff';
+        });
+        leaveBtn.addEventListener('mouseleave', () => {
+            leaveBtn.style.background = 'transparent';
+            leaveBtn.style.color = '#ef4444';
+        });
+        leaveBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            leaveGym(userGym.email, userGym.role);
+        });
         footer.appendChild(leaveBtn);
     }
 
@@ -464,13 +624,19 @@ async function initGymsUi() {
         const key = g.key || normalizeGymKey(g.name);
         if (!key || seen.has(key)) return;
         seen.add(key);
-        merged.push({ ...g, key });
+        merged.push({
+            ...g,
+            key
+        });
     });
     defaultGyms.forEach((g) => {
         const key = normalizeGymKey(g.name);
         if (!key || seen.has(key)) return;
         seen.add(key);
-        merged.push({ ...g, key });
+        merged.push({
+            ...g,
+            key
+        });
     });
 
     // Pin the user's gym first
@@ -678,6 +844,7 @@ async function initGymsUi() {
                 behavior: 'smooth',
                 block: 'start'
             });
+            initGymsMap();
         });
     }
 
