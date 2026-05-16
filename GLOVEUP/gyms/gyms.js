@@ -335,18 +335,24 @@ async function initGymsMap() {
         }).addTo(map);
         gymMarkersMap[gymKey] = marker;
         marker.bindPopup(`
-            <div style="font-family:sans-serif;min-width:160px;padding:4px 0;">
-                <strong style="font-size:.95rem;">${gym.name}</strong><br>
-                <span style="color:#666;font-size:.82rem;">${gym.city || ''}</span><br>
-                <a href="${directionsUrl}" target="_blank" rel="noopener"
-                   style="font-size:.82rem;color:#1a73e8;text-decoration:none;display:inline-block;margin-top:6px;">
-                    Cómo llegar ↗
-                </a>
-                <br>
-                <a href="gym.html?key=${encodeURIComponent(gymKey)}"
-                   style="font-size:.82rem;color:#1a73e8;text-decoration:none;display:inline-block;margin-top:4px;">
-                    Ver gimnasio →
-                </a>
+            <div style="min-width:230px;background:var(--color-bg-card,#ffffff);color:var(--color-text-main,#0f172a);border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,.18);padding:12px 12px 10px;border:1px solid var(--color-border,rgba(15,23,42,.12));font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;">
+                <div style="display:flex;flex-direction:column;gap:6px;padding-bottom:10px;border-bottom:1px solid var(--color-border,rgba(15,23,42,.12));">
+                    <div style="font-weight:900;font-size:.95rem;line-height:1.15;letter-spacing:.01em;">${gym.name}</div>
+                    <div style="display:flex;align-items:center;gap:7px;font-size:.82rem;color:var(--color-text-light,#64748b);">
+                        <i class="fas fa-map-marker-alt" style="color:var(--color-accent,#f59e0b);"></i>
+                        <span>${gym.city || 'Ubicación no indicada'}</span>
+                    </div>
+                </div>
+                <div style="display:flex;gap:10px;padding-top:10px;">
+                    <a href="${directionsUrl}" target="_blank" rel="noopener"
+                       style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 10px;border-radius:12px;background:linear-gradient(135deg,var(--color-accent,#f59e0b),#374151);color:#fff;font-weight:800;font-size:.82rem;text-decoration:none;border:1px solid transparent;">
+                        <i class="fas fa-route" style="font-size:.9rem;"></i><span>Cómo llegar</span>
+                    </a>
+                    <a href="gym.html?key=${encodeURIComponent(gymKey)}"
+                       style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 10px;border-radius:12px;background:transparent;color:var(--color-text-main,#0f172a);font-weight:800;font-size:.82rem;text-decoration:none;border:1px solid var(--color-border-hover,rgba(148,163,184,.35));">
+                        <i class="fas fa-dumbbell" style="font-size:.9rem;"></i><span>Ver gimnasio</span>
+                    </a>
+                </div>
             </div>
         `);
     });
