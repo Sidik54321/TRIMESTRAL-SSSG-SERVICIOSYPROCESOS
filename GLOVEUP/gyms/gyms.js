@@ -329,7 +329,7 @@ async function initGymsMap() {
 
     validGyms.forEach((gym) => {
         const gymKey = gym.key || slugify(gym.name);
-        const directionsUrl = `https://www.openstreetmap.org/directions?from=&to=${gym.lat},${gym.lng}`;
+        const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${gym.lat},${gym.lng}`;
         const marker = L.marker([gym.lat, gym.lng], {
             icon: gymIcon
         }).addTo(map);
