@@ -160,6 +160,17 @@ function toggleFavorite(name) {
     return favs.includes(name);
 }
 
+const gymMarkersMap = {};
+
+function focusGymOnMap(gymKey) {
+    const marker = gymMarkersMap[gymKey];
+    const mapSection = document.querySelector('.map-section-container');
+    if (mapSection) mapSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (marker) setTimeout(() => marker.openPopup(), 400);
+}
+
+window.glvFocusGymOnMap = focusGymOnMap;
+
 async function initGymsMap() {
     const mapContainer = document.getElementById('gyms-map');
     if (!mapContainer || !window.L) return;
@@ -169,19 +180,27 @@ async function initGymsMap() {
         ? [validGyms[0].lat, validGyms[0].lng]
         : [40.4168, -3.7038];
 
-    const map = L.map(mapContainer).setView(defaultCenter, 11);
+    const map = L.map(mapContainer).setView(defaultCenter, validGyms.length > 0 ? 11 : 6);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19
     }).addTo(map);
 
+    const gymIcon = L.divIcon({
+        className: '',
+        html: '<div style="width:18px;height:18px;border-radius:50%;background:#f59e0b;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);"></div>',
+        iconAnchor: [9, 9],
+        popupAnchor: [0, -12]
+    });
+
     validGyms.forEach((gym) => {
         const gymKey = gym.key || slugify(gym.name);
         const directionsUrl = `https://www.openstreetmap.org/directions?from=&to=${gym.lat},${gym.lng}`;
-        const marker = L.marker([gym.lat, gym.lng]).addTo(map);
+        const marker = L.marker([gym.lat, gym.lng], { icon: gymIcon }).addTo(map);
+        gymMarkersMap[gymKey] = marker;
         marker.bindPopup(`
-            <div style="font-family:sans-serif;min-width:150px;padding:4px 0;">
+            <div style="font-family:sans-serif;min-width:160px;padding:4px 0;">
                 <strong style="font-size:.95rem;">${gym.name}</strong><br>
                 <span style="color:#666;font-size:.82rem;">${gym.city || ''}</span><br>
                 <a href="${directionsUrl}" target="_blank" rel="noopener"
@@ -323,9 +342,17 @@ function buildGymCard(gym, userGym) {
     const location = document.createElement('p');
     location.className = 'gym-location';
     const locIcon = document.createElement('i');
+    const hasCoords = typeof gym.lat === 'number' && typeof gym.lng === 'number';
     locIcon.className = 'fas fa-map-marker-alt';
+    if (hasCoords) locIcon.style.color = '#f59e0b';
     location.appendChild(locIcon);
     location.appendChild(document.createTextNode(` ${gym.city || 'Ubicación no indicada'}`));
+    if (hasCoords) {
+        const locBadge = document.createElement('span');
+        locBadge.style.cssText = 'margin-left:8px;font-size:.7rem;font-weight:700;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:20px;padding:2px 8px;vertical-align:middle;white-space:nowrap;';
+        locBadge.innerHTML = '<i class="fas fa-map-pin" style="margin-right:3px;font-size:.65rem;"></i>En el mapa';
+        location.appendChild(locBadge);
+    };
     
     // Gym Meta Tags (Trainer & Hours)
     const metaTags = document.createElement('div');
@@ -371,6 +398,21 @@ function buildGymCard(gym, userGym) {
 
     footer.appendChild(price);
     footer.appendChild(viewBtn);
+
+    if (hasCoords) {
+        const mapBtn = document.createElement('button');
+        mapBtn.type = 'button';
+        mapBtn.innerHTML = '<i class="fas fa-map-marked-alt"></i> Ver en mapa';
+        mapBtn.style.cssText = 'padding:8px 14px;border-radius:8px;border:1px solid #f59e0b;background:transparent;color:#f59e0b;font-size:.8rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s;';
+        mapBtn.addEventListener('mouseenter', () => { mapBtn.style.background = '#f59e0b'; mapBtn.style.color = '#fff'; });
+        mapBtn.addEventListener('mouseleave', () => { mapBtn.style.background = 'transparent'; mapBtn.style.color = '#f59e0b'; });
+        mapBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const key = gym.key || normalizeGymKey(gym.name);
+            if (typeof window.glvFocusGymOnMap === 'function') window.glvFocusGymOnMap(key);
+        });
+        footer.appendChild(mapBtn);
+    }
 
     if (isMyGym) {
         const leaveBtn = document.createElement('button');
