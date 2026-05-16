@@ -147,6 +147,7 @@
         const panel = $('glv-notif-panel');
         const closeBtn = $('glv-notif-close');
         const markAllBtn = $('glv-notif-mark-all');
+        const deleteAllBtn = $('glv-notif-delete-all');
 
         if (bell && panel) {
             bell.addEventListener('click', (e) => {
@@ -162,6 +163,14 @@
         if (markAllBtn) markAllBtn.addEventListener('click', async () => {
             await apiFetch(`/api/notificaciones/leer-todas?email=${encodeURIComponent(me())}`, { method: 'PUT' });
             loadNotifications();
+            updateBadge();
+        });
+
+        if (deleteAllBtn) deleteAllBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const list = $('glv-notif-list');
+            if (list) list.innerHTML = '<li class="glv-list-hint">Sin notificaciones por ahora.</li>';
+            await apiFetch(`/api/notificaciones/todas?email=${encodeURIComponent(me())}`, { method: 'DELETE' });
             updateBadge();
         });
 

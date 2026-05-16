@@ -160,107 +160,111 @@ function toggleFavorite(name) {
     return favs.includes(name);
 }
 
-function createMap(centerLat, centerLng) {
-    const map = L.map('gyms-map').setView([centerLat, centerLng], 11);
+async function initGymsMap() {
+    const mapContainer = document.getElementById('gyms-map');
+    if (!mapContainer || !window.L) return;
+
+    const validGyms = gyms.filter((g) => typeof g.lat === 'number' && typeof g.lng === 'number');
+    const defaultCenter = validGyms.length > 0
+        ? [validGyms[0].lat, validGyms[0].lng]
+        : [40.4168, -3.7038];
+
+    const map = L.map(mapContainer).setView(defaultCenter, 11);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
     }).addTo(map);
 
-    const favs = getFavorites();
-    gyms.forEach((gym) => {
-        if (typeof gym.lat !== 'number' || typeof gym.lng !== 'number') return;
-        const isFav = favs.includes(gym.name);
+    validGyms.forEach((gym) => {
+        const gymKey = gym.key || slugify(gym.name);
+        const directionsUrl = `https://www.openstreetmap.org/directions?from=&to=${gym.lat},${gym.lng}`;
         const marker = L.marker([gym.lat, gym.lng]).addTo(map);
-        const slug = slugify(gym.name);
-        const directions = `https://www.google.com/maps/dir/?api=1&destination=${gym.lat},${gym.lng}`;
         marker.bindPopup(`
-            <div>
-                <strong>${gym.name}</strong><br>
-                ${gym.city}<br>
-                <a href="${directions}" target="_blank" rel="noopener">Cómo llegar</a>
+            <div style="font-family:sans-serif;min-width:150px;padding:4px 0;">
+                <strong style="font-size:.95rem;">${gym.name}</strong><br>
+                <span style="color:#666;font-size:.82rem;">${gym.city || ''}</span><br>
+                <a href="${directionsUrl}" target="_blank" rel="noopener"
+                   style="font-size:.82rem;color:#1a73e8;text-decoration:none;display:inline-block;margin-top:6px;">
+                    Cómo llegar ↗
+                </a>
                 <br>
-                <button id="fav-${slug}" style="margin-top:6px;padding:6px 10px;border:1px solid #000;border-radius:8px;background:#fff;cursor:pointer;">
-                    ${isFav ? 'Quitar favorito' : 'Guardar favorito'}
-                </button>
+                <a href="gym.html?key=${encodeURIComponent(gymKey)}"
+                   style="font-size:.82rem;color:#1a73e8;text-decoration:none;display:inline-block;margin-top:4px;">
+                    Ver gimnasio →
+                </a>
             </div>
         `);
-        marker.on('popupopen', () => {
-            const btn = document.getElementById(`fav-${slug}`);
-            if (btn) {
-                btn.addEventListener('click', () => {
-                    const nowFav = toggleFavorite(gym.name);
-                    btn.textContent = nowFav ? 'Quitar favorito' : 'Guardar favorito';
-                });
-            }
-        });
     });
-
-    return map;
-}
-
-function sortGymsByDistance(lat, lng) {
-    return gyms
-        .filter((g) => typeof g.lat === 'number' && typeof g.lng === 'number')
-        .map((gym) => {
-            const dLat = ((gym.lat - lat) * Math.PI) / 180;
-            const dLng = ((gym.lng - lng) * Math.PI) / 180;
-            const a =
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos((lat * Math.PI) / 180) *
-                Math.cos((gym.lat * Math.PI) / 180) *
-                Math.sin(dLng / 2) *
-                Math.sin(dLng / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            const distance = 6371 * c;
-            return {
-                ...gym,
-                distance
-            };
-        })
-        .sort((a, b) => a.distance - b.distance);
-}
-
-function initGymsMap() {
-    const mapContainer = document.getElementById('gyms-map');
-    if (!mapContainer) return;
 
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                const sorted = sortGymsByDistance(lat, lng);
-                const nearest = sorted[0];
-                const map = createMap(nearest ? nearest.lat : lat, nearest ? nearest.lng : lng);
+            (pos) => {
+                const userLat = pos.coords.latitude;
+                const userLng = pos.coords.longitude;
+                L.circleMarker([userLat, userLng], {
+                    radius: 9,
+                    fillColor: '#4285f4',
+                    fillOpacity: 1,
+                    color: '#fff',
+                    weight: 2
+                }).addTo(map).bindPopup('Tu ubicación');
 
-                const userIcon = L.icon({
-                    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-                    iconSize: [25, 41],
-                    iconAnchor: [12, 41],
-                    popupAnchor: [1, -34],
-                    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-                    shadowSize: [41, 41]
-                });
-
-                const userMarker = L.marker([lat, lng], {
-                    icon: userIcon
-                }).addTo(map);
-                userMarker.bindPopup('Tu ubicación aproximada').openPopup();
+                if (validGyms.length > 0) {
+                    const allPoints = [[userLat, userLng], ...validGyms.map((g) => [g.lat, g.lng])];
+                    map.fitBounds(L.latLngBounds(allPoints), { padding: [30, 30] });
+                } else {
+                    map.setView([userLat, userLng], 13);
+                }
             },
-            () => {
-                const fallbackGym = gyms.find((g) => typeof g.lat === 'number' && typeof g.lng === 'number') || defaultGyms[0];
-                createMap(fallbackGym.lat, fallbackGym.lng);
-            }, {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 60000
-            }
+            () => {},
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
         );
-    } else {
-        const fallbackGym = gyms.find((g) => typeof g.lat === 'number' && typeof g.lng === 'number') || defaultGyms[0];
-        createMap(fallbackGym.lat, fallbackGym.lng);
+    }
+
+    // Address search with Nominatim
+    const searchInput = document.getElementById('map-search-input');
+    const searchBtn = document.getElementById('map-search-btn');
+    let searchMarker = null;
+
+    async function searchLocation() {
+        const q = searchInput ? searchInput.value.trim() : '';
+        if (!q) return;
+        try {
+            const res = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`,
+                { headers: { 'Accept-Language': 'es' } }
+            );
+            const data = await res.json();
+            if (data && data.length > 0) {
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
+                if (searchMarker) searchMarker.remove();
+                searchMarker = L.marker([lat, lon], {
+                    icon: L.divIcon({
+                        className: '',
+                        html: '<div style="width:14px;height:14px;border-radius:50%;background:#ef4444;border:2px solid #fff;box-shadow:0 0 6px rgba(0,0,0,.4);"></div>',
+                        iconAnchor: [7, 7]
+                    })
+                }).addTo(map).bindPopup(`<b>${data[0].display_name}</b>`).openPopup();
+                map.setView([lat, lon], 14);
+            } else {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('No se encontró la ubicación buscada.', 'error');
+                }
+            }
+        } catch {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Error al buscar la ubicación.', 'error');
+            }
+        }
+    }
+
+    if (searchBtn) searchBtn.addEventListener('click', searchLocation);
+    if (searchInput) {
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') searchLocation();
+        });
     }
 }
 

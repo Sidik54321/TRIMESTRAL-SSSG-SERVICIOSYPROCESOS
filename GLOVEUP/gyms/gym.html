@@ -650,6 +650,18 @@
                     <h3><i class="fas fa-info-circle"></i> Sobre nosotros</h3>
                     <p id="gym-bio-text"></p>
                 </div>
+
+                <!-- Map -->
+                <div class="info-card" id="gym-map-card" style="display: none;">
+                    <h3><i class="fas fa-map-marker-alt"></i> Ubicación</h3>
+                    <div id="gym-map-container" style="height:160px;border-radius:10px;overflow:hidden;border:1px solid var(--color-border);"></div>
+                    <p id="gym-address-text" style="display:none;margin:8px 0 0;font-size:.8rem;color:var(--color-text-light);line-height:1.5;"></p>
+                    <a id="gym-directions-link" href="#" target="_blank" rel="noopener"
+                       style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:.8rem;font-weight:600;color:var(--color-accent);text-decoration:none;">
+                        <i class="fas fa-route"></i> Cómo llegar
+                    </a>
+                </div>
+
             </aside>
 
             <!-- Main area: Boxers -->
@@ -815,6 +827,63 @@
                 if (bioCard && bioText && gymBio) {
                     bioCard.style.display = 'block';
                     bioText.textContent = gymBio;
+                }
+
+                // OpenStreetMap embed (Leaflet)
+                const gymLat = gym.lat != null ? parseFloat(gym.lat) : null;
+                const gymLng = gym.lng != null ? parseFloat(gym.lng) : null;
+                const gymDireccion = typeof gym.direccion === 'string' ? gym.direccion.trim() : '';
+                const mapCard = document.getElementById('gym-map-card');
+                const mapContainer = document.getElementById('gym-map-container');
+                const directionsLink = document.getElementById('gym-directions-link');
+                const addressText = document.getElementById('gym-address-text');
+
+                if (addressText && gymDireccion) {
+                    addressText.textContent = gymDireccion;
+                    addressText.style.display = '';
+                }
+
+                const hasCoords = gymLat !== null && !isNaN(gymLat) && gymLng !== null && !isNaN(gymLng);
+                const hasAddress = gymDireccion || gymCity;
+
+                const initLeafletMap = (lat, lng) => {
+                    if (!mapContainer) return;
+                    const delta = 0.008;
+                    const bbox = `${(lng - delta).toFixed(6)},${(lat - delta).toFixed(6)},${(lng + delta).toFixed(6)},${(lat + delta).toFixed(6)}`;
+                    const iframe = document.createElement('iframe');
+                    iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
+                    iframe.style.cssText = 'width:100%;height:100%;border:0;display:block;';
+                    iframe.setAttribute('loading', 'lazy');
+                    iframe.setAttribute('title', 'Ubicación del gimnasio');
+                    mapContainer.style.height = '160px';
+                    mapContainer.innerHTML = '';
+                    mapContainer.appendChild(iframe);
+                    if (directionsLink) {
+                        directionsLink.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+                    }
+                };
+
+                if (mapCard && mapContainer && (hasCoords || hasAddress)) {
+                    // Mostrar el card ANTES de inicializar el mapa
+                    mapCard.style.display = 'block';
+
+                    if (hasCoords) {
+                        initLeafletMap(gymLat, gymLng);
+                    } else {
+                        const q = encodeURIComponent(gymDireccion || `${gymName} ${gymCity}`);
+                        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`, {
+                            headers: { 'Accept-Language': 'es' }
+                        })
+                            .then((r) => r.json())
+                            .then((data) => {
+                                if (data && data.length > 0) {
+                                    initLeafletMap(parseFloat(data[0].lat), parseFloat(data[0].lon));
+                                } else {
+                                    mapCard.style.display = 'none';
+                                }
+                            })
+                            .catch(() => { mapCard.style.display = 'none'; });
+                    }
                 }
 
                 // Gallery logic (Carousel)
@@ -997,10 +1066,11 @@
         <div id="glv-notif-panel" class="glv-notif-panel hidden">
             <div class="glv-notif-header">
                 <span>Notificaciones</span>
-                <div style="display:flex;gap:8px;align-items:center">
-                    <button id="glv-notif-mark-all" class="glv-notif-mark-all">Marcar todo</button>
-                    <i id="glv-notif-close" class="fas fa-times" style="cursor:pointer;opacity:.6"></i>
-                </div>
+                <i id="glv-notif-close" class="fas fa-times" style="cursor:pointer;opacity:.5;font-size:.9rem"></i>
+            </div>
+            <div class="glv-notif-actions">
+                <button id="glv-notif-mark-all" class="glv-notif-mark-all"><i class="fas fa-check-double"></i> Marcar todo</button>
+                <button id="glv-notif-delete-all" class="glv-notif-delete-all" title="Borrar todas las notificaciones"><i class="fas fa-trash"></i> Borrar todo</button>
             </div>
             <ul id="glv-notif-list" class="glv-notif-list"></ul>
         </div>
@@ -1046,6 +1116,7 @@
             </div>
         </div>
     </div>
+
     <script src="../home/chat.js"></script>
     <script src="../home/notifications.js"></script>
     <script src="../home/sidebar.js"></script>

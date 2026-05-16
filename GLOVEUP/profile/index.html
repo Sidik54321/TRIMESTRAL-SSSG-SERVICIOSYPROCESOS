@@ -562,10 +562,11 @@
         <div id="glv-notif-panel" class="glv-notif-panel hidden">
             <div class="glv-notif-header">
                 <span>Notificaciones</span>
-                <div style="display:flex;gap:8px;align-items:center">
-                    <button id="glv-notif-mark-all" class="glv-notif-mark-all">Marcar todo</button>
-                    <i id="glv-notif-close" class="fas fa-times" style="cursor:pointer;opacity:.6"></i>
-                </div>
+                <i id="glv-notif-close" class="fas fa-times" style="cursor:pointer;opacity:.5;font-size:.9rem"></i>
+            </div>
+            <div class="glv-notif-actions">
+                <button id="glv-notif-mark-all" class="glv-notif-mark-all"><i class="fas fa-check-double"></i> Marcar todo</button>
+                <button id="glv-notif-delete-all" class="glv-notif-delete-all" title="Borrar todas las notificaciones"><i class="fas fa-trash"></i> Borrar todo</button>
             </div>
             <ul id="glv-notif-list" class="glv-notif-list"></ul>
         </div>

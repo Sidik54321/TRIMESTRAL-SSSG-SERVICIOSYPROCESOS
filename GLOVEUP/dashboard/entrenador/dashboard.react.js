@@ -1354,13 +1354,17 @@ function CoachManagement() {
     const [lat, setLat] = useState(null);
     const [lng, setLng] = useState(null);
     const [isGeocoding, setIsGeocoding] = useState(false);
+    const [pendingLocation, setPendingLocation] = useState(null);
     const [horario, setHorario] = useState('');
     const [horaApertura, setHoraApertura] = useState('08:00');
     const [horaCierre, setHoraCierre] = useState('22:00');
     const [selectedDays, setSelectedDays] = useState([true, true, true, true, true, false, false]); // L M X J V S D
     const [nombreEntrenador, setNombreEntrenador] = useState('');
-    const mapRef = useRef(null);
-    const markerRef = useRef(null);
+    const [activeTab, setActiveTab] = useState('gym');
+
+    const locationMapRef = useRef(null);
+    const locationMarkerRef = useRef(null);
+    const pendingMarkerRef = useRef(null);
 
     const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
 
@@ -1456,92 +1460,64 @@ function CoachManagement() {
         }
     };
 
-    // Inicializar Mapa de Ubicación
-    useEffect(() => {
-        if (loading) return;
-
-        const container = document.getElementById('gym-location-map');
-        if (!container || !window.L) return;
-
-        // Si ya hay un mapa, actualizar marcador
-        if (mapRef.current) {
-            if (lat && lng) {
-                const pos = [lat, lng];
-                mapRef.current.setView(pos, 15);
-                if (markerRef.current) {
-                    markerRef.current.setLatLng(pos);
-                } else {
-                    markerRef.current = window.L.marker(pos, {
-                        draggable: true
-                    }).addTo(mapRef.current);
-                    markerRef.current.on('dragend', () => {
-                        const newPos = markerRef.current.getLatLng();
-                        setLat(newPos.lat);
-                        setLng(newPos.lng);
-                    });
-                }
-            }
-            // Importante: Leaflet necesita redibujar si el contenedor era display:none
-            setTimeout(() => mapRef.current.invalidateSize(), 200);
-            return;
-        }
-
-        const initialPos = lat && lng ? [lat, lng] : [40.4168, -3.7038]; // Madrid por defecto
-        const map = window.L.map('gym-location-map').setView(initialPos, lat && lng ? 15 : 6);
-        mapRef.current = map;
-
-        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(map);
-
-        if (lat && lng) {
-            markerRef.current = window.L.marker([lat, lng], {
-                draggable: true
-            }).addTo(map);
-            markerRef.current.on('dragend', () => {
-                const newPos = markerRef.current.getLatLng();
-                setLat(newPos.lat);
-                setLng(newPos.lng);
-            });
-        }
-
-        map.on('click', (e) => {
-            const {
-                lat,
-                lng
-            } = e.latlng;
-            setLat(lat);
-            setLng(lng);
-            if (markerRef.current) {
-                markerRef.current.setLatLng([lat, lng]);
-            } else {
-                markerRef.current = window.L.marker([lat, lng], {
-                    draggable: true
-                }).addTo(map);
-                markerRef.current.on('dragend', () => {
-                    const newPos = markerRef.current.getLatLng();
-                    setLat(newPos.lat);
-                    setLng(newPos.lng);
-                });
-            }
-        });
-
-        // Detectar cambios de hash para invalidar tamaño (cuando se muestra la pestaña)
-        const handleHash = () => {
-            if (window.location.hash === '#coach-gym') {
-                setTimeout(() => map.invalidateSize(), 300);
-            }
-        };
-        window.addEventListener('hashchange', handleHash);
-
-        return () => {
-            window.removeEventListener('hashchange', handleHash);
-        };
-    }, [loading, lat === null, lng === null]);
-
     useEffect(() => {
         refreshAll();
     }, []);
+
+    // Crear/destruir el mapa Leaflet al cambiar de tab o cuando termina de cargar
+    useEffect(() => {
+        if (activeTab !== 'gym') {
+            if (locationMapRef.current) {
+                try { locationMapRef.current.remove(); } catch (_) {}
+                locationMapRef.current = null;
+                locationMarkerRef.current = null;
+            }
+            return;
+        }
+        if (loading) return;
+        const timer = setTimeout(() => {
+            const container = document.getElementById('gym-location-map');
+            if (!container || !window.L || locationMapRef.current) return;
+            const curLat = typeof lat === 'number' ? lat : 40.4168;
+            const curLng = typeof lng === 'number' ? lng : -3.7038;
+            const zoom = typeof lat === 'number' ? 15 : 6;
+            const lmap = window.L.map(container).setView([curLat, curLng], zoom);
+            window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                maxZoom: 19
+            }).addTo(lmap);
+            if (typeof lat === 'number' && typeof lng === 'number') {
+                locationMarkerRef.current = window.L.marker([lat, lng]).addTo(lmap);
+            }
+            lmap.on('click', (e) => {
+                const { lat: clat, lng: clng } = e.latlng;
+                if (pendingMarkerRef.current) {
+                    pendingMarkerRef.current.remove();
+                    pendingMarkerRef.current = null;
+                }
+                const pendingIcon = window.L.divIcon({
+                    className: '',
+                    html: '<div style="width:18px;height:18px;border-radius:50%;background:#f59e0b;border:3px solid #fff;box-shadow:0 0 8px rgba(0,0,0,.5);"></div>',
+                    iconAnchor: [9, 9]
+                });
+                pendingMarkerRef.current = window.L.marker([clat, clng], { icon: pendingIcon }).addTo(lmap);
+                setPendingLocation({ lat: clat, lng: clng });
+            });
+            locationMapRef.current = lmap;
+        }, 150);
+        return () => clearTimeout(timer);
+    }, [activeTab, loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Actualizar marcador cuando lat/lng cambia (geocoding o clic en mapa)
+    useEffect(() => {
+        if (!locationMapRef.current || typeof lat !== 'number' || typeof lng !== 'number') return;
+        if (locationMarkerRef.current) {
+            locationMarkerRef.current.setLatLng([lat, lng]);
+        } else {
+            locationMarkerRef.current = window.L.marker([lat, lng]).addTo(locationMapRef.current);
+        }
+        locationMapRef.current.setView([lat, lng], 15);
+    }, [lat, lng]);
 
     const filteredBoxers = useMemo(() => {
         const q = search.trim().toLowerCase();
@@ -1555,35 +1531,65 @@ function CoachManagement() {
 
     const hasGym = Boolean(coach.gimnasio);
 
+    const confirmPendingLocation = () => {
+        if (!pendingLocation) return;
+        const { lat: clat, lng: clng } = pendingLocation;
+        setLat(clat);
+        setLng(clng);
+        setPendingLocation(null);
+        if (pendingMarkerRef.current) {
+            pendingMarkerRef.current.remove();
+            pendingMarkerRef.current = null;
+        }
+        fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${clat}&lon=${clng}`,
+            { headers: { 'Accept-Language': 'es' } }
+        )
+            .then((r) => r.json())
+            .then((data) => {
+                const addr = (data && data.address) ? data.address : {};
+                const city = addr.city || addr.town || addr.village || addr.county || '';
+                if (city) setUbicacion(city);
+                const road = addr.road || addr.pedestrian || '';
+                const house = addr.house_number || '';
+                if (road) setDireccion([road, house].filter(Boolean).join(', '));
+            })
+            .catch(() => {});
+    };
+
+    const cancelPendingLocation = () => {
+        if (pendingMarkerRef.current) {
+            pendingMarkerRef.current.remove();
+            pendingMarkerRef.current = null;
+        }
+        setPendingLocation(null);
+    };
+
     const geocodeAddress = async () => {
-        if (!direccion.trim()) return;
+        const addr = direccion.trim();
+        if (!addr) return { lat: null, lng: null, city: '' };
         setIsGeocoding(true);
         try {
-            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccion)}&limit=1`;
-            const res = await fetch(url, {
-                headers: {
-                    'User-Agent': 'GloveUp-App'
-                }
-            });
+            const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(addr)}&limit=1`;
+            const res = await fetch(url, { headers: { 'User-Agent': 'GloveUp-App' } });
             const data = await res.json();
             if (data && data.length > 0) {
                 const first = data[0];
-                setLat(Number(first.lat));
-                setLng(Number(first.lon));
-                // Extraer ciudad si es posible
-                if (first.address) {
-                    const city = first.address.city || first.address.town || first.address.village || first.address.county || '';
-                    setUbicacion(city);
-                } else if (first.display_name) {
-                    const parts = first.display_name.split(',');
-                    setUbicacion(parts[0].trim());
-                }
+                const foundLat = Number(first.lat);
+                const foundLng = Number(first.lon);
+                const addrObj = first.address || {};
+                const city = addrObj.city || addrObj.town || addrObj.village || addrObj.county || '';
+                setLat(foundLat);
+                setLng(foundLng);
+                if (city) setUbicacion(city);
+                return { lat: foundLat, lng: foundLng, city };
             }
         } catch (err) {
             console.error('Geocoding error:', err);
         } finally {
             setIsGeocoding(false);
         }
+        return { lat: null, lng: null, city: '' };
     };
 
     const saveGym = async () => {
@@ -1607,6 +1613,18 @@ function CoachManagement() {
             else if (isLS) diasSummary = 'L-S';
             else if (isLV) diasSummary = 'L-V';
 
+            let finalLat = lat;
+            let finalLng = lng;
+            let finalUbicacion = ubicacion;
+            if ((finalLat === null || finalLng === null) && direccion.trim()) {
+                const geo = await geocodeAddress();
+                if (geo.lat !== null) {
+                    finalLat = geo.lat;
+                    finalLng = geo.lng;
+                    if (geo.city) finalUbicacion = geo.city;
+                }
+            }
+
             const payload = {
                 nombre: gymInput,
                 creadoPorEmail: email,
@@ -1616,9 +1634,9 @@ function CoachManagement() {
                 correoContacto: emailContacto,
                 telefono,
                 direccion,
-                ubicacion,
-                lat,
-                lng,
+                ubicacion: finalUbicacion,
+                lat: finalLat,
+                lng: finalLng,
                 horario: `${diasSummary} | ${horaApertura} - ${horaCierre}`,
                 nombreEntrenador
             };
@@ -1774,7 +1792,53 @@ function CoachManagement() {
         }, 'Cargando panel...');
     }
 
+    const tabBarStyle = {
+        display: 'flex',
+        gap: '8px',
+        marginBottom: '20px',
+        borderBottom: '2px solid #e5e7eb',
+        paddingBottom: '0'
+    };
+    const tabBtnStyle = (isActive) => ({
+        padding: '10px 20px',
+        fontWeight: 700,
+        fontSize: '0.9rem',
+        border: 'none',
+        background: 'none',
+        cursor: 'pointer',
+        borderBottom: isActive ? '3px solid #3b82f6' : '3px solid transparent',
+        color: isActive ? '#3b82f6' : '#6b7280',
+        marginBottom: '-2px',
+        transition: 'color 0.15s, border-color 0.15s',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px'
+    });
+
     return h(React.Fragment, null, [
+        h('div', {
+            key: 'tab-bar',
+            style: tabBarStyle
+        }, [
+            h('button', {
+                key: 'tab-gym',
+                style: tabBtnStyle(activeTab === 'gym'),
+                onClick: () => setActiveTab('gym')
+            }, [
+                h('i', { className: 'fas fa-building' }),
+                'Mi Gimnasio'
+            ]),
+            ...(hasGym ? [h('button', {
+                key: 'tab-boxers',
+                style: tabBtnStyle(activeTab === 'boxers'),
+                onClick: () => setActiveTab('boxers')
+            }, [
+                h('i', { className: 'fas fa-users' }),
+                `Mis Boxeadores${boxers.length ? ` (${boxers.length})` : ''}`
+            ])] : [])
+        ]),
+
+        activeTab === 'gym' ? h(React.Fragment, {key: 'gym-tab'}, [
         h('div', {
             key: 'main-panel',
             className: 'dashboard-panel',
@@ -2159,43 +2223,53 @@ function CoachManagement() {
                             }
                         }, 'Dirección y Mapa'),
                         h('div', {
-                            style: {
-                                position: 'relative'
-                            }
+                            style: { display: 'flex', gap: '8px', alignItems: 'center' }
                         }, [
-                            h('input', {
-                                value: direccion,
-                                onChange: (e) => setDireccion(e.target.value),
-                                onBlur: geocodeAddress,
-                                placeholder: 'Av. del Cid, 10, Valencia',
+                            h('div', { style: { position: 'relative', flex: 1 } }, [
+                                h('input', {
+                                    value: direccion,
+                                    onChange: (e) => setDireccion(e.target.value),
+                                    onKeyDown: (e) => { if (e.key === 'Enter') { e.preventDefault(); geocodeAddress(); } },
+                                    placeholder: 'Av. del Cid, 10, Valencia',
+                                    style: {
+                                        width: '100%',
+                                        padding: '12px 16px',
+                                        paddingRight: '40px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #e5e7eb',
+                                        fontSize: '0.95rem',
+                                        boxSizing: 'border-box'
+                                    }
+                                }),
+                                (isGeocoding && h('i', {
+                                    className: 'fas fa-spinner fa-spin',
+                                    style: { position: 'absolute', right: '14px', top: '14px', color: '#6366f1' }
+                                })),
+                                (!isGeocoding && lat && h('i', {
+                                    className: 'fas fa-check-circle',
+                                    style: { position: 'absolute', right: '14px', top: '14px', color: '#10b981' },
+                                    title: 'Ubicación encontrada'
+                                }))
+                            ]),
+                            h('button', {
+                                onClick: geocodeAddress,
+                                disabled: isGeocoding,
+                                title: 'Buscar dirección',
                                 style: {
-                                    width: '100%',
                                     padding: '12px 16px',
-                                    paddingRight: '40px',
                                     borderRadius: '12px',
-                                    border: '1px solid #e5e7eb',
-                                    fontSize: '0.95rem'
+                                    border: 'none',
+                                    background: '#6366f1',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    fontSize: '0.9rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    whiteSpace: 'nowrap',
+                                    flexShrink: 0
                                 }
-                            }),
-                            (isGeocoding && h('i', {
-                                className: 'fas fa-spinner fa-spin',
-                                style: {
-                                    position: 'absolute',
-                                    right: '14px',
-                                    top: '14px',
-                                    color: '#6366f1'
-                                }
-                            })),
-                            (!isGeocoding && lat && h('i', {
-                                className: 'fas fa-check-circle',
-                                style: {
-                                    position: 'absolute',
-                                    right: '14px',
-                                    top: '14px',
-                                    color: '#10b981'
-                                },
-                                title: 'Ubicación encontrada'
-                            }))
+                            }, [h('i', { className: 'fas fa-search' }), ' Buscar'])
                         ]),
                         h('div', {
                             id: 'gym-location-map',
@@ -2207,18 +2281,44 @@ function CoachManagement() {
                                 backgroundColor: '#f9fafb'
                             }
                         }),
-                        h('p', {
-                            style: {
-                                fontSize: '.75rem',
-                                color: '#6b7280',
-                                margin: 0
-                            }
-                        }, [h('i', {
-                            className: 'fas fa-info-circle',
-                            style: {
-                                marginRight: '4px'
-                            }
-                        }), 'Haz clic en el mapa para ajustar tu ubicación exacta.'])
+                        (pendingLocation
+                            ? h('div', {
+                                style: {
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    padding: '10px 14px',
+                                    borderRadius: '10px',
+                                    background: '#fffbeb',
+                                    border: '1px solid #fcd34d'
+                                }
+                            }, [
+                                h('i', { className: 'fas fa-map-marker-alt', style: { color: '#f59e0b' } }),
+                                h('span', { style: { flex: 1, fontSize: '.85rem', color: '#92400e' } }, 'Nueva ubicación seleccionada. ¿Confirmar?'),
+                                h('button', {
+                                    onClick: confirmPendingLocation,
+                                    style: {
+                                        padding: '6px 14px', borderRadius: '8px', border: 'none',
+                                        background: '#10b981', color: '#fff', fontWeight: 700,
+                                        fontSize: '.82rem', cursor: 'pointer'
+                                    }
+                                }, 'Confirmar'),
+                                h('button', {
+                                    onClick: cancelPendingLocation,
+                                    style: {
+                                        padding: '6px 14px', borderRadius: '8px',
+                                        border: '1px solid #d1d5db', background: 'transparent',
+                                        fontWeight: 700, fontSize: '.82rem', cursor: 'pointer'
+                                    }
+                                }, 'Cancelar')
+                            ])
+                            : h('p', {
+                                style: { fontSize: '.75rem', color: '#6b7280', margin: 0 }
+                            }, [
+                                h('i', { className: 'fas fa-info-circle', style: { marginRight: '4px' } }),
+                                'Haz clic en el mapa para ajustar tu ubicación exacta y confirma el cambio.'
+                            ])
+                        )
                     ]),
                     h('div', {
                         style: {
@@ -2414,7 +2514,20 @@ function CoachManagement() {
             ])
         ]),
 
-        (hasGym ? h('div', {
+        h('div', {
+            key: 'revenue-panel',
+            className: 'dashboard-panel'
+        }, [
+            h('h2', null, 'Resumen'),
+            h('p', null, [
+                'Cobros registrados: ',
+                h('strong', null, formatCurrency(cobrosTotal))
+            ])
+        ])
+
+        ]) : null,
+
+        (activeTab === 'boxers' && hasGym) ? h('div', {
             key: 'boxers-panel',
             className: 'dashboard-panel'
         }, [
@@ -2654,18 +2767,7 @@ function CoachManagement() {
                         ]) : null)
                     ])))
             ]),
-        ]) : null),
-
-        h('div', {
-            key: 'revenue-panel',
-            className: 'dashboard-panel'
-        }, [
-            h('h2', null, 'Resumen'),
-            h('p', null, [
-                'Cobros registrados: ',
-                h('strong', null, formatCurrency(cobrosTotal))
-            ])
-        ])
+        ]) : null,
     ]);
 }
 

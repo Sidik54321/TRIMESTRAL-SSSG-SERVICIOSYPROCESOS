@@ -530,23 +530,21 @@
                 }
             })();
 
-            const gymsList = [
-                'Amado Family Boxeo',
-                'Club Boxeo Sanapa',
-                'Club Boxeo Sedaví',
-                'Morales Box Valencia',
-                'Escuela de Boxeo Tsubox',
-                'Deportivo Shaolin',
-                'Brooklyn Fitboxing Mestalla',
-                'Brooklyn Fitboxing Abastos',
-                'Brooklyn Fitboxing Ruzafa',
-                'The Boxer Club Arena',
-                'Club Boxeo Monteolivete',
-                'Training Unit',
-                'Boxing Unitres',
-                'Gimnasio Do Chang',
-                'Cosmobox'
-            ];
+            let gymsList = [];
+            let gymsLoaded = false;
+
+            const loadGyms = async () => {
+                if (gymsLoaded) return gymsList;
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/gimnasios`);
+                    const data = await res.json().catch(() => []);
+                    gymsList = Array.isArray(data) ? data.map(g => String(g.nombre || '')).filter(Boolean).sort((a, b) => a.localeCompare(b)) : [];
+                } catch (e) {
+                    gymsList = [];
+                }
+                gymsLoaded = true;
+                return gymsList;
+            };
 
             const pad2 = (n) => String(n).padStart(2, '0');
 
@@ -670,10 +668,10 @@
                 });
             };
 
-            const ensureGymOptions = () => {
+            const ensureGymOptions = async () => {
                 const checklist = document.getElementById('gym-checklist');
                 if (!checklist) return;
-                if (checklist.dataset && checklist.dataset.ready === '1') return;
+                await loadGyms();
                 renderGymChecklist(gymsList);
                 if (checklist.dataset) checklist.dataset.ready = '1';
             };
@@ -1030,7 +1028,7 @@
                         if (gymChecklist.dataset) gymChecklist.dataset.ready = '0';
                         gymChecklist.innerHTML = '';
                     }
-                    ensureGymOptions();
+                    await ensureGymOptions();
 
                     const coachSearch = document.getElementById('coach-search');
                     if (coachSearch) coachSearch.value = '';
@@ -1348,7 +1346,7 @@
                             }
                         }
                         if (challengePreset) challengePreset.value = '';
-                        ensureGymOptions();
+                        await ensureGymOptions();
                         if (challengeGym) challengeGym.value = '';
                         if (challengeDatetime) challengeDatetime.value = '';
                         if (challengeNote) challengeNote.value = '';
@@ -1388,10 +1386,11 @@
         <div id="glv-notif-panel" class="glv-notif-panel hidden">
             <div class="glv-notif-header">
                 <span>Notificaciones</span>
-                <div style="display:flex;gap:8px;align-items:center">
-                    <button id="glv-notif-mark-all" class="glv-notif-mark-all">Marcar todo</button>
-                    <i id="glv-notif-close" class="fas fa-times" style="cursor:pointer;opacity:.6"></i>
-                </div>
+                <i id="glv-notif-close" class="fas fa-times" style="cursor:pointer;opacity:.5;font-size:.9rem"></i>
+            </div>
+            <div class="glv-notif-actions">
+                <button id="glv-notif-mark-all" class="glv-notif-mark-all"><i class="fas fa-check-double"></i> Marcar todo</button>
+                <button id="glv-notif-delete-all" class="glv-notif-delete-all" title="Borrar todas las notificaciones"><i class="fas fa-trash"></i> Borrar todo</button>
             </div>
             <ul id="glv-notif-list" class="glv-notif-list"></ul>
         </div>

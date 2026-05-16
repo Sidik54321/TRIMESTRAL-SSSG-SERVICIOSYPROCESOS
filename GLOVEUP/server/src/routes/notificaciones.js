@@ -51,6 +51,16 @@ router.put('/leer-todas', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// DELETE /api/notificaciones/todas?email=X
+router.delete('/todas', async (req, res) => {
+    try {
+        const email = norm(req.query.email);
+        if (!email) return res.status(400).json({ error: 'Email requerido' });
+        await Notificacion.deleteMany({ para: email });
+        res.json({ ok: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // DELETE /api/notificaciones/:id
 router.delete('/:id', async (req, res) => {
     try {
