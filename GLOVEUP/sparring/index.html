@@ -1355,11 +1355,11 @@
                         if (challengeDatetime && challengeDatetime.dataset) {
                             challengeDatetime.dataset.iso = '';
                         }
-                        if (challengeCoaches) {
-                            Array.from(challengeCoaches.options || []).forEach((opt) => {
-                                opt.selected = false;
-                            });
-                        }
+                        const coachSearch2 = document.getElementById('coach-search');
+                        if (coachSearch2) coachSearch2.value = '';
+                        const coachChecklist2 = document.getElementById('coach-checklist');
+                        if (coachChecklist2) coachChecklist2.innerHTML = '';
+                        await ensureCoachOptions();
                         challengeModal.showModal();
 
                         // Clean the URL to avoid re-triggering on reload
