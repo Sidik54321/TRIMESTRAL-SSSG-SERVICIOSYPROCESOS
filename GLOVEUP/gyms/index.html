@@ -274,7 +274,7 @@
                     var btn = document.getElementById('filter-toggle-btn');
                     var body = document.getElementById('filter-body');
                     var chevron = btn ? btn.querySelector('.filter-chevron') : null;
-                    function isMobile() { return window.innerWidth <= 1200; }
+                    function isMobile() { return window.innerWidth <= 1440; }
                     function collapse() {
                         body.classList.add('filter-collapsed');
                         if (chevron) chevron.style.transform = 'rotate(-90deg)';
