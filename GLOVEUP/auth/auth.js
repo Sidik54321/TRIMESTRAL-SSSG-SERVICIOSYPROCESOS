@@ -64,8 +64,6 @@ export function validateSignUpForm(event) {
     const pass = getValue('pass_signup');
     const repeatPass = getValue('pass_repeat_signup');
     const level = getValue('level_signup');
-    const coachGym = getValue('coach_gym_signup').trim();
-    const coachSpecialty = getValue('coach_specialty_signup').trim();
     const errorMessageDiv = document.getElementById('signup-error-message');
 
     if (!errorMessageDiv) {
@@ -113,8 +111,7 @@ export function validateSignUpForm(event) {
     }
 
     if (accountType === 'entrenador') {
-        registerBody.especialidad = coachSpecialty || 'Boxeo';
-        registerBody.gimnasio = coachGym;
+        registerBody.especialidad = 'Boxeo';
     }
 
     requestJson('/api/auth/register', {
@@ -454,20 +451,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const accountTypeSelect = document.getElementById('account_type_signup');
     const levelGroup = document.getElementById('level_signup_group');
-    const coachGymGroup = document.getElementById('coach_gym_group');
-    const coachSpecialtyGroup = document.getElementById('coach_specialty_group');
 
     const syncSignUpFields = () => {
         const value = (accountTypeSelect ? accountTypeSelect.value || 'boxeador' : 'boxeador').trim().toLowerCase();
-        if (value === 'entrenador') {
-            if (levelGroup) levelGroup.style.display = 'none';
-            if (coachGymGroup) coachGymGroup.style.display = '';
-            if (coachSpecialtyGroup) coachSpecialtyGroup.style.display = '';
-        } else {
-            if (levelGroup) levelGroup.style.display = '';
-            if (coachGymGroup) coachGymGroup.style.display = 'none';
-            if (coachSpecialtyGroup) coachSpecialtyGroup.style.display = 'none';
-        }
+        if (levelGroup) levelGroup.style.display = value === 'entrenador' ? 'none' : '';
     };
 
     if (accountTypeSelect) {

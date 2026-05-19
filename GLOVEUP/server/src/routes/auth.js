@@ -62,13 +62,13 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        const existingDni = await Usuario.findOne({
-            dniLicencia: cleanDni
-        }).lean();
-        if (existingDni) {
-            return res.status(409).json({
-                error: 'Este DNI/Licencia ya está registrado'
-            });
+        const existingEntrenadorDni = await Entrenador.findOne({ dniLicencia: cleanDni }).lean();
+        if (existingEntrenadorDni) {
+            return res.status(409).json({ error: 'Ese DNI ya existe' });
+        }
+        const existingBoxeadorDni = await Boxeador.findOne({ dniLicencia: cleanDni }).lean();
+        if (existingBoxeadorDni) {
+            return res.status(409).json({ error: 'Ese DNI ya existe' });
         }
 
         // 🔐 La contraseña se hashea automáticamente en el pre-save hook del modelo
@@ -131,6 +131,9 @@ router.post('/register', async (req, res) => {
             dniLicencia: cleanDni  // Devolvemos el DNI original, no el cifrado
         });
     } catch (err) {
+        if (err.code === 11000) {
+            return res.status(409).json({ error: 'Ese DNI ya existe' });
+        }
         return res.status(400).json({
             error: err.message
         });

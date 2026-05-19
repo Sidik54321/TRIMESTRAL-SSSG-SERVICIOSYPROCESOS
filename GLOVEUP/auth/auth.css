@@ -250,8 +250,8 @@ a {
 
 .login-wrap {
     width: 100%;
-    max-width: 400px;
-    min-height: 600px;
+    max-width: 420px;
+    min-height: unset;
     position: relative;
     background: var(--auth-card-bg);
     box-shadow:
@@ -298,7 +298,7 @@ a {
     top: 0;
     left: 0;
     width: 100%;
-    height: 150px;
+    height: 85px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -313,7 +313,7 @@ a {
 }
 
 .app-logo {
-    max-width: 160px;
+    max-width: 90px;
     height: auto;
     display: block;
     filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.05));
@@ -325,14 +325,15 @@ a {
 
 .login-html {
     width: 100%;
-    height: 100%;
     position: relative;
     top: 0;
     left: 0;
-    padding: 28px 36px 32px;
+    padding: 14px 36px 18px;
     background: var(--auth-card-bg);
     border-bottom-left-radius: var(--auth-radius);
     border-bottom-right-radius: var(--auth-radius);
+    display: flex;
+    flex-direction: column;
 }
 
 /* Tab animations */
@@ -362,11 +363,11 @@ a {
 
 .login-html .tab {
     font-family: var(--auth-font-heading);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 800;
     margin-right: 15px;
-    padding-bottom: 8px;
-    margin: 0 15px 12px 0;
+    padding-bottom: 5px;
+    margin: 0 15px 8px 0;
     display: inline-block;
     border-bottom: 2px solid transparent;
     color: var(--auth-text-light);
@@ -390,7 +391,7 @@ a {
 /* ============================================== */
 
 .login-form {
-    min-height: 460px;
+    min-height: 380px;
     position: relative;
     perspective: 1000px;
     transform-style: preserve-3d;
@@ -436,26 +437,34 @@ a {
 }
 
 .login-form .group {
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
-/* Signup grid layout */
+/* Signup — 2 column grid layout */
 .login-form .sign-up-htm #signup-form {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px 16px;
-}
-
-.login-form .sign-up-htm #signup-form #level_signup_group {
-    grid-column: 1 / -1;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 14px;
+    align-items: end;
 }
 
 .login-form .sign-up-htm #signup-form .group {
-    margin-bottom: 0;
+    margin-bottom: 16px;
 }
 
+/* Nivel de experiencia — centrado exactamente mitad */
+#level_signup_group {
+    grid-column: 1 / -1;
+    width: calc(50% - 7px);
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 16px;
+}
+
+/* Botón submit — ancho completo */
 .login-form .sign-up-htm #signup-form .group:last-child {
     grid-column: 1 / -1;
+    margin-bottom: 0;
 }
 
 .login-form .group .label,
@@ -466,33 +475,41 @@ a {
     display: block;
 }
 
+/* Line-style inputs — ALL forms */
 .login-form .group .input,
-.login-form .group .button {
-    border: 1px solid var(--auth-border);
-    padding: 12px 16px;
-    border-radius: 14px;
-    background: var(--auth-card-bg);
-    min-height: 46px;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    font-family: var(--auth-font);
-}
-
 .login-form .group input.input,
-.login-form .group select.input {
-    height: 48px;
-    padding: 0 16px;
-    line-height: 1.2;
-}
-
-.login-form .group .input:hover {
-    border-color: rgba(0, 0, 0, 0.16);
-}
-
-.login-form .group .input:focus {
-    background: var(--auth-card-bg);
-    border-color: var(--auth-accent);
-    box-shadow: 0 0 0 3px var(--auth-accent-glow);
+.login-form .group select.input,
+.forgot-panel .group .input,
+.forgot-panel .group input.input {
+    border: none !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: 2px solid var(--auth-border) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 4px 4px !important;
+    height: 32px;
+    width: 100%;
+    transition: border-color 0.25s ease;
+    font-family: var(--auth-font);
+    font-size: 0.95rem;
+    color: var(--auth-text);
     outline: none;
+}
+
+.login-form .group .input:hover,
+.forgot-panel .group .input:hover {
+    border-bottom-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+.login-form .group .input:focus,
+.forgot-panel .group .input:focus {
+    border-bottom-color: var(--auth-accent) !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    outline: none !important;
 }
 
 .login-form .group .input::placeholder {
@@ -501,10 +518,10 @@ a {
 
 .login-form .group .label {
     color: var(--auth-text-light);
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     display: flex;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 1px;
     font-weight: 700;
     letter-spacing: 0.04em;
 }
@@ -525,15 +542,17 @@ a {
     font-family: var(--auth-font-heading);
     font-weight: 800;
     border: none;
-    transition: all 0.3s ease;
-    margin-top: 14px;
-    padding: 14px 20px;
+    border-bottom: none;
     border-radius: 14px;
+    transition: all 0.3s ease;
+    margin-top: 8px;
+    padding: 10px 20px;
     letter-spacing: 0.06em;
     cursor: pointer;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     position: relative;
     overflow: hidden;
+    width: 100%;
 }
 
 .login-form .group .button::after {
@@ -577,18 +596,18 @@ a {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* SELECT styling */
-.login-form .group select.input {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2C118.8L146.2%2C26.1c-4.7-4.7-12.2-4.7-16.9%2C0L5.4%2C118.8c-6.1%2C6.1-2.9%2C16.5%2C5.4%2C16.5h271.6C290%2C135.3%2C293.2%2C124.9%2C287%2C118.8z%22%2F%3E%3C%2Fsvg%3E');
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 10px;
-    padding-right: 30px;
+/* SELECT styling — line style (chevron only, no box) */
+.login-form .group select.input,
+.forgot-panel .group select.input {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2010%206%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M0%200l5%206%205-6z%22%2F%3E%3C%2Fsvg%3E') !important;
+    background-repeat: no-repeat !important;
+    background-position: right 4px center !important;
+    background-size: 10px !important;
+    padding-right: 24px !important;
     cursor: pointer;
-    color: var(--auth-text-light);
 }
 
 .login-form .group select.input option {
@@ -659,7 +678,7 @@ a {
 
 .hr {
     height: 1px;
-    margin: 20px 0 14px 0;
+    margin: 10px 0 8px 0;
     background: linear-gradient(90deg, transparent, var(--auth-border), transparent);
 }
 
@@ -680,9 +699,9 @@ a {
 
 .auth-title {
     font-family: var(--auth-font-heading);
-    margin: 6px 0 18px;
+    margin: 2px 0 8px;
     color: var(--auth-text);
-    font-size: 1.8rem;
+    font-size: 1.2rem;
     letter-spacing: -0.01em;
     text-align: center;
     font-weight: 900;
@@ -727,15 +746,15 @@ a {
     }
 
     .login-wrap {
-        width: 90%;
-        max-width: 90%;
+        width: 95%;
+        max-width: 95%;
         min-height: 520px;
-        margin: 10px;
+        margin: 10px auto;
         border-radius: 20px;
     }
 
     .login-html {
-        padding: 24px 22px 26px;
+        padding: 20px 18px 24px;
     }
 
     .login-html .tab {
@@ -744,12 +763,8 @@ a {
 
     .login-form .group input.input,
     .login-form .group select.input {
-        height: 44px;
-        padding: 0 12px;
-    }
-
-    .login-form .sign-up-htm #signup-form {
-        grid-template-columns: 1fr;
+        height: 42px;
+        padding: 0 4px;
     }
 }
 
