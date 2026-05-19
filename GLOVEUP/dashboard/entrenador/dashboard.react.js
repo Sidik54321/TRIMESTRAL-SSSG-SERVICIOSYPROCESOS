@@ -262,6 +262,31 @@ const buildCoachCalendarEvents = (boxers, metricas) => {
             });
         }
 
+        const pagos = b && Array.isArray(b.pagos) ? b.pagos : [];
+        pagos.forEach((p) => {
+            const pagoDate = p && (p.fecha || p.mes);
+            if (!pagoDate) return;
+            const start = p.fecha
+                ? new Date(p.fecha).toISOString().slice(0, 16)
+                : `${p.mes}-01`;
+            events.push({
+                id: `pago-${b && b._id ? b._id : boxerName}-${p.mes}`,
+                title: `Pago: ${boxerName}`,
+                start,
+                allDay: !p.fecha,
+                backgroundColor: '#16a34a',
+                borderColor: '#16a34a',
+                classNames: ['gloveup-event--pago'],
+                extendedProps: {
+                    kind: 'pago',
+                    boxer: boxerName,
+                    email: b && b.email ? String(b.email) : '',
+                    mes: p.mes,
+                    monto: p.monto || 0
+                }
+            });
+        });
+
         const history = b && Array.isArray(b.sparringHistory) ? b.sparringHistory : [];
         history.forEach((s, idx) => {
             const date = toIsoDate(s && s.date);
@@ -1173,6 +1198,7 @@ function CoachStatsDashboard() {
     const [metricas, setMetricas] = useState({
         boxeadoresActivos: 0,
         inscripcionesMes: 0,
+        pagosMes: 0,
         ingresosMes: 0,
         precioMensual: 0,
         gimnasio: ''
@@ -1210,6 +1236,7 @@ function CoachStatsDashboard() {
             setMetricas({
                 boxeadoresActivos: metricsInfo && typeof metricsInfo.boxeadoresActivos === 'number' ? metricsInfo.boxeadoresActivos : 0,
                 inscripcionesMes: metricsInfo && typeof metricsInfo.inscripcionesMes === 'number' ? metricsInfo.inscripcionesMes : 0,
+                pagosMes: metricsInfo && typeof metricsInfo.pagosMes === 'number' ? metricsInfo.pagosMes : 0,
                 ingresosMes: metricsInfo && typeof metricsInfo.ingresosMes === 'number' ? metricsInfo.ingresosMes : 0,
                 precioMensual,
                 gimnasio
@@ -1333,6 +1360,9 @@ function CoachManagement() {
     });
     const [cobrosTotal, setCobrosTotal] = useState(0);
     const [boxers, setBoxers] = useState([]);
+    const [payingIds, setPayingIds] = useState(new Set());
+    const [boxersMessage, setBoxersMessage] = useState(null);
+    const [payConfirm, setPayConfirm] = useState(null);
 
     const [gymInput, setGymInput] = useState('');
     const [priceInput, setPriceInput] = useState('');
@@ -1361,6 +1391,7 @@ function CoachManagement() {
     const [selectedDays, setSelectedDays] = useState([true, true, true, true, true, false, false]); // L M X J V S D
     const [nombreEntrenador, setNombreEntrenador] = useState('');
     const [activeTab, setActiveTab] = useState('gym');
+    const [showCreateForm, setShowCreateForm] = useState(false);
 
     const locationMapRef = useRef(null);
     const locationMarkerRef = useRef(null);
@@ -1506,7 +1537,7 @@ function CoachManagement() {
             locationMapRef.current = lmap;
         }, 150);
         return () => clearTimeout(timer);
-    }, [activeTab, loading]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [activeTab, loading, showCreateForm]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Actualizar marcador cuando lat/lng cambia (geocoding o clic en mapa)
     useEffect(() => {
@@ -1756,6 +1787,56 @@ function CoachManagement() {
         }
     };
 
+    const markPaid = async (boxerId, isPaid) => {
+        const bId = String(boxerId);
+        if (payingIds.has(bId)) return;
+        const mes = new Date().toISOString().slice(0, 7);
+        const now = new Date().toISOString();
+        setBoxersMessage(null);
+        setPayingIds(prev => new Set([...prev, bId]));
+        try {
+            await requestJson(
+                `/api/entrenadores/me/boxeadores/${encodeURIComponent(bId)}/pago?email=${encodeURIComponent(email)}`,
+                { method: isPaid ? 'DELETE' : 'POST' }
+            );
+            setBoxers(prev => prev.map(b => {
+                if (String(b._id) !== bId) return b;
+                const pagos = Array.isArray(b.pagos) ? b.pagos : [];
+                return {
+                    ...b,
+                    pagos: isPaid
+                        ? pagos.filter(p => p.mes !== mes)
+                        : [...pagos, { mes, monto: 0, fecha: now }]
+                };
+            }));
+            const events = await requestJson(`/api/entrenadores/me/calendar-events?email=${encodeURIComponent(email)}`).catch(() => []);
+            const pagoEvent = Array.isArray(events) ? events.find(ev => ev.tipo === 'pago' && ev.notas && ev.notas.includes(`[boxeador:${bId}]`)) : null;
+            if (!isPaid && !pagoEvent) {
+                const boxer = boxers.find(b => String(b._id) === bId);
+                const boxerName = boxer ? (boxer.nombre || boxer.email || 'Alumno') : 'Alumno';
+                requestJson(`/api/entrenadores/me/calendar-events?email=${encodeURIComponent(email)}`, {
+                    method: 'POST',
+                    body: {
+                        title: `Pago: ${boxerName}`,
+                        start: now.slice(0, 16),
+                        allDay: false,
+                        color: '#16a34a',
+                        tipo: 'pago',
+                        notas: `Pago mensual registrado para ${boxerName} (${mes}) [boxeador:${bId}]`
+                    }
+                }).catch(() => {});
+            } else if (isPaid && pagoEvent) {
+                requestJson(`/api/entrenadores/me/calendar-events/${pagoEvent._id}?email=${encodeURIComponent(email)}`, {
+                    method: 'DELETE'
+                }).catch(() => {});
+            }
+        } catch (err) {
+            setBoxersMessage({ kind: 'error', text: err.message || 'Error al registrar pago' });
+        } finally {
+            setPayingIds(prev => { const s = new Set(prev); s.delete(bId); return s; });
+        }
+    };
+
     const levelScore = (nivel = '') => {
         const n = String(nivel).toLowerCase();
         if (n.includes('principiante')) return 1;
@@ -1792,6 +1873,59 @@ function CoachManagement() {
         }, 'Cargando panel...');
     }
 
+    if (!hasGym && !showCreateForm) {
+        return h('div', {
+            style: {
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '80px 20px',
+                textAlign: 'center',
+                gap: '20px'
+            }
+        }, [
+            h('div', {
+                style: {
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '24px',
+                    backgroundColor: '#eff6ff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }
+            }, h('i', { className: 'fas fa-building', style: { fontSize: '2rem', color: '#3b82f6' } })),
+            h('h2', {
+                style: { fontSize: '1.8rem', color: '#111827', margin: 0 }
+            }, 'Aún no tienes un gimnasio'),
+            h('p', {
+                style: { color: '#6b7280', fontSize: '1rem', maxWidth: '480px', margin: 0 }
+            }, 'Registra tu gimnasio para empezar a gestionar boxeadores, horarios y mucho más.'),
+            h('button', {
+                onClick: () => setShowCreateForm(true),
+                style: {
+                    marginTop: '8px',
+                    padding: '14px 36px',
+                    backgroundColor: '#3b82f6',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    boxShadow: '0 4px 14px rgba(59,130,246,0.35)'
+                }
+            }, [
+                h('i', { className: 'fas fa-plus' }),
+                'Crear Gimnasio'
+            ])
+        ]);
+    }
+
     const tabBarStyle = {
         display: 'flex',
         gap: '8px',
@@ -1814,6 +1948,56 @@ function CoachManagement() {
         alignItems: 'center',
         gap: '8px'
     });
+
+    const payConfirmModal = payConfirm ? h('div', {
+        style: {
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 10000
+        },
+        onClick: (e) => { if (e.target === e.currentTarget) setPayConfirm(null); }
+    },
+        h('div', {
+            style: {
+                backgroundColor: '#fff', borderRadius: '16px', padding: '28px 24px',
+                maxWidth: 400, width: '90%', textAlign: 'center',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+            }
+        },
+            h('i', {
+                className: payConfirm.isPaid ? 'fas fa-undo-alt' : 'fas fa-money-bill-wave',
+                style: { fontSize: '2.5rem', color: payConfirm.isPaid ? 'var(--color-accent)' : '#16a34a', marginBottom: '16px', display: 'block' }
+            }),
+            h('h3', {
+                style: { margin: '0 0 10px 0', fontSize: '1.2rem', fontWeight: 800, color: '#111827' }
+            }, payConfirm.isPaid ? 'Deshacer pago' : 'Confirmar pago'),
+            h('p', {
+                style: { margin: '0 0 24px 0', fontSize: '0.95rem', color: '#6b7280', lineHeight: 1.5 }
+            }, payConfirm.isPaid
+                ? `¿Deshacer el pago de ${payConfirm.nombre} para este mes?`
+                : `¿Marcar a ${payConfirm.nombre} como pagado este mes?`
+            ),
+            h('div', { style: { display: 'flex', gap: '12px', justifyContent: 'center' } },
+                h('button', {
+                    onClick: () => setPayConfirm(null),
+                    style: {
+                        flex: 1, padding: '11px 0', borderRadius: '10px',
+                        border: '1px solid #d1d5db', background: '#fff',
+                        color: '#374151', fontWeight: 700, fontSize: '.95rem', cursor: 'pointer'
+                    }
+                }, 'Cancelar'),
+                h('button', {
+                    onClick: () => { markPaid(payConfirm.id, payConfirm.isPaid); setPayConfirm(null); },
+                    style: {
+                        flex: 1, padding: '11px 0', borderRadius: '10px', border: 'none',
+                        background: payConfirm.isPaid ? 'var(--color-accent)' : '#16a34a',
+                        color: '#fff', fontWeight: 700, fontSize: '.95rem', cursor: 'pointer'
+                    }
+                }, payConfirm.isPaid ? 'Deshacer' : 'Confirmar')
+            )
+        )
+    ) : null;
 
     return h(React.Fragment, null, [
         h('div', {
@@ -2607,6 +2791,17 @@ function CoachManagement() {
                     }, 'Quitar')
                 ])
             ]),
+            boxersMessage ? h('div', {
+                style: {
+                    margin: '12px 0 0 0',
+                    padding: '10px 16px',
+                    borderRadius: '10px',
+                    fontWeight: 600,
+                    fontSize: '.9rem',
+                    backgroundColor: boxersMessage.kind === 'error' ? '#fee2e2' : '#dcfce7',
+                    color: boxersMessage.kind === 'error' ? '#b91c1c' : '#166534'
+                }
+            }, boxersMessage.text) : null,
             h('div', {
                 className: 'sparring-list',
                 style: {
@@ -2632,11 +2827,45 @@ function CoachManagement() {
                                 className: 'card-stars'
                             }, renderStars(levelScore(b.nivel))),
                             h('div', {
-                                className: 'card-action'
-                            }, [h('button', {
-                                className: 'view-profile-button',
-                                onClick: () => selectForEdit(b)
-                            }, 'Editar')])
+                                className: 'card-action',
+                                style: { display: 'flex', gap: '8px', alignItems: 'center' }
+                            }, [
+                                (() => {
+                                    const currentMes = new Date().toISOString().slice(0, 7);
+                                    const isPaid = Array.isArray(b.pagos) && b.pagos.some(p => p.mes === currentMes);
+                                    const bId = String(b._id);
+                                    const isPaying = payingIds.has(bId);
+                                    return h('button', {
+                                        onClick: () => {
+                                            if (!isPaying) setPayConfirm({ id: b._id, nombre: b.nombre || b.email, isPaid });
+                                        },
+                                        disabled: isPaying,
+                                        title: isPaying ? 'Procesando...' : (isPaid ? 'Deshacer pago' : 'Marcar como pagado este mes'),
+                                        style: {
+                                            padding: '7px 14px',
+                                            borderRadius: '8px',
+                                            border: `2px solid ${isPaying ? '#9ca3af' : (isPaid ? '#16a34a' : '#dc2626')}`,
+                                            backgroundColor: isPaying ? '#f3f4f6' : (isPaid ? '#dcfce7' : '#fee2e2'),
+                                            color: isPaying ? '#6b7280' : (isPaid ? '#15803d' : '#dc2626'),
+                                            fontWeight: 700,
+                                            fontSize: '.8rem',
+                                            cursor: isPaying ? 'not-allowed' : 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '5px',
+                                            whiteSpace: 'nowrap',
+                                            opacity: isPaying ? 0.7 : 1
+                                        }
+                                    }, [
+                                        h('i', { className: isPaying ? 'fas fa-spinner fa-spin' : (isPaid ? 'fas fa-check-circle' : 'fas fa-times-circle') }),
+                                        isPaying ? 'Procesando...' : (isPaid ? 'Mes pagado' : 'Pendiente de pagar mes')
+                                    ]);
+                                })(),
+                                h('button', {
+                                    className: 'view-profile-button',
+                                    onClick: () => selectForEdit(b)
+                                }, 'Editar')
+                            ])
                         ]),
                         (editId === (b._id || b.email) ? h('div', {
                             style: {
@@ -2768,6 +2997,7 @@ function CoachManagement() {
                     ])))
             ]),
         ]) : null,
+        payConfirmModal
     ]);
 }
 
@@ -2913,20 +3143,20 @@ function CoachFinance() {
                     }
                 }),
                 h(MetricCard, {
-                    label: 'Inscripciones este mes',
-                    pill: String(metricas.inscripcionesMes || 0),
-                    sub: 'Altas registradas este mes.',
+                    label: 'Pagos este mes',
+                    pill: `${metricas.pagosMes || 0} / ${metricas.boxeadoresActivos || 0}`,
+                    sub: `${metricas.pagosMes || 0} de ${metricas.boxeadoresActivos || 0} boxeadores han pagado. Se restablece cada mes.`,
                     chartProps: {
-                        label: 'Inscripciones',
-                        value: metricas.inscripcionesMes || 0,
-                        max: 30,
-                        color: '#6b7280'
+                        label: 'Pagos',
+                        value: metricas.pagosMes || 0,
+                        max: Math.max(1, metricas.boxeadoresActivos || 1),
+                        color: '#10b981'
                     }
                 }),
                 h(MetricCard, {
-                    label: 'Ingresos estimados (mes)',
+                    label: 'Ingresos este mes',
                     pill: formatCurrency(metricas.ingresosMes || 0),
-                    sub: 'Precio mensual × inscripciones del mes.',
+                    sub: 'Precio mensual × pagos registrados este mes.',
                     chartProps: {
                         label: 'Ingresos',
                         value: metricas.ingresosMes || 0,

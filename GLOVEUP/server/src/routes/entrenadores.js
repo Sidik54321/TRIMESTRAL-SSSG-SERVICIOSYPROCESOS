@@ -399,13 +399,19 @@ router.get('/me/metricas', async (req, res) => {
         });
 
         const precioMensual = Number.isFinite(Number(coach.precioMensual)) ? Number(coach.precioMensual) : 0;
-        const ingresosMes = precioMensual * inscripcionesMes;
+        const mesPago = new Date().toISOString().slice(0, 7);
+        const pagosMes = await Boxeador.countDocuments({
+            entrenadorId: coach._id,
+            'pagos.mes': mesPago
+        });
+        const ingresosMes = precioMensual * pagosMes;
 
         return res.json({
             gimnasio: coach.gimnasio || '',
             precioMensual,
             boxeadoresActivos,
             inscripcionesMes,
+            pagosMes,
             ingresosMes
         });
     } catch (err) {
@@ -598,7 +604,7 @@ router.post('/me/boxeadores/create', async (req, res) => {
         }).lean();
         if (existingDni) {
             return res.status(409).json({
-                error: 'Este DNI/Licencia ya está registrado'
+                error: 'Ese DNI ya existe'
             });
         }
 
@@ -717,6 +723,44 @@ router.put('/me/boxeadores/:id', async (req, res) => {
         return res.status(err.status || 400).json({
             error: err.message
         });
+    }
+});
+
+router.post('/me/boxeadores/:id/pago', async (req, res) => {
+    try {
+        const coach = await requireCoachByEmail(req.query.email);
+        const boxer = await Boxeador.findById(req.params.id);
+        if (!boxer) return res.status(404).json({ error: 'Boxeador no encontrado' });
+        if (String(boxer.entrenadorId) !== String(coach._id)) return res.status(403).json({ error: 'No autorizado' });
+
+        const mes = new Date().toISOString().slice(0, 7);
+        if (!Array.isArray(boxer.pagos)) boxer.pagos = [];
+        if (boxer.pagos.some(p => p.mes === mes)) {
+            return res.status(409).json({ error: 'El boxeador ya ha pagado este mes' });
+        }
+
+        const monto = Number(coach.precioMensual) || 0;
+        boxer.pagos.push({ mes, monto, fecha: new Date() });
+        await boxer.save();
+        return res.json({ ok: true, mes, monto });
+    } catch (err) {
+        return res.status(err.status || 400).json({ error: err.message });
+    }
+});
+
+router.delete('/me/boxeadores/:id/pago', async (req, res) => {
+    try {
+        const coach = await requireCoachByEmail(req.query.email);
+        const boxer = await Boxeador.findById(req.params.id);
+        if (!boxer) return res.status(404).json({ error: 'Boxeador no encontrado' });
+        if (String(boxer.entrenadorId) !== String(coach._id)) return res.status(403).json({ error: 'No autorizado' });
+
+        const mes = new Date().toISOString().slice(0, 7);
+        boxer.pagos = (boxer.pagos || []).filter(p => p.mes !== mes);
+        await boxer.save();
+        return res.json({ ok: true });
+    } catch (err) {
+        return res.status(err.status || 400).json({ error: err.message });
     }
 });
 

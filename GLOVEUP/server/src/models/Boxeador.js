@@ -193,6 +193,11 @@ const BoxeadorSchema = new mongoose.Schema({
             createdAt: String
         }]
     }],
+    pagos: [{
+        mes: { type: String, trim: true },       // "YYYY-MM"
+        fecha: { type: Date, default: Date.now },
+        monto: { type: Number, default: 0 }
+    }],
     fechaInscripcion: {
         type: Date
     },
