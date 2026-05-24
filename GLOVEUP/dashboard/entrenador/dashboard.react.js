@@ -1260,7 +1260,7 @@ function CoachStatsDashboard() {
 
     const calendarEvents = useMemo(() => {
         const autoEvents = buildCoachCalendarEvents(boxers, metricas);
-        const custom = (Array.isArray(customEvents) ? customEvents : []).map(ev => ({
+        const custom = (Array.isArray(customEvents) ? customEvents : []).filter(ev => ev.tipo !== 'pago' && !(ev.notas && ev.notas.includes('[boxeador:'))).map(ev => ({
             id: `custom-${ev._id}`,
             title: ev.title || 'Evento',
             start: ev.start,
@@ -1809,27 +1809,6 @@ function CoachManagement() {
                         : [...pagos, { mes, monto: 0, fecha: now }]
                 };
             }));
-            const events = await requestJson(`/api/entrenadores/me/calendar-events?email=${encodeURIComponent(email)}`).catch(() => []);
-            const pagoEvent = Array.isArray(events) ? events.find(ev => ev.tipo === 'pago' && ev.notas && ev.notas.includes(`[boxeador:${bId}]`)) : null;
-            if (!isPaid && !pagoEvent) {
-                const boxer = boxers.find(b => String(b._id) === bId);
-                const boxerName = boxer ? (boxer.nombre || boxer.email || 'Alumno') : 'Alumno';
-                requestJson(`/api/entrenadores/me/calendar-events?email=${encodeURIComponent(email)}`, {
-                    method: 'POST',
-                    body: {
-                        title: `Pago: ${boxerName}`,
-                        start: now.slice(0, 16),
-                        allDay: false,
-                        color: '#16a34a',
-                        tipo: 'pago',
-                        notas: `Pago mensual registrado para ${boxerName} (${mes}) [boxeador:${bId}]`
-                    }
-                }).catch(() => {});
-            } else if (isPaid && pagoEvent) {
-                requestJson(`/api/entrenadores/me/calendar-events/${pagoEvent._id}?email=${encodeURIComponent(email)}`, {
-                    method: 'DELETE'
-                }).catch(() => {});
-            }
         } catch (err) {
             setBoxersMessage({ kind: 'error', text: err.message || 'Error al registrar pago' });
         } finally {
