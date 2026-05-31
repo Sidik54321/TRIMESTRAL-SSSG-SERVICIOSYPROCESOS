@@ -1,5 +1,13 @@
-// Lógica de autenticación (auth/index.html)
+/**
+ * auth.js — Lógica de autenticación para auth/index.html.
+ * Gestiona registro, inicio de sesión y recuperación de contraseña.
+ * Persiste la sesión del usuario en localStorage / sessionStorage.
+ * Redirige al dashboard correcto según el rol (boxeador / entrenador).
+ */
 
+// ─── CLAVES DE ALMACENAMIENTO LOCAL ─────────────────────────────────────────
+
+// Claves utilizadas para almacenar el estado de sesión en localStorage/sessionStorage
 const REGISTERED_KEY = 'gloveup_is_registered';
 const SESSION_MAINTAINED_KEY = 'gloveup_session_maintained';
 const STORED_EMAIL_KEY = 'gloveup_user_email';
@@ -7,12 +15,24 @@ const STORED_USERNAME_KEY = 'gloveup_user_name';
 const STORED_USER_ID_KEY = 'gloveup_user_id';
 const STORED_USER_ROLE_KEY = 'gloveup_user_role';
 const STORED_USER_DNI_KEY = 'gloveup_user_dni';
+
+// ─── CONFIGURACIÓN DE LA URL BASE DE LA API ──────────────────────────────────
+
+// Detecta el host dinámicamente para funcionar tanto en local como en producción
 const _glv_h = window.location.hostname;
 const _glv_apiHost = (_glv_h === '127.0.0.1' || _glv_h === 'localhost' || _glv_h === '') ? 'localhost' : _glv_h;
+// Permite sobreescribir la URL base desde localStorage (útil para despliegues alternativos)
 const API_BASE_URL = (window.localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${_glv_apiHost}:3000` : '')).replace(/\/+$/, '');
 
 // Eliminado: lógica BoxRec ID (no se requiere)
 
+// ─── DIÁLOGO DE ALERTAS ──────────────────────────────────────────────────────
+
+/**
+ * Muestra un diálogo <dialog> nativo con título y mensaje.
+ * Soporta cierre automático tras un tiempo con autoCloseMs.
+ * Devuelve una Promise que resuelve con el valor de retorno del diálogo.
+ */
 function showAuthAlert({
     title,
     message,
@@ -28,6 +48,7 @@ function showAuthAlert({
     titleEl.textContent = String(title || 'Aviso');
     messageEl.textContent = String(message || '');
 
+    // Si el diálogo ya está abierto, cerrarlo antes de reabrirlo
     if (dialog.open) {
         try {
             dialog.close('reopen');
@@ -38,6 +59,7 @@ function showAuthAlert({
         const onClose = () => resolve(String(dialog.returnValue || ''));
         dialog.addEventListener('close', onClose, { once: true });
         dialog.showModal();
+        // Cierre automático opcional para alertas temporales (ej: tras login exitoso)
         if (typeof autoCloseMs === 'number' && Number.isFinite(autoCloseMs) && autoCloseMs > 0) {
             window.setTimeout(() => {
                 if (!dialog.open) return;
@@ -49,9 +71,17 @@ function showAuthAlert({
     });
 }
 
+// ─── FORMULARIO DE REGISTRO ──────────────────────────────────────────────────
+
+/**
+ * Valida y envía el formulario de registro al backend.
+ * Adjunta los campos opcionales según el tipo de cuenta (boxeador/entrenador).
+ * En caso de éxito, redirige al tab de inicio de sesión.
+ */
 export function validateSignUpForm(event) {
     event.preventDefault();
 
+    // Helper para leer valores de inputs por su ID de forma segura
     const getValue = (id) => {
         const el = document.getElementById(id);
         return el && 'value' in el ? String(el.value) : '';
@@ -74,8 +104,10 @@ export function validateSignUpForm(event) {
         return false;
     }
 
+    // Ocultar cualquier mensaje de error previo
     errorMessageDiv.style.display = 'none';
 
+    // Validaciones del lado cliente antes de llamar a la API
     if (!name || !email || !pass) {
         errorMessageDiv.textContent = '⛔ Debes completar nombre, email y contraseña.';
         errorMessageDiv.style.display = 'block';
@@ -94,9 +126,11 @@ export function validateSignUpForm(event) {
         return false;
     }
 
+    // Deshabilitar el botón durante la petición para evitar dobles envíos
     const submitButton = event.target.querySelector('input[type="submit"]');
     if (submitButton) submitButton.disabled = true;
 
+    // Construir el cuerpo de la petición con los campos comunes
     const registerBody = {
         nombre: name,
         email: email,
@@ -105,6 +139,7 @@ export function validateSignUpForm(event) {
         dniLicencia
     };
 
+    // Añadir campos específicos según el tipo de cuenta
     if (accountType === 'boxeador') {
         registerBody.nivel = level;
         registerBody.disciplina = 'Boxeo';
@@ -119,6 +154,7 @@ export function validateSignUpForm(event) {
             body: registerBody
         })
         .then((payload) => {
+            // Limpiar datos de sesión previos para no interferir con el nuevo usuario
             localStorage.removeItem(REGISTERED_KEY);
             localStorage.removeItem(STORED_EMAIL_KEY);
             localStorage.removeItem(STORED_USERNAME_KEY);
@@ -131,6 +167,7 @@ export function validateSignUpForm(event) {
                 title: 'Registro completado',
                 message: 'Ya puedes iniciar sesión.'
             });
+            // Cambiar al tab de inicio de sesión y pre-rellenar el email
             document.getElementById('tab-1').checked = true;
             document.getElementById('tab-2').checked = false;
 
@@ -152,9 +189,17 @@ export function validateSignUpForm(event) {
     return false;
 }
 
+// ─── FORMULARIO DE INICIO DE SESIÓN ─────────────────────────────────────────
+
+/**
+ * Valida y envía el formulario de login al backend.
+ * Guarda los datos del usuario en storage y redirige al dashboard correspondiente.
+ * Si se marca "mantener sesión", se persiste en localStorage; si no, solo en sessionStorage.
+ */
 export function validateSignInForm(event) {
     event.preventDefault();
 
+    // Leer el checkbox de "mantener sesión"
     const checkEl = document.getElementById('check');
     const maintainSessionChecked = Boolean(checkEl && checkEl.checked);
     const errorMessageDiv = document.getElementById('signin-error-message');
@@ -192,13 +237,16 @@ export function validateSignInForm(event) {
             }
         })
         .then((data) => {
+            // Persistir datos del usuario en localStorage
             localStorage.setItem(REGISTERED_KEY, 'true');
             localStorage.setItem(STORED_EMAIL_KEY, data.email);
             localStorage.setItem(STORED_USERNAME_KEY, data.nombre);
             localStorage.setItem(STORED_USER_ROLE_KEY, data.rol || 'usuario');
             localStorage.setItem(STORED_USER_DNI_KEY, data.dniLicencia || '');
+            // El ID de usuario solo se guarda en sessionStorage (más efímero)
             sessionStorage.setItem(STORED_USER_ID_KEY, data.id || '');
 
+            // Determinar si se mantiene la sesión entre cierres de pestaña
             if (maintainSessionChecked) {
                 localStorage.setItem(SESSION_MAINTAINED_KEY, 'true');
                 sessionStorage.setItem(SESSION_MAINTAINED_KEY, 'true');
@@ -207,6 +255,7 @@ export function validateSignInForm(event) {
                 sessionStorage.setItem(SESSION_MAINTAINED_KEY, 'true');
             }
 
+            // Redirigir al dashboard según el rol recibido del servidor
             const role = (data.rol || 'usuario').toLowerCase();
             const nextUrl = role === 'entrenador' ? '../dashboard/entrenador/dashboard.html' : '../dashboard/boxeador/dashboard.html';
             if (typeof window.showToast === 'function') {
@@ -218,11 +267,13 @@ export function validateSignInForm(event) {
                     autoCloseMs: 1000
                 });
             }
+            // Pequeño retardo para que el usuario vea el toast antes de navegar
             window.setTimeout(() => {
                 window.location.href = nextUrl;
             }, 900);
         })
         .catch((err) => {
+            // Diferenciar error de red de error de credenciales para mensaje más útil
             const rawMessage = err && err.message ? err.message.toLowerCase() : '';
             if (rawMessage.includes('failed') || rawMessage.includes('network') || rawMessage.includes('conectar')) {
                 errorMessageDiv.textContent = `⚠️ No se pudo conectar con el servidor. Verifica que esté activo en ${API_BASE_URL}.`;
@@ -230,6 +281,7 @@ export function validateSignInForm(event) {
                 errorMessageDiv.textContent = `❌ ${err.message || 'Email/Usuario o Contraseña incorrectos. Por favor, revísalos.'}`;
             }
             errorMessageDiv.style.display = 'block';
+            // Limpiar contraseña por seguridad y devolver el foco al usuario
             passInput.value = '';
             userInput.focus();
         })
@@ -240,6 +292,13 @@ export function validateSignInForm(event) {
     return false;
 }
 
+// ─── FORMULARIO DE RECUPERACIÓN DE CONTRASEÑA ───────────────────────────────
+
+/**
+ * Valida y envía el formulario de restablecimiento de contraseña.
+ * Usa email + DNI/licencia como verificación de identidad (sin email externo).
+ * En caso de éxito, oculta el panel y vuelve al tab de login.
+ */
 export function validateForgotPasswordForm(event) {
     event.preventDefault();
 
@@ -263,9 +322,11 @@ export function validateForgotPasswordForm(event) {
     const password = String(passInput.value || '');
     const passwordRepeat = String(passRepeatInput.value || '');
 
+    // Ocultar mensajes de estado anteriores
     errorMessageDiv.style.display = 'none';
     successMessageDiv.style.display = 'none';
 
+    // Validaciones básicas del lado cliente
     if (!email || !dniLicencia || !password) {
         errorMessageDiv.textContent = '⛔ Debes completar email, DNI/licencia y la nueva contraseña.';
         errorMessageDiv.style.display = 'block';
@@ -298,11 +359,13 @@ export function validateForgotPasswordForm(event) {
         .then(() => {
             successMessageDiv.textContent = '✅ Contraseña actualizada. Ya puedes iniciar sesión con tu nueva contraseña.';
             successMessageDiv.style.display = 'block';
+            // Limpiar los campos del formulario por seguridad
             emailInput.value = '';
             dniInput.value = '';
             passInput.value = '';
             passRepeatInput.value = '';
 
+            // Ocultar el panel de recuperación y volver al tab de login
             const forgotPanel = document.getElementById('forgot-panel');
             if (forgotPanel) forgotPanel.style.display = 'none';
             const signInInput = document.getElementById('tab-1');
@@ -322,6 +385,13 @@ export function validateForgotPasswordForm(event) {
     return false;
 }
 
+// ─── HELPER HTTP ─────────────────────────────────────────────────────────────
+
+/**
+ * Realiza una petición JSON a la API REST.
+ * Lanza un Error con el mensaje del servidor si la respuesta no es OK.
+ * Traduce errores de red a mensajes legibles en español.
+ */
 function requestJson(path, options = {}) {
     const method = options.method || 'GET';
     const headers = {
@@ -344,6 +414,7 @@ function requestJson(path, options = {}) {
         }
         return payload;
     }).catch((err) => {
+        // Detectar errores de conectividad y normalizar el mensaje
         const raw = err && err.message ? err.message.toLowerCase() : '';
         if (raw.includes('failed to fetch') || raw.includes('networkerror') || raw.includes('load failed')) {
             throw new Error(`No se pudo conectar con ${API_BASE_URL}`);
@@ -352,8 +423,11 @@ function requestJson(path, options = {}) {
     });
 }
 
+// ─── INICIALIZACIÓN AL CARGAR EL DOM ─────────────────────────────────────────
+
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Detectar si ya existe una sesión activa para decidir qué tab mostrar por defecto
     const storedSessionMaintained =
         sessionStorage.getItem(SESSION_MAINTAINED_KEY) === 'true' ||
         localStorage.getItem(SESSION_MAINTAINED_KEY) === 'true' ?
@@ -364,9 +438,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const signUpInput = document.getElementById('tab-2');
     const infoBanner = document.getElementById('redirect-info');
     const params = new URLSearchParams(window.location.search);
-    const from = params.get('from');
+    const from = params.get('from');  // Parámetro de redirección (ej: desde perfil sin sesión)
     // Eliminado: eventos para BoxRec ID
 
+    // Si ya hay sesión, mostrar el tab de login; si no, mostrar el de registro
     if (storedSessionMaintained === 'true') {
         if (signInInput) signInInput.checked = true;
         if (signUpInput) signUpInput.checked = false;
@@ -375,6 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (signInInput) signInInput.checked = false;
     }
 
+    // Mostrar banner informativo si el usuario llegó desde una página protegida sin sesión
     if (from === 'profile' && storedSessionMaintained !== 'true') {
         if (infoBanner) {
             infoBanner.textContent = 'Necesitas crear un perfil para poder ver esta sección. Regístrate o inicia sesión.';
@@ -384,10 +460,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (signInInput) signInInput.checked = false;
     }
 
+    // ─── PANEL DE RECUPERACIÓN DE CONTRASEÑA ────────────────────────────────
+
     const forgotPanel = document.getElementById('forgot-panel');
     const forgotLink = document.getElementById('forgot-password-link');
     const forgotBackLink = document.getElementById('forgot-back-link');
 
+    /** Oculta el panel "¿Olvidaste tu contraseña?" y limpia mensajes. */
     const hideForgotPanel = () => {
         if (forgotPanel) forgotPanel.style.display = 'none';
         const errorMessageDiv = document.getElementById('forgot-error-message');
@@ -396,6 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (successMessageDiv) successMessageDiv.style.display = 'none';
     };
 
+    /** Muestra el panel de recuperación y fuerza el tab de login visible. */
     const showForgotPanel = () => {
         if (forgotPanel) forgotPanel.style.display = 'block';
         const signInInputLocal = document.getElementById('tab-1');
@@ -406,6 +486,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (emailForgot) emailForgot.focus();
     };
 
+    /**
+     * Sincroniza la visibilidad del panel con el hash de la URL (#forgot).
+     * Permite navegar directamente a la recuperación con un enlace.
+     */
     const syncForgotFromHash = () => {
         if (String(window.location.hash || '').toLowerCase() === '#forgot') {
             showForgotPanel();
@@ -414,6 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Abrir/cerrar el panel de recuperación usando el hash de la URL
     if (forgotLink) {
         forgotLink.addEventListener('click', (e) => {
             e.preventDefault();
@@ -428,15 +513,18 @@ document.addEventListener('DOMContentLoaded', () => {
             hideForgotPanel();
         });
     }
+    // Escuchar cambios de hash para sincronizar (ej: botón atrás del navegador)
     window.addEventListener('hashchange', syncForgotFromHash);
     syncForgotFromHash();
 
+    /** Cierra el panel de recuperación si el hash no es #forgot. */
     const leaveForgotPanel = () => {
         if (String(window.location.hash || '').toLowerCase() !== '#forgot') return;
         window.location.hash = '';
         hideForgotPanel();
     };
 
+    // Cerrar el panel al cambiar de tab (registro o login)
     if (signUpInput) {
         signUpInput.addEventListener('change', () => {
             if (signUpInput.checked) leaveForgotPanel();
@@ -449,9 +537,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ─── VISIBILIDAD DINÁMICA DE CAMPOS DEL FORMULARIO DE REGISTRO ──────────
+
     const accountTypeSelect = document.getElementById('account_type_signup');
     const levelGroup = document.getElementById('level_signup_group');
 
+    /**
+     * Oculta el campo "nivel" cuando el usuario selecciona "entrenador",
+     * ya que ese campo solo aplica a boxeadores.
+     */
     const syncSignUpFields = () => {
         const value = (accountTypeSelect ? accountTypeSelect.value || 'boxeador' : 'boxeador').trim().toLowerCase();
         if (levelGroup) levelGroup.style.display = value === 'entrenador' ? 'none' : '';
@@ -459,6 +553,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (accountTypeSelect) {
         accountTypeSelect.addEventListener('change', syncSignUpFields);
-        syncSignUpFields();
+        syncSignUpFields(); // Aplicar estado inicial al cargar la página
     }
 });

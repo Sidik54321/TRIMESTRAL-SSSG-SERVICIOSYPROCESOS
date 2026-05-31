@@ -1,21 +1,35 @@
 /**
- * GloveUp — Onboarding "Primeros Pasos"
- * Se persiste en localStorage con clave individualizada por email.
- * Los pasos completados desaparecen de la lista.
+ * onboarding.js — Módulo de "Primeros Pasos" de GloveUp.
+ * Guía al usuario recién registrado a través de las acciones clave de la plataforma.
+ * El progreso se persiste en localStorage con una clave individual por email.
+ * Los pasos completados se detectan vía API y también se pueden descartar manualmente.
+ * Se adapta al rol del usuario (boxeador o entrenador) con listas de pasos distintas.
  */
 
 (function () {
     'use strict';
 
+    // ─── CLAVES DE ALMACENAMIENTO ────────────────────────────────────────────
+
     const LS_EMAIL       = 'gloveup_user_email';
     const LS_ROLE        = 'gloveup_user_role';
+    // Prefijo de clave; se añade el email para que cada cuenta tenga su progreso independiente
     const LS_DONE_PREFIX = 'gloveup_onboarding_done_';
 
+    // ─── CONFIGURACIÓN DE LA API ─────────────────────────────────────────────
+
+    // Función lazy para obtener la URL base (se evalúa en tiempo de ejecución)
     const _glv_h = window.location.hostname;
     const _glv_apiHost = (_glv_h === '127.0.0.1' || _glv_h === 'localhost' || _glv_h === '') ? 'localhost' : _glv_h;
     const API = () => (localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${_glv_apiHost}:3000` : '')).replace(/\/+$/, '');
 
-    // ── Pasos por rol ────────────────────────────────────────────────────────
+    // ─── PASOS POR ROL ───────────────────────────────────────────────────────
+
+    /**
+     * Lista de pasos para el rol boxeador.
+     * Cada paso tiene un id único, icono, texto descriptivo, acción y una función
+     * check() asíncrona que consulta la API para detectar si ya está completado.
+     */
     const STEPS_BOXEADOR = [
         {
             id: 'profile',
@@ -24,6 +38,7 @@
             desc:  'Añade tu foto, peso, disciplina y ubicación para que otros te encuentren más fácil.',
             action: 'Ir a Mi Perfil',
             href:  '../profile/index.html',
+            // Completado si el boxeador tiene foto, peso, disciplina y ubicación
             check: async (email) => {
                 try {
                     const r = await fetch(`${API()}/api/boxeadores/me?email=${encodeURIComponent(email)}`);
@@ -39,6 +54,7 @@
             desc:  'Usa el buscador para encontrar compañeros de combate por nivel, peso y ubicación.',
             action: 'Buscar Sparring',
             href:  '../sparring/index.html',
+            // No hay verificación automática; el usuario lo descarta manualmente
             check: async () => false
         },
         {
@@ -48,6 +64,7 @@
             desc:  'Envía tu primer reto de sparring. Usa los filtros para encontrar al rival perfecto.',
             action: 'Ir al buscador',
             href:  '../sparring/index.html',
+            // Completado si el boxeador tiene al menos un reto enviado
             check: async (email) => {
                 try {
                     const r = await fetch(`${API()}/api/boxeadores/challenges?email=${encodeURIComponent(email)}`);
@@ -67,6 +84,10 @@
         }
     ];
 
+    /**
+     * Lista de pasos para el rol entrenador.
+     * Incluye pasos específicos como crear gimnasio y añadir boxeadores.
+     */
     const STEPS_ENTRENADOR = [
         {
             id: 'profile',
@@ -75,6 +96,7 @@
             desc:  'Añade tu especialidad, precio mensual y foto para que los boxeadores puedan encontrarte.',
             action: 'Ir a Mi Perfil',
             href:  '../profile/index.html',
+            // Completado si el entrenador tiene foto y especialidad informadas
             check: async (email) => {
                 try {
                     const r = await fetch(`${API()}/api/entrenadores/me?email=${encodeURIComponent(email)}`);
@@ -90,6 +112,7 @@
             desc:  'Registra el gimnasio donde entrenas: nombre, ubicación y descripción.',
             action: 'Ver Gimnasios',
             href:  '../gyms/index.html',
+            // Completado si existe al menos un gimnasio creado por este entrenador
             check: async (email) => {
                 try {
                     const r = await fetch(`${API()}/api/gimnasios`);
@@ -105,6 +128,7 @@
             desc:  'Registra un boxeador bajo tu gestión usando su email o DNI/Licencia.',
             action: 'Ir a Gestión',
             href:  '../dashboard/entrenador/dashboard.html#coach-management',
+            // Completado si el entrenador tiene al menos un boxeador asignado
             check: async (email) => {
                 try {
                     const r = await fetch(`${API()}/api/entrenadores/me/boxeadores?email=${encodeURIComponent(email)}`);
@@ -133,22 +157,38 @@
         }
     ];
 
-    // ── Helpers de persistencia ──────────────────────────────────────────────
+    // ─── HELPERS DE PERSISTENCIA ─────────────────────────────────────────────
+
+    /**
+     * Devuelve el Set de IDs de pasos marcados como completados para un email dado.
+     * Lee desde localStorage; devuelve un Set vacío si no existe o hay error de parseo.
+     */
     function getDoneSet(email) {
         try { return new Set(JSON.parse(localStorage.getItem(LS_DONE_PREFIX + email) || '[]')); }
         catch { return new Set(); }
     }
+
+    /** Guarda en localStorage el Set de pasos completados serializado como JSON. */
     function saveDoneSet(email, set) {
         localStorage.setItem(LS_DONE_PREFIX + email, JSON.stringify([...set]));
     }
+
+    /** Añade el ID de un paso al Set de completados y lo persiste. */
     function markDone(email, id) {
         const s = getDoneSet(email);
         s.add(id);
         saveDoneSet(email, s);
     }
 
-    // ── Build HTML: sólo pasos pendientes ────────────────────────────────────
+    // ─── CONSTRUCCIÓN DEL HTML ───────────────────────────────────────────────
+
+    /**
+     * Genera el HTML de la sección onboarding con barra de progreso y tarjetas.
+     * Solo muestra los pasos que aún no están en doneSet.
+     * Si todos están completos, muestra un mensaje de felicitación.
+     */
     function buildHTML(steps, doneSet, pct) {
+        // Filtrar solo los pasos pendientes (los completados desaparecen)
         const pending = steps.filter(s => !doneSet.has(s.id));
 
         const cardsHtml = pending.map(step => `
@@ -186,7 +226,14 @@
         }`;
     }
 
-    // ── Render ───────────────────────────────────────────────────────────────
+    // ─── RENDER PRINCIPAL ────────────────────────────────────────────────────
+
+    /**
+     * Renderiza el onboarding en el contenedor dado.
+     * Lanza las verificaciones de completado en paralelo vía API,
+     * actualiza el localStorage y construye el HTML resultante.
+     * Si isDashboardWidget=true y todo está hecho, elimina el contenedor del DOM.
+     */
     async function renderOnboarding(containerEl, isDashboardWidget) {
         const email = (localStorage.getItem(LS_EMAIL) || '').trim().toLowerCase();
         const role  = (localStorage.getItem(LS_ROLE)  || 'usuario').toLowerCase();
@@ -196,13 +243,15 @@
             return;
         }
 
+        // Seleccionar los pasos según el rol del usuario
         const steps   = role === 'entrenador' ? STEPS_ENTRENADOR : STEPS_BOXEADOR;
         const doneSet = getDoneSet(email);
 
-        // Verificaciones async via API
+        // Verificaciones asíncronas en paralelo para detectar pasos ya completados via API
         const checks = await Promise.all(
             steps.map(s => s.check(email).then(v => ({ id: s.id, done: v })).catch(() => ({ id: s.id, done: false })))
         );
+        // Marcar automáticamente los pasos que la API confirma como completados
         checks.forEach(({ id, done }) => { if (done) doneSet.add(id); });
         saveDoneSet(email, doneSet);
 
@@ -210,7 +259,7 @@
         const totalSteps = steps.length;
         const pct = Math.round((totalDone / totalSteps) * 100);
 
-        // Widget del dashboard: si todos completos, ocultar
+        // Widget del dashboard: si todos completos, ocultar el widget completo
         if (isDashboardWidget && totalDone >= totalSteps) {
             if (containerEl && containerEl.parentNode) containerEl.parentNode.removeChild(containerEl);
             return;
@@ -219,7 +268,7 @@
         containerEl.innerHTML = buildHTML(steps, doneSet, pct);
         hideSidebarIfDone();
 
-        // Clic en tarjeta → marcar hecho + navegar
+        // Clic en tarjeta → marcar hecho + navegar a la sección correspondiente
         containerEl.querySelectorAll('.onboarding-card').forEach(card => {
             card.addEventListener('click', (e) => {
                 if (e.target.closest('.onboarding-card-dismiss')) return;
@@ -228,7 +277,7 @@
             });
         });
 
-        // Clic en "×" → marcar hecho + animar desaparición + re-render
+        // Clic en "×" → marcar como hecho, animar desaparición y re-renderizar
         containerEl.querySelectorAll('.onboarding-card-dismiss').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -236,6 +285,7 @@
                 const card = btn.closest('.onboarding-card');
                 markDone(email, stepId);
                 if (card) {
+                    // Añadir clase CSS de animación antes de re-renderizar
                     card.classList.add('dismissing');
                     setTimeout(() => renderOnboarding(containerEl, isDashboardWidget), 260);
                 } else {
@@ -245,17 +295,29 @@
         });
     }
 
-    // ── Modo página completa ─────────────────────────────────────────────────
+    // ─── MODO PÁGINA COMPLETA ────────────────────────────────────────────────
+
+    /**
+     * Inicializa el onboarding en el contenedor de página completa (#onboarding-full-root).
+     * Solo se ejecuta si dicho elemento existe en el DOM.
+     */
     function initFullPage() {
         const el = document.getElementById('onboarding-full-root');
         if (!el) return;
         renderOnboarding(el, false);
     }
 
-    // ── Exponer para uso externo ─────────────────────────────────────────────
+    // ─── API PÚBLICA ─────────────────────────────────────────────────────────
+
+    // Exponer funciones para uso externo desde otros módulos (ej: sparring.js)
     window.GlvOnboarding = { markDone, getDoneSet };
 
-    // ── Ocultar enlace del sidebar si todos los pasos están hechos ───────────
+    // ─── OCULTAR ENLACE DEL SIDEBAR ──────────────────────────────────────────
+
+    /**
+     * Oculta el ítem de navegación "Primeros Pasos" del sidebar cuando
+     * el usuario ha completado todos los pasos, para no saturar el menú.
+     */
     function hideSidebarIfDone() {
         const email = (localStorage.getItem(LS_EMAIL) || '').trim().toLowerCase();
         const role  = (localStorage.getItem(LS_ROLE)  || 'usuario').toLowerCase();
@@ -271,13 +333,15 @@
         }
     }
 
-    // ── Detectar contexto ────────────────────────────────────────────────────
+    // ─── DETECCIÓN DE CONTEXTO E INICIALIZACIÓN ──────────────────────────────
+
+    // Inicializar en página completa si el elemento raíz está presente
     if (document.getElementById('onboarding-full-root')) {
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initFullPage);
         else initFullPage();
     }
 
-    // Ocultar sidebar en todas las páginas
+    // Ocultar el enlace del sidebar en todas las páginas donde esté incluido este script
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hideSidebarIfDone);
     else hideSidebarIfDone();
 
