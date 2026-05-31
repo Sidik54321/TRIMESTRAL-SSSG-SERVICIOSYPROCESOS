@@ -22,7 +22,6 @@
 
 <body class="with-sidebar">
     <script>
-        // Aplicar tema según rol antes del primer paint
         const _role = (localStorage.getItem('gloveup_user_role') || '').toLowerCase();
         if (_role === 'entrenador') document.body.classList.add('theme-entrenador');
         const _savedTheme = localStorage.getItem('gloveup_theme');
@@ -375,12 +374,9 @@
                 return;
             }
 
-            // Theme Toggle
             const themeBtn = document.getElementById('theme-toggle');
             const body = document.body;
             const THEME_KEY = 'gloveup_theme';
-
-            // Check saved theme
             const savedTheme = localStorage.getItem(THEME_KEY);
             if (savedTheme === 'dark') {
                 body.classList.add('theme-dark');
@@ -407,7 +403,6 @@
                 }
             }
 
-            // Logout Logic
             const logoutBtn = document.getElementById('logout-button');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', () => {

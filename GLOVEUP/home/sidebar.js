@@ -1,47 +1,34 @@
-/**
- * sidebar.js — Gestión del menú lateral colapsable.
- * Crea dinámicamente el botón de alternar, persiste el estado en localStorage
- * y dispara un evento 'resize' para que componentes como FullCalendar o
- * Leaflet recalculen su tamaño tras la transición CSS.
- */
+// sidebar.js — Menú lateral colapsable: toggle, persistencia en localStorage y redispatch de resize.
 
 document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.querySelector('.main-sidebar');
     const body = document.body;
     if (!sidebar) return;
 
-    // ─── CREACIÓN DEL BOTÓN DE ALTERNAR ─────────────────────────────────────
-
-    // Crear el botón de hamburguesa e insertarlo dentro del sidebar
+    // Botón creado por JS para mantener el HTML limpio
     const toggleBtn = document.createElement('button');
     toggleBtn.id = 'sidebar-toggle';
     toggleBtn.className = 'sidebar-toggle';
     toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
     toggleBtn.title = 'Alternar menú';
+    toggleBtn.setAttribute('aria-label', 'Alternar menú lateral');
     sidebar.appendChild(toggleBtn);
 
-    // ─── ESTADO INICIAL DESDE LOCALSTORAGE ──────────────────────────────────
-
-    // Restaurar el estado colapsado/expandido de la sesión anterior
+    // Restaurar estado previo desde localStorage
     const isCollapsed = localStorage.getItem('gloveup_sidebar_collapsed') === 'true';
     if (isCollapsed) {
         sidebar.classList.add('collapsed');
         body.classList.add('sidebar-collapsed');
     }
 
-    // ─── EVENTO DE CLIC PARA ALTERNAR ───────────────────────────────────────
-
     toggleBtn.addEventListener('click', () => {
         sidebar.classList.toggle('collapsed');
         body.classList.toggle('sidebar-collapsed');
-        // Guardar el nuevo estado para que persista en próximas visitas
-        const nowCollapsed = sidebar.classList.contains('collapsed');
-        localStorage.setItem('gloveup_sidebar_collapsed', nowCollapsed);
 
-        // Disparar resize después de la transición CSS para que componentes
-        // visuales como FullCalendar o Leaflet recalculen sus dimensiones
-        setTimeout(() => {
-            window.dispatchEvent(new Event('resize'));
-        }, 300);
+        const nowCollapsed = sidebar.classList.contains('collapsed');
+        localStorage.setItem('gloveup_sidebar_collapsed', String(nowCollapsed));
+
+        // 300 ms = duración de la transición CSS; FullCalendar y Leaflet necesitan resize para recalcularse
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 300);
     });
 });

@@ -20,7 +20,6 @@
 
 <body class="with-sidebar">
     <script>
-        // Aplicar tema según rol antes del primer paint
         const _role = (localStorage.getItem('gloveup_user_role') || '').toLowerCase();
         if (_role === 'entrenador') document.body.classList.add('theme-entrenador');
         const _savedTheme = localStorage.getItem('gloveup_theme');
@@ -290,12 +289,9 @@
                 return;
             }
 
-            // Theme Toggle
             const themeBtn = document.getElementById('theme-toggle');
             const body = document.body;
             const THEME_KEY = 'gloveup_theme';
-
-            // Check saved theme
             const savedTheme = localStorage.getItem(THEME_KEY);
             if (savedTheme === 'dark') {
                 body.classList.add('theme-dark');
@@ -322,7 +318,6 @@
                 }
             }
 
-            // Logout Logic
             const logoutBtn = document.getElementById('logout-button');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', () => {
@@ -660,7 +655,6 @@
                         if (e.target.tagName !== 'INPUT') {
                             rb.checked = true;
                         }
-                        // Manual toggle classes for single select
                         checklist.querySelectorAll('.coach-item').forEach(i => i.classList.remove('selected'));
                         item.classList.add('selected');
                     });
@@ -805,7 +799,6 @@
                 try {
                     const coaches = await loadCoaches();
                     currentModalCoaches = coaches;
-                    // Reset selection when opening the modal for a new challenge
                     selectedCoachIds.clear();
                     requiredCoachIds.forEach((id) => selectedCoachIds.add(id));
                     renderCoachChecklist(coaches);
@@ -1040,7 +1033,6 @@
                 });
             }
 
-            // Gym search filter
             const gymSearch = document.getElementById('gym-search');
             if (gymSearch) {
                 gymSearch.addEventListener('input', (e) => {
@@ -1050,7 +1042,6 @@
                 });
             }
 
-            // Coach search filter
             const coachSearch = document.getElementById('coach-search');
             if (coachSearch) {
                 coachSearch.addEventListener('input', (e) => {
@@ -1064,7 +1055,6 @@
                 });
             }
 
-            // Logic for the new selection grid
             const presetGrid = document.getElementById('preset-grid');
             const hiddenPreset = document.getElementById('challenge-preset');
             if (presetGrid && hiddenPreset) {
@@ -1299,7 +1289,6 @@
             }
 
             try {
-                // Fetch de la API
                 console.log('[GloveUp] API_BASE_URL =', API_BASE_URL);
                 console.log('[GloveUp] Fetching:', `${API_BASE_URL}/api/boxeadores`);
                 const response = await fetch(`${API_BASE_URL}/api/boxeadores`);

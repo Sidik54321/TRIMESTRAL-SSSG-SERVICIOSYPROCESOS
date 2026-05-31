@@ -682,7 +682,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // === Sidebar role logic ===
             const role = (localStorage.getItem('gloveup_user_role') || 'usuario').toLowerCase();
             const homeLink = document.getElementById('nav-home-link');
             const coachNavItem = document.getElementById('coach-nav-item');
@@ -700,7 +699,6 @@
             if (sparringsNavItem) sparringsNavItem.style.display = role === 'entrenador' ? 'none' : '';
             if (buscarSparringNavItem) buscarSparringNavItem.style.display = '';
 
-            // === Session check ===
             const sessionEmail = (localStorage.getItem('gloveup_user_email') || '').trim().toLowerCase();
             const sessionOk =
                 sessionStorage.getItem('gloveup_session_maintained') === 'true' ||
@@ -710,7 +708,6 @@
                 return;
             }
 
-            // === Theme Toggle ===
             const themeBtn = document.getElementById('theme-toggle');
             const body = document.body;
             const THEME_KEY = 'gloveup_theme';
@@ -733,7 +730,6 @@
                 if (text) text.textContent = isDark ? 'Tema Claro' : 'Tema Oscuro';
             }
 
-            // === Logout ===
             const logoutBtn = document.getElementById('logout-button');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', () => {
@@ -749,7 +745,6 @@
                 });
             }
 
-            // === Load Gym Detail ===
             const _glv_h = window.location.hostname;
             const _glv_apiHost = (_glv_h === '127.0.0.1' || _glv_h === 'localhost' || _glv_h === '') ? 'localhost' : _glv_h;
             const API_BASE_URL = (localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${_glv_apiHost}:3000` : '')).replace(/\/+$/, '');
@@ -777,13 +772,11 @@
                 const allGyms = Array.isArray(gymsRes) ? gymsRes : [];
                 const allBoxers = Array.isArray(boxersRes) ? boxersRes : [];
 
-                // Find the gym
                 let gym = allGyms.find(g => {
                     const k = g.key || normalizeGymKey(g.nombre || '');
                     return k === gymKey;
                 });
 
-                // Fallback: disabled
                 if (!gym) {
                     const defaultGyms = [];
                     gym = defaultGyms.find(g => normalizeGymKey(g.nombre) === gymKey);
@@ -800,7 +793,6 @@
                 const gymBio = typeof gym.bio === 'string' ? gym.bio.trim() : '';
                 const gymFoto = Array.isArray(gym.fotos) && gym.fotos.length ? gym.fotos[0] : '../assets/images/Sparring_Club_Collection-Link-Image.jpg';
 
-                // Set hero background
                 const heroEl = document.getElementById('gym-hero');
                 if (heroEl) heroEl.style.setProperty('--hero-bg-image', `url('${gymFoto}')`);
 
@@ -808,7 +800,6 @@
                 document.getElementById('gym-location').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${gymCity || 'Ubicación no indicada'}`;
                 document.title = `GloveUp - ${gymName}`;
 
-                // New fields: trainer and hours
                 const trainerEl = document.getElementById('gym-trainer');
                 const hoursEl = document.getElementById('gym-hours');
 
@@ -821,7 +812,6 @@
                     hoursEl.querySelector('span').textContent = gym.horario;
                 }
 
-                // Info / Bio
                 const bioCard = document.getElementById('gym-bio-card');
                 const bioText = document.getElementById('gym-bio-text');
                 if (bioCard && bioText && gymBio) {
@@ -829,7 +819,6 @@
                     bioText.textContent = gymBio;
                 }
 
-                // OpenStreetMap embed (Leaflet)
                 const gymLat = gym.lat != null ? parseFloat(gym.lat) : null;
                 const gymLng = gym.lng != null ? parseFloat(gym.lng) : null;
                 const gymDireccion = typeof gym.direccion === 'string' ? gym.direccion.trim() : '';
@@ -864,7 +853,6 @@
                 };
 
                 if (mapCard && mapContainer && (hasCoords || hasAddress)) {
-                    // Mostrar el card ANTES de inicializar el mapa
                     mapCard.style.display = 'block';
 
                     if (hasCoords) {
@@ -886,7 +874,6 @@
                     }
                 }
 
-                // Gallery logic (Carousel)
                 const galleryCard = document.getElementById('gallery-card');
                 const carouselMain = document.getElementById('carousel-main');
                 const track = document.getElementById('carousel-track');
@@ -899,14 +886,12 @@
                     const photos = gym.fotos.filter(f => f);
                     let currentIndex = 0;
 
-                    // Generate slides
                     track.innerHTML = photos.map(foto => `
                         <div class="carousel-slide">
                             <img src="${foto}" alt="Gym Photo" loading="lazy">
                         </div>
                     `).join('');
 
-                    // Generate dots
                     dotsContainer.innerHTML = photos.map((_, i) => `
                         <div class="dot ${i === 0 ? 'active' : ''}" data-index="${i}"></div>
                     `).join('');
@@ -938,7 +923,6 @@
                         }
                     };
 
-                    // Lightbox logic
                     const lightbox = document.getElementById('lightbox');
                     const lightboxImg = document.getElementById('lightbox-img');
                     carouselMain.onclick = () => {
@@ -952,13 +936,11 @@
                         document.body.style.overflow = '';
                     };
 
-                    // Auto-advance
                     let autoTimer = setInterval(() => nextBtn.onclick(), 5000);
                     galleryCard.onmouseenter = () => clearInterval(autoTimer);
                     galleryCard.onmouseleave = () => autoTimer = setInterval(() => nextBtn.onclick(), 5000);
                 }
 
-                // Filter boxers for this gym
                 const gymKeyNorm = normalizeGymKey(gymName);
                 const gymBoxers = allBoxers.filter(b => {
                     const bGym = b && b.gimnasio ? String(b.gimnasio) : '';
@@ -977,7 +959,6 @@
                     return;
                 }
 
-                // Render boxer cards
                 listEl.innerHTML = '';
                 gymBoxers.forEach((boxeador, index) => {
                     const card = document.createElement('div');
@@ -1033,7 +1014,6 @@
                     listEl.appendChild(card);
                 });
 
-                // Event delegation for buttons
                 listEl.addEventListener('click', (e) => {
                     const viewBtn = e.target.closest('.view-profile-button');
                     if (viewBtn && viewBtn.dataset.identifierEnc) {
