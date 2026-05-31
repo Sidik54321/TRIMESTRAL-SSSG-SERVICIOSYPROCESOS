@@ -8,7 +8,10 @@
         "dev": "nodemon --exec \"node --env-file=.env\" src/index.js",
         "seed:boxeadores": "node --env-file=.env src/seed/seedBoxeadores.js",
         "seed:demo": "node --env-file=.env src/seed/seedBoxeadores.js --demo",
-        "seed": "node src/seed/seedBoxeadores.js --demo"
+        "seed": "node src/seed/seedBoxeadores.js --demo",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage"
     },
     "dependencies": {
         "bcrypt": "^6.0.0",
@@ -16,6 +19,9 @@
         "mongoose": "^7.6.0"
     },
     "devDependencies": {
-        "nodemon": "^3.0.2"
+        "mongodb-memory-server": "^11.2.0",
+        "nodemon": "^3.0.2",
+        "supertest": "^7.2.2",
+        "vitest": "^4.1.7"
     }
 }
