@@ -314,7 +314,7 @@
         <div class="cover-badge"><i class="fas fa-book-open"></i> Guía oficial</div>
         <h1>Manual del<br>Boxeador</h1>
         <p>Todo lo que necesitas saber para aprovechar GloveUp al máximo: registra sparrings, reta rivales, gestiona tu perfil y conecta con otros luchadores.</p>
-        <div class="cover-version">GloveUp · Versión 1.0 · 2026</div>
+        <div class="cover-version">GloveUp · Versión 2.0 · 2026</div>
     </div>
 
     <!-- ToC -->
@@ -327,11 +327,12 @@
             <li><a href="#s4">Buscar sparring</a></li>
             <li><a href="#s5">Enviar y gestionar retos</a></li>
             <li><a href="#s6">Mis Sparrings</a></li>
-            <li><a href="#s7">Explorar gimnasios</a></li>
-            <li><a href="#s8">Chat y mensajes</a></li>
-            <li><a href="#s9">Notificaciones</a></li>
-            <li><a href="#s10">Personalización y ajustes</a></li>
-            <li><a href="#s11">Preguntas frecuentes</a></li>
+            <li><a href="#s7">Calendario</a></li>
+            <li><a href="#s8">Explorar gimnasios</a></li>
+            <li><a href="#s9">Chat y mensajes</a></li>
+            <li><a href="#s10">Notificaciones</a></li>
+            <li><a href="#s11">Personalización y ajustes</a></li>
+            <li><a href="#s12">Preguntas frecuentes</a></li>
         </ol>
     </div>
 
@@ -372,18 +373,22 @@
         <div class="steps">
             <div class="step">
                 <div class="step-icon"><i class="fas fa-user-plus"></i></div>
-                <div class="step-body"><h4>Crear cuenta</h4><p>Introduce tu nombre, email y contraseña. Selecciona el rol <strong>Boxeador</strong>. Tu cuenta se crea automáticamente en la base de datos.</p></div>
+                <div class="step-body"><h4>Crear cuenta</h4><p>Introduce tu nombre, email, contraseña y <strong>DNI / Licencia federativa</strong>. Selecciona el rol <strong>Boxeador</strong>. El DNI/Licencia debe tener entre 6 y 20 caracteres y es obligatorio; se cifra en la base de datos.</p></div>
             </div>
             <div class="step">
                 <div class="step-icon"><i class="fas fa-sign-in-alt"></i></div>
                 <div class="step-body"><h4>Iniciar sesión</h4><p>Escribe tu email y contraseña registrados. Al entrar, serás redirigido a tu panel de control de boxeador.</p></div>
             </div>
             <div class="step">
+                <div class="step-icon"><i class="fas fa-key"></i></div>
+                <div class="step-body"><h4>Recuperar contraseña</h4><p>Si olvidaste tu contraseña, usa la opción <em>"¿Olvidaste tu contraseña?"</em> en la pantalla de inicio de sesión. Necesitarás tu <strong>email</strong> y tu <strong>DNI/Licencia</strong> para verificar tu identidad y establecer una nueva contraseña.</p></div>
+            </div>
+            <div class="step">
                 <div class="step-icon"><i class="fas fa-sign-out-alt"></i></div>
                 <div class="step-body"><h4>Cerrar sesión</h4><p>Usa el botón "Cerrar Sesión" en la parte inferior del menú lateral en cualquier página.</p></div>
             </div>
         </div>
-        <div class="tip"><strong>💡 Consejo:</strong> Usa una contraseña segura con al menos 8 caracteres. GloveUp nunca comparte tu información personal.</div>
+        <div class="tip"><strong>💡 Consejo:</strong> Usa una contraseña segura con al menos 8 caracteres. GloveUp nunca comparte tu información personal ni tu DNI.</div>
     </div>
 
     <div class="section" id="s3">
@@ -400,11 +405,16 @@
             <tr><td>Categoría de peso</td><td>Peso pluma, ligero, pesado…</td><td>⭐⭐⭐ Esencial</td></tr>
             <tr><td>Nivel</td><td>Principiante, Amateur, Intermedio, Avanzado, Profesional</td><td>⭐⭐⭐ Esencial</td></tr>
             <tr><td>Ubicación</td><td>Ciudad o región</td><td>⭐⭐⭐ Esencial</td></tr>
+            <tr><td>Género</td><td>Masculino, Femenino u Otro</td><td>⭐⭐ Recomendado</td></tr>
+            <tr><td>Guardia</td><td>Diestro o Zurdo</td><td>⭐⭐ Recomendado</td></tr>
+            <tr><td>Altura / Alcance / Edad</td><td>Datos físicos que ayudan a encontrar rivales compatibles</td><td>⭐ Opcional</td></tr>
+            <tr><td>Frecuencia de sparring</td><td>Diaria, Semanal o Mensual — cuánto estás disponible</td><td>⭐ Opcional</td></tr>
             <tr><td>Biografía</td><td>Texto libre sobre tu trayectoria</td><td>⭐ Opcional</td></tr>
-            <tr><td>Historial</td><td>Registro D-N-E (victorias, derrotas, empates)</td><td>⭐⭐ Recomendado</td></tr>
+            <tr><td>Historial (récord)</td><td>Registro D-N-E (victorias, derrotas, empates)</td><td>⭐⭐ Recomendado</td></tr>
         </table>
         <p>Accede a tu perfil desde <strong>Mi Perfil</strong> en el menú lateral. Pulsa el botón <strong>Editar perfil</strong> para modificar tus datos y guarda con el botón correspondiente.</p>
         <div class="info-box"><i class="fas fa-info-circle"></i>&nbsp; Los campos <em>Disciplina</em>, <em>Peso</em>, <em>Nivel</em> y <em>Ubicación</em> son obligatorios para aparecer en los resultados de búsqueda de sparring.</div>
+        <div class="tip"><strong>💡 Pagos:</strong> Tu historial de pagos mensuales al entrenador queda registrado automáticamente cuando el entrenador confirma tu inscripción. Puedes consultarlo desde la pestaña <em>Pagos</em> de tu perfil.</div>
     </div>
 
     <div class="section" id="s4">
@@ -473,6 +483,29 @@
     <div class="section" id="s7">
         <div class="section-header">
             <div class="section-num">7</div>
+            <h2>Calendario</h2>
+        </div>
+        <p>El <strong>Calendario</strong> es una herramienta personal integrada en tu perfil que te permite organizar tus sesiones, compromisos y eventos de entrenamiento.</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-calendar-plus"></i></div>
+                <div class="step-body"><h4>Crear un evento</h4><p>Pulsa sobre cualquier día del calendario para añadir un evento. Introduce el título, fecha de inicio, fecha de fin (opcional), color y notas.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-paint-brush"></i></div>
+                <div class="step-body"><h4>Personalizar colores</h4><p>Cada evento puede tener un color distinto para distinguir fácilmente entre sparrings, entrenamientos, descanso u otros compromisos.</p></div>
+            </div>
+            <div class="step">
+                <div class="step-icon"><i class="fas fa-trash-alt"></i></div>
+                <div class="step-body"><h4>Eliminar eventos</h4><p>Pulsa sobre un evento existente y selecciona la opción de eliminar para borrarlo del calendario.</p></div>
+            </div>
+        </div>
+        <div class="info-box"><i class="fas fa-info-circle"></i>&nbsp; Los eventos del calendario son privados y solo los ves tú. Los sparrings confirmados desde la sección <em>Mis Sparrings</em> se añaden automáticamente al calendario.</div>
+    </div>
+
+    <div class="section" id="s8">
+        <div class="section-header">
+            <div class="section-num">8</div>
             <h2>Explorar gimnasios</h2>
         </div>
         <p>La sección <strong>Gimnasios</strong> muestra un mapa interactivo y una lista de todos los recintos registrados en la plataforma.</p>
@@ -492,9 +525,9 @@
         </div>
     </div>
 
-    <div class="section" id="s8">
+    <div class="section" id="s9">
         <div class="section-header">
-            <div class="section-num">8</div>
+            <div class="section-num">9</div>
             <h2>Chat y mensajes</h2>
         </div>
         <p>El chat está disponible en todas las páginas de la plataforma (esquina inferior derecha). Te permite comunicarte en tiempo real con cualquier usuario de GloveUp.</p>
@@ -515,9 +548,9 @@
         <div class="tip"><strong>💡 Consejo:</strong> El chat se actualiza automáticamente. Si tienes mensajes nuevos sin leer, verás un número en rojo sobre el icono del chat.</div>
     </div>
 
-    <div class="section" id="s9">
+    <div class="section" id="s10">
         <div class="section-header">
-            <div class="section-num">9</div>
+            <div class="section-num">10</div>
             <h2>Notificaciones</h2>
         </div>
         <p>GloveUp incluye un sistema de notificaciones propio que te avisa de eventos importantes sin interrumpir tu navegación: retos recibidos, sparrings aceptados o rechazados, mensajes nuevos, etc.</p>
@@ -534,9 +567,9 @@
         <div class="info-box"><i class="fas fa-info-circle"></i>&nbsp; Las notificaciones se comprueban automáticamente en segundo plano mientras estés en la aplicación. Los avisos aparecen como mensajes flotantes no bloqueantes.</div>
     </div>
 
-    <div class="section" id="s10">
+    <div class="section" id="s11">
         <div class="section-header">
-            <div class="section-num">10</div>
+            <div class="section-num">11</div>
             <h2>Personalización y ajustes</h2>
         </div>
         <p>Desde la sección <strong>Ajustes</strong> (icono ⚙️ en la barra lateral) puedes adaptar la apariencia de GloveUp a tus preferencias.</p>
@@ -557,9 +590,9 @@
         <div class="tip"><strong>💡 Consejo:</strong> La paleta personalizada se guarda en tu navegador. Si accedes desde otro dispositivo deberás volver a configurarla.</div>
     </div>
 
-    <div class="section" id="s11">
+    <div class="section" id="s12">
         <div class="section-header">
-            <div class="section-num">11</div>
+            <div class="section-num">12</div>
             <h2>Preguntas frecuentes</h2>
         </div>
         <div class="steps">
