@@ -1,8 +1,25 @@
 /**
  * chat.js — Sistema de chat de GloveUp con historial de conversaciones.
- * Implementado mediante polling HTTP cada 15 segundos (sin WebSockets).
- * Permite buscar usuarios, abrir conversaciones y enviar mensajes de texto.
- * El badge de mensajes no leídos se actualiza también cada 2 minutos.
+ *
+ * Arquitectura de paneles:
+ *  Los tres paneles del widget se alternan ocultando/mostrando con clases CSS 'hidden':
+ *  - glv-home-panel  → lista de conversaciones recientes con preview y badge de no leídos.
+ *  - glv-search-panel → buscador de contactos (con debounce de 300 ms por tecla).
+ *  - glv-conv-panel   → hilo de mensajes con el contacto activo.
+ *
+ * Ciclo de vida del widget:
+ *  1. El usuario pulsa el botón flotante → showPanel('glv-home-panel') + loadConversations().
+ *  2. Para buscar un contacto → showPanel('glv-search-panel') + doSearch('').
+ *  3. Al seleccionar un contacto → openConversation(contact) + fetchMessages(true) + startPolling().
+ *  4. Al cerrar la conversación → stopPolling() + loadConversations() (refleja mensajes leídos).
+ *
+ * Polling de mensajes: cada 15 s mientras una conversación está abierta (setInterval en pollId).
+ * Polling de badge: cada 2 min para actualizar el contador de no leídos en el botón flotante.
+ * Límite del badge: máximo "9+" para no desbordar visualmente el icono.
+ * Scroll automático: solo si el usuario ya estaba en el fondo del hilo (o es la primera carga).
+ *
+ * El módulo se envuelve en un IIFE para no contaminar el scope global con las
+ * variables de estado internas (activeContact, pollId, searchTimeout).
  */
 (function () {
     'use strict';

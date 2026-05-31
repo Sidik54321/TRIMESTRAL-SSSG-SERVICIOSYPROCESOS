@@ -1,3 +1,29 @@
+/**
+ * seed/seedMinimal.js — Seed mínimo de datos de prueba para GloveUp.
+ *
+ * Crea un conjunto pequeño pero completo de datos para desarrollo y testing manual:
+ *  - 2 gimnasios de prueba (GloveUp Central y The Ring)
+ *  - 2 entrenadores (uno por gimnasio)
+ *  - 3 boxeadores (distribuidos entre los dos entrenadores)
+ *
+ * Uso:
+ *   node server/src/seed/seedMinimal.js
+ *
+ * ADVERTENCIA: Limpia completamente la base de datos antes de insertar.
+ * No ejecutar en entornos con datos reales.
+ *
+ * Los DNI se cifran con AES-256-CBC (igual que en el flujo de registro normal)
+ * para que el login y la recuperación de contraseña funcionen correctamente
+ * con estos usuarios de prueba.
+ *
+ * Credenciales de prueba:
+ *   Entrenador 1: entrenador1@test.com / password123
+ *   Entrenador 2: entrenador2@test.com / password123
+ *   Boxeador 1:   boxeador1@test.com   / password123
+ *   Boxeador 2:   boxeador2@test.com   / password123
+ *   Boxeador 3:   boxeador3@test.com   / password123
+ */
+
 import mongoose from 'mongoose';
 import Usuario from '../models/Usuario.js';
 import Boxeador from '../models/Boxeador.js';
@@ -7,12 +33,15 @@ import Mensaje from '../models/Mensaje.js';
 import Notificacion from '../models/Notificacion.js';
 import { encrypt } from '../utils/crypto.js';
 
+// URI de MongoDB: variable de entorno o valor local por defecto
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/gloveup';
+
+// ── Datos de los gimnasios de prueba ──────────────────────────────────────────
 
 const testGyms = [
     {
         nombre: 'GloveUp Central',
-        key: 'gloveup-central',
+        key: 'gloveup-central',           // Slug URL-friendly
         ubicacion: 'Madrid',
         direccion: 'Calle del Boxeo 1',
         bio: 'El centro neurálgico de GloveUp.',
@@ -29,6 +58,8 @@ const testGyms = [
         correoContacto: 'ring@gloveup.com'
     }
 ];
+
+// ── Datos de los entrenadores de prueba ───────────────────────────────────────
 
 const trainers = [
     {
@@ -48,6 +79,8 @@ const trainers = [
         extra: { especialidad: 'Fitness & Boxeo', gimnasio: 'The Ring', precioMensual: 45 }
     }
 ];
+
+// ── Datos de los boxeadores de prueba ─────────────────────────────────────────
 
 const boxers = [
     {
@@ -76,11 +109,20 @@ const boxers = [
     }
 ];
 
+/**
+ * Función principal del seed:
+ *  1. Conecta a MongoDB.
+ *  2. Limpia todas las colecciones para partir de cero.
+ *  3. Crea los gimnasios.
+ *  4. Crea los entrenadores (Usuario + Entrenador, con DNI cifrado).
+ *  5. Crea los boxeadores asignando entrenadores de forma rotativa.
+ */
 async function seed() {
     try {
         console.log('⏳ Conectando a MongoDB...');
         await mongoose.connect(MONGO_URI);
 
+        // Limpiar todas las colecciones para garantizar un estado inicial limpio
         console.log('🧹 Vaciando base de datos...');
         await Usuario.deleteMany({});
         await Boxeador.deleteMany({});
@@ -89,34 +131,40 @@ async function seed() {
         await Mensaje.deleteMany({});
         await Notificacion.deleteMany({});
 
+        // Crear los gimnasios de prueba
         console.log('🏟️ Creando gimnasios...');
         for (const gym of testGyms) {
             await Gimnasio.create(gym);
         }
 
+        // Crear los entrenadores: primero la cuenta de Usuario (credenciales),
+        // luego el perfil de Entrenador (datos profesionales)
         const trainerDocs = [];
         console.log('👨‍🏫 Creando entrenadores...');
         for (const t of trainers) {
             console.log(`👤 Procesando ${t.email}...`);
+            // Cifrar el DNI antes de guardarlo en la colección de usuarios
             const encryptedDni = encrypt(t.dni);
             const usuario = await Usuario.create({
                 nombre: t.nombre,
                 email: t.email,
-                password: t.password,
+                password: t.password, // Se hasheará en el pre-save hook del modelo
                 rol: t.rol,
                 dniLicencia: encryptedDni
             });
 
+            // Crear el perfil profesional del entrenador enlazado al usuario
             const entrenador = await Entrenador.create({
                 nombre: t.nombre,
                 email: t.email,
-                usuarioId: usuario._id,
-                dniLicencia: t.dni,
+                usuarioId: usuario._id,  // Referencia cruzada para consultas futuras
+                dniLicencia: t.dni,      // Sin cifrar en la colección de perfiles
                 ...t.extra
             });
             trainerDocs.push(entrenador);
         }
 
+        // Crear los boxeadores y asignarlos a los entrenadores de forma rotativa
         console.log('🥊 Creando boxeadores...');
         for (const [i, b] of boxers.entries()) {
             console.log(`👤 Procesando ${b.email}...`);
@@ -129,14 +177,14 @@ async function seed() {
                 dniLicencia: encryptedDni
             });
 
-            // Assign a trainer (alternating)
+            // Asignar entrenador de forma rotativa: índice % nº entrenadores
             const coach = trainerDocs[i % trainerDocs.length];
 
             await Boxeador.create({
                 nombre: b.nombre,
                 email: b.email,
                 usuarioId: usuario._id,
-                entrenadorId: coach._id,
+                entrenadorId: coach._id,  // Vinculación con el entrenador asignado
                 dniLicencia: b.dni,
                 ...b.extra
             });

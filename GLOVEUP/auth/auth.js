@@ -1,8 +1,32 @@
 /**
  * auth.js — Lógica de autenticación para auth/index.html.
- * Gestiona registro, inicio de sesión y recuperación de contraseña.
- * Persiste la sesión del usuario en localStorage / sessionStorage.
- * Redirige al dashboard correcto según el rol (boxeador / entrenador).
+ *
+ * Gestiona tres flujos de autenticación:
+ *  - Registro:              validateSignUpForm()         → POST /api/auth/register.
+ *    Construye el payload con campos comunes (nombre, email, password, dniLicencia) y
+ *    añade campos específicos del rol (nivel + disciplina para boxeador; especialidad
+ *    para entrenador). Tras el éxito pre-rellena el tab de login con el email registrado.
+ *
+ *  - Inicio de sesión:      validateSignInForm()         → POST /api/auth/login.
+ *    Si "mantener sesión" está marcado, persiste los datos en localStorage; si no,
+ *    solo en sessionStorage (se pierde al cerrar el navegador). Redirige al dashboard
+ *    específico del rol devuelto por el servidor tras 900 ms (para que se vea el toast).
+ *
+ *  - Recuperación de contraseña: validateForgotPasswordForm() → POST /api/auth/forgot-password.
+ *    Usa email + DNI/Licencia como segundo factor de verificación (sin email externo).
+ *    Muestra el panel de recuperación vía hash URL (#forgot) para que sea enlazable.
+ *
+ * Almacenamiento de sesión (stateless, sin JWT):
+ *  - gloveup_user_email, gloveup_user_name, gloveup_user_role → localStorage
+ *  - gloveup_user_id                                           → sessionStorage
+ *  - gloveup_session_maintained → localStorage (si recordar) o solo sessionStorage
+ *
+ * Redirección post-login:
+ *  - boxeador   → ../dashboard/boxeador/dashboard.html
+ *  - entrenador → ../dashboard/entrenador/dashboard.html
+ *
+ * requestJson() es el único helper HTTP del módulo: normaliza errores de red a mensajes
+ * en español y lanza Error con el mensaje del servidor si !res.ok.
  */
 
 // ─── CLAVES DE ALMACENAMIENTO LOCAL ─────────────────────────────────────────

@@ -1,14 +1,46 @@
+/**
+ * dashboard/boxeador/dashboard.react.js — Dashboard principal del boxeador.
+ *
+ * Implementado con React sin JSX (usa React.createElement / h()) cargado
+ * desde CDN en dashboard.html. No hay paso de compilación (Babel/webpack).
+ *
+ * Componentes principales:
+ *  · MetricDoughnut    — Gráfico de rosca (Chart.js) con valor centrado.
+ *  · MetricCard        — Tarjeta de métrica con doughnut y subtexto.
+ *  · SparringRow       — Fila de una sesión de sparring en la tabla de historial.
+ *  · EmptyState        — Placeholder vacío cuando no hay datos.
+ *  · buildBoxerAutoEvents — Genera eventos de calendario automáticos desde
+ *                           las sesiones y retos del boxeador.
+ *  · BoxerCalendar     — Calendario FullCalendar con CRUD de eventos (API).
+ *  · BoxerDashboard    — Raíz: carga datos, renderiza métricas y calendario.
+ *
+ * Se monta en #boxer-react-root al cargar el DOM.
+ */
+
+// React y ReactDOM se cargan como globales desde CDN en el HTML
 const React = window.React;
 const ReactDOM = window.ReactDOM;
 const { useEffect, useRef, useState } = React;
+// Alias corto para React.createElement (evita la necesidad de JSX)
 const h = React.createElement;
 
+// Claves de localStorage usadas para leer la sesión del usuario
 const STORED_EMAIL_KEY = 'gloveup_user_email';
 const STORED_USER_ROLE_KEY = 'gloveup_user_role';
+
+// Detección dinámica del host para entornos locales y de producción
 const _glv_h = window.location.hostname;
 const _glv_apiHost = (_glv_h === '127.0.0.1' || _glv_h === 'localhost' || _glv_h === '') ? 'localhost' : _glv_h;
 const API_BASE_URL = (localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${_glv_apiHost}:3000` : '')).replace(/\/+$/, '');
 
+/**
+ * Helper HTTP para peticiones JSON a la API REST.
+ * Lanza un Error con el mensaje del servidor si la respuesta no es OK.
+ *
+ * @param {string} path - Ruta relativa a la API (ej: '/api/boxeadores/me?email=...')
+ * @param {Object} [options] - Opciones de fetch: method, body, headers.
+ * @returns {Promise<any>} Datos deserializados de la respuesta JSON.
+ */
 const requestJson = (path, options = {}) => {
     const method = options.method || 'GET';
     const config = { method, headers: { 'Content-Type': 'application/json' } };
@@ -20,6 +52,13 @@ const requestJson = (path, options = {}) => {
     });
 };
 
+/**
+ * Convierte una fecha a formato ISO YYYY-MM-DD para el input[type=date].
+ * Devuelve '' si el valor no es una fecha válida.
+ *
+ * @param {string|Date} value - Fecha a convertir.
+ * @returns {string} Fecha en formato YYYY-MM-DD o ''.
+ */
 const toIsoDate = (value) => {
     if (!value) return '';
     if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
@@ -28,6 +67,13 @@ const toIsoDate = (value) => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
+/**
+ * Comprueba si una fecha en formato 'YYYY-MM-...' pertenece al mes actual.
+ * Usado para filtrar sesiones y retos del mes corriente en las métricas.
+ *
+ * @param {string} str - Fecha en formato ISO ('YYYY-MM-DD...')
+ * @returns {boolean}
+ */
 const inCurrentMonth = (str) => {
     if (!str || typeof str !== 'string') return false;
     const [y, m] = str.split('-');
@@ -36,6 +82,13 @@ const inCurrentMonth = (str) => {
     return y === String(now.getFullYear()) && m === String(now.getMonth() + 1).padStart(2, '0');
 };
 
+/**
+ * Formatea una fecha ISO como cadena localizada en español.
+ * Devuelve '—' si la fecha es inválida o vacía.
+ *
+ * @param {string} str - Fecha en formato ISO.
+ * @returns {string} Fecha formateada (ej: "15 ene 2025") o '—'.
+ */
 const fmtDate = (str) => {
     if (!str) return '—';
     try {
@@ -45,17 +98,46 @@ const fmtDate = (str) => {
     } catch (_) { return str; }
 };
 
+/**
+ * Traduce el estado interno de un reto/sesión a etiqueta en español.
+ * Usado para mostrar el estado en la tabla de historial.
+ *
+ * @param {string} s - Estado interno (ej: 'pending', 'accepted', 'completed').
+ * @returns {string} Etiqueta en español.
+ */
 const statusLabel = (s) => {
     const map = { pending: 'Pendiente', accepted: 'Aceptado', rejected: 'Rechazado', completed: 'Completado', cancelled: 'Cancelado' };
     return map[s] || s || '—';
 };
 
+/**
+ * Devuelve la clase CSS correspondiente al estado de un reto/sesión.
+ * Los estilos de cada clase se definen en dashboard.css.
+ *
+ * @param {string} s - Estado interno del reto.
+ * @returns {string} Nombre de clase CSS.
+ */
 const statusClass = (s) => {
     const map = { pending: 'status-pending', accepted: 'status-accepted', completed: 'status-completed', rejected: 'status-rejected', cancelled: 'status-cancelled' };
     return map[s] || 'status-pending';
 };
 
-// ——— Doughnut con valor centrado ———
+// ─── COMPONENTES ──────────────────────────────────────────────────────────────
+
+/**
+ * Gráfico de anillo (doughnut) con el valor numérico centrado.
+ * Usa Chart.js (window.Chart) para dibujar sobre un <canvas> de 96×96px.
+ * El anillo muestra `value` sobre `max`; el arco restante se rellena en gris.
+ * El Chart.js se inicializa en el primer useEffect y se actualiza cuando cambian
+ * las props. El segundo useEffect destruye la instancia al desmontar el componente
+ * para evitar fugas de memoria.
+ *
+ * @param {object} props
+ * @param {string} props.label  - Etiqueta para el dataset (visible en datos internos).
+ * @param {number} props.value  - Valor actual a representar.
+ * @param {number} props.max    - Valor máximo (100 % del arco).
+ * @param {string} props.color  - Color HEX del arco principal.
+ */
 function MetricDoughnut({ label, value, max, color }) {
     const canvasRef = useRef(null);
     const chartRef = useRef(null);
@@ -107,6 +189,16 @@ function MetricDoughnut({ label, value, max, color }) {
     );
 }
 
+/**
+ * Tarjeta de métrica con encabezado, doughnut embebido y subtexto descriptivo.
+ *
+ * @param {object} props
+ * @param {string}  props.label       - Título de la métrica (ej: "Sesiones este mes").
+ * @param {string}  props.pill        - Valor principal mostrado como píldora (ej: "7").
+ * @param {string}  props.sub         - Texto descriptivo bajo el gráfico.
+ * @param {string}  [props.icon]      - Clase FontAwesome para el icono del encabezado.
+ * @param {object}  props.chartProps  - Props pasadas directamente a MetricDoughnut.
+ */
 function MetricCard({ label, pill, sub, icon, chartProps }) {
     return h('div', { className: 'metric-card has-chart' },
         h('div', { className: 'metric-header' },
@@ -122,6 +214,15 @@ function MetricCard({ label, pill, sub, icon, chartProps }) {
 }
 
 // ——— Fila de sparring reciente ———
+/**
+ * Fila de historial de sparring dentro de la lista de "Sparrings recientes".
+ * Determina quién es el rival comparando `userEmail` con `boxerAEmail`/`boxerBEmail`
+ * del objeto de sesión, mostrando siempre el nombre del otro boxeador.
+ *
+ * @param {object} props
+ * @param {object} props.session   - Objeto de sesión de sparring (del array sparringSessions).
+ * @param {string} props.userEmail - Email del boxeador logueado (para identificar el lado A/B).
+ */
 function SparringRow({ session, userEmail }) {
     const isA = (session.boxerAEmail || '').toLowerCase() === (userEmail || '').toLowerCase();
     const rival = isA ? (session.boxerBNombre || session.boxerBEmail || '—') : (session.boxerANombre || session.boxerAEmail || '—');
@@ -148,6 +249,13 @@ function SparringRow({ session, userEmail }) {
     );
 }
 
+/**
+ * Placeholder visual para listas o secciones sin datos.
+ *
+ * @param {object} props
+ * @param {string} props.icon - Clase FontAwesome del icono (ej: 'fas fa-fist-raised').
+ * @param {string} props.text - Mensaje explicativo para el usuario.
+ */
 function EmptyState({ icon, text }) {
     return h('div', { className: 'empty-state' },
         h('i', { className: icon }),
@@ -155,7 +263,23 @@ function EmptyState({ icon, text }) {
     );
 }
 
-// ——— Construir eventos automáticos del boxeador ———
+// ─── FUNCIONES DE CALENDARIO ──────────────────────────────────────────────────
+
+/**
+ * Construye el array de eventos FullCalendar a partir de los datos de la API.
+ * Combina dos tipos de eventos automáticos:
+ *  - Sesiones de sparring pasadas/programadas → clase 'gloveup-event--sparring'
+ *  - Retos confirmados (status 'accepted') con fecha → clase 'gloveup-event--reto'
+ *
+ * Los eventos automáticos se distinguen de los eventos personalizados del usuario
+ * porque NO tienen extendedProps.dbId; por eso, al hacer clic en ellos el
+ * modal de edición no se abre (ver openEditModal en BoxerCalendar).
+ *
+ * @param {Array} sessions          - Sesiones de sparring del boxeador (del API).
+ * @param {Array} upcomingChallenges - Retos aceptados, ya enriquecidos con _dir ('sent'|'recv').
+ * @param {string} email            - Email del boxeador para resolver quién es rival A/B.
+ * @returns {Array} Array de objetos de evento compatibles con FullCalendar v5+.
+ */
 function buildBoxerAutoEvents(sessions, upcomingChallenges, email) {
     const events = [];
     const myEmail = (email || '').toLowerCase();
@@ -195,7 +319,28 @@ function buildBoxerAutoEvents(sessions, upcomingChallenges, email) {
     return events;
 }
 
-// ——— Calendario FullCalendar del boxeador ———
+/**
+ * Calendario interactivo del boxeador basado en FullCalendar (window.FullCalendar).
+ *
+ * Combina dos capas de eventos en el mismo calendario:
+ *  1. Eventos automáticos: sesiones y retos aceptados construidos por buildBoxerAutoEvents().
+ *     No tienen dbId → el clic muestra detalles en el texto informativo pero no abre modal.
+ *  2. Eventos personalizados: guardados en MongoDB vía /api/boxeadores/me/calendar-events.
+ *     Tienen extendedProps.dbId → el clic abre el modal de edición/eliminación.
+ *
+ * Flujo de vida del componente:
+ *  - useEffect #1 inicializa FullCalendar en el primer render y lo destruye al desmontar.
+ *  - useEffect #2 sincroniza los eventos del calendario cuando cambian sessions, upcomingChallenges
+ *    o customEvents (recargados desde la API por loadCustomEvents).
+ *  - El modal de creación/edición y el diálogo de confirmación de borrado se renderizan
+ *    como portales React dentro del mismo árbol usando h() (sin JSX).
+ *
+ * @param {object}   props
+ * @param {Array}    props.sessions            - Sesiones de sparring del boxeador.
+ * @param {Array}    props.upcomingChallenges  - Retos aceptados con _dir adjunto.
+ * @param {string}   props.email              - Email del boxeador para las llamadas a la API.
+ * @param {number}   props.refreshKey         - Clave numérica; cambiarla fuerza recarga de eventos.
+ */
 function BoxerCalendar({ sessions, upcomingChallenges, email, refreshKey }) {
     const elRef = useRef(null);
     const calRef = useRef(null);
@@ -430,7 +575,27 @@ function BoxerCalendar({ sessions, upcomingChallenges, email, refreshKey }) {
     );
 }
 
-// ——— Dashboard principal ———
+// ─── COMPONENTE RAÍZ ──────────────────────────────────────────────────────────
+
+/**
+ * Componente raíz del dashboard del boxeador. Orquesta toda la UI de la página.
+ *
+ * Flujo de inicialización:
+ *  1. Lee email y rol desde localStorage (la fuente de verdad de sesión de GloveUp).
+ *  2. Si no hay email o el rol no es 'boxeador', muestra el spinner y para.
+ *  3. Llama a /api/boxeadores/me?email=... para obtener el perfil completo.
+ *  4. Deriva métricas (sesiones del mes, retos pendientes, sesiones recientes) del perfil.
+ *  5. Renderiza: sección de métricas (3 MetricCards) + grid inferior (lista + calendario).
+ *
+ * Estado:
+ *  - profile: datos completos del boxeador (null mientras carga o si falla).
+ *  - loading: controla el spinner de carga inicial.
+ *  - calRefreshKey: integer para forzar recarga del calendario desde fuera (no usado hoy,
+ *    preparado para acciones que crean eventos desde otros componentes).
+ *
+ * No recibe props: lee el email directamente de localStorage porque es el componente raíz
+ * que se monta en un div estático del HTML (#boxer-react-root).
+ */
 function BoxerDashboard() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);

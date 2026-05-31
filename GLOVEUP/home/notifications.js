@@ -1,8 +1,20 @@
 /**
  * notifications.js — Sistema de notificaciones en tiempo cuasi-real de GloveUp.
- * Consulta la API REST cada 2 minutos (polling) para actualizar el badge.
- * Respeta las preferencias de silencio por tipo guardadas en localStorage.
- * Sin push notifications ni WebSockets — todo via polling HTTP.
+ *
+ * Funcionalidades:
+ *  - Badge en tiempo cuasi-real: polling HTTP cada 2 min al endpoint /api/notificaciones.
+ *  - Panel deslizable con lista completa de notificaciones (se abre al pulsar la campana).
+ *  - Filtros de silencio por tipo: sparring, mensaje, gimnasio y general — persistidos
+ *    en localStorage con la clave 'gloveup_notif_prefs' (configurado en settings.js).
+ *  - Marcar como leída: clic sobre un item → PUT /api/notificaciones/leer/:id.
+ *  - Eliminar individual: botón × → DELETE /api/notificaciones/:id con animación de fadeout.
+ *  - "Marcar todas como leídas": PUT /api/notificaciones/leer-todas?email=X.
+ *  - "Eliminar todas": DELETE /api/notificaciones/todas?email=X con vaciado optimista del DOM.
+ *  - El panel se cierra al hacer clic fuera de él.
+ *
+ * Sin push notifications ni WebSockets — todo vía polling HTTP.
+ *
+ * El módulo se envuelve en un IIFE para evitar contaminar el scope global.
  */
 (function () {
     'use strict';

@@ -1,3 +1,39 @@
+/**
+ * dashboard.react.js — Dashboard React del entrenador de GloveUp.
+ *
+ * Cargado como script clásico (no módulo ES) en dashboard/entrenador/dashboard.html.
+ * React y ReactDOM se toman de window (CDN); no hay paso de compilación/transpilación.
+ * Se usa `h` como alias de React.createElement para evitar JSX y mantener compatibilidad
+ * con carga directa desde CDN sin Babel.
+ *
+ * Componentes exportados (montados en DOM al final del archivo):
+ *  - InscriptionRevenueLineChart  → Gráfico de línea (Chart.js) de ingresos acumulados
+ *  - buildCoachCalendarEvents     → Función pura que genera eventos FullCalendar
+ *  - CoachCalendar                → Calendario FullCalendar con filtros y CRUD de eventos
+ *  - MetricDoughnut               → Gráfico de anillo (Chart.js) para métricas individuales
+ *  - MetricCard                   → Tarjeta de métrica con doughnut embebido
+ *  - CoachStatsDashboard          → Panel de estadísticas y calendario (vista #coach-dashboard)
+ *  - CoachManagement              → Panel de gestión de boxeadores y gimnasio (vista #coach-management)
+ *
+ * Arquitectura de vistas:
+ *  La página HTML tiene dos divs raíz: #coach-stats-root y #coach-management-root.
+ *  Cada uno monta un árbol React independiente (ReactDOM.createRoot).
+ *  La navegación entre vistas se gestiona con hashes de URL (#coach-management, etc.)
+ *  desde home.js; este archivo no gestiona la visibilidad de secciones.
+ *
+ * Gestión de datos:
+ *  - No hay JWT; la autenticación es stateless vía email en localStorage.
+ *  - Todos los endpoints reciben `?email=...` como parámetro de identificación.
+ *  - requestJson usa AbortController con timeout configurable (8 s por defecto).
+ *
+ * Herramientas externas (cargadas vía CDN en el HTML):
+ *  - Chart.js     → gráficos (window.Chart)
+ *  - FullCalendar → calendario (window.FullCalendar)
+ *  - React 18     → UI (window.React, window.ReactDOM)
+ */
+
+// ─── DEPENDENCIAS DE REACT (CDN) ──────────────────────────────────────────────
+
 const React = window.React;
 const ReactDOM = window.ReactDOM;
 const {
@@ -6,14 +42,40 @@ const {
     useRef,
     useState
 } = React;
+
+// Alias corto para React.createElement (evita JSX sin compilador)
 const h = React.createElement;
 
+// ─── CONSTANTES DE ALMACENAMIENTO Y API ───────────────────────────────────────
+
+// Claves de localStorage compartidas con el resto del frontend de GloveUp
 const STORED_EMAIL_KEY = 'gloveup_user_email';
 const STORED_USER_ROLE_KEY = 'gloveup_user_role';
+
+// Detección dinámica del host para funcionar en local (puerto 8080 con live-server)
+// y en producción (mismo host, sin puerto hardcoded)
 const _glv_h = window.location.hostname;
 const _glv_apiHost = (_glv_h === '127.0.0.1' || _glv_h === 'localhost' || _glv_h === '') ? 'localhost' : _glv_h;
 const API_BASE_URL = (localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${_glv_apiHost}:3000` : '')).replace(/\/+$/, '');
 
+// ─── HELPER HTTP ──────────────────────────────────────────────────────────────
+
+/**
+ * Realiza una petición JSON a la API REST con timeout configurable.
+ * Usa AbortController para cancelar la petición si tarda más de `timeoutMs` ms.
+ * Lanza un Error legible en español si:
+ *  - La respuesta HTTP no es 2xx (usa el campo `error` del body si existe).
+ *  - Se agota el timeout (AbortError → mensaje con el tiempo configurado).
+ *  - Hay un fallo de red (TypeError → mensaje con la URL base).
+ *
+ * @param {string} path       - Ruta relativa de la API (ej: '/api/entrenadores/me/metricas?email=...').
+ * @param {object} [options]  - Opciones de la petición.
+ * @param {string} [options.method='GET']    - Método HTTP.
+ * @param {object} [options.headers]         - Cabeceras adicionales.
+ * @param {*}      [options.body]            - Cuerpo de la petición (se serializa con JSON.stringify).
+ * @param {number} [options.timeoutMs=8000]  - Timeout en milisegundos antes de abortar.
+ * @returns {Promise<*>} Datos JSON de la respuesta si es exitosa.
+ */
 const requestJson = (path, options = {}) => {
     const method = options.method || 'GET';
     const headers = {
@@ -51,14 +113,38 @@ const requestJson = (path, options = {}) => {
         .finally(() => window.clearTimeout(timeoutId));
 };
 
+// ─── UTILIDADES DE FORMATO ────────────────────────────────────────────────────
+
+/**
+ * Formatea un número como precio en euros con dos decimales.
+ * Devuelve '0€' si el valor no es un número positivo finito.
+ *
+ * @param {*} value - Valor numérico a formatear.
+ * @returns {string} Precio formateado (ej: "29.99€") o "0€".
+ */
 const formatCurrency = (value) => {
     const num = Number(value);
     if (!Number.isFinite(num) || num <= 0) return '0€';
     return `${num.toFixed(2)}€`;
 };
 
+/**
+ * Limita un número al rango [0, 100].
+ * Usada para calcular porcentajes de barras de progreso sin desbordamiento.
+ *
+ * @param {number} n - Número a limitar.
+ * @returns {number} Valor entre 0 y 100 inclusive.
+ */
 const cap = (n) => Math.max(0, Math.min(100, n));
 
+/**
+ * Convierte cualquier valor de fecha al formato ISO YYYY-MM-DD.
+ * Acepta strings ISO, objetos Date y timestamps numéricos.
+ * Devuelve '' si el valor no es una fecha válida.
+ *
+ * @param {string|Date|number|*} value - Fecha a convertir.
+ * @returns {string} Fecha en formato YYYY-MM-DD o ''.
+ */
 const toIsoDate = (value) => {
     if (!value) return '';
     if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
@@ -70,6 +156,13 @@ const toIsoDate = (value) => {
     return `${yyyy}-${mm}-${dd}`;
 };
 
+/**
+ * Formatea una fecha ISO YYYY-MM-DD al formato español DD/MM/YYYY.
+ * Devuelve el string original si el formato no es reconocido.
+ *
+ * @param {string} iso - Fecha en formato YYYY-MM-DD.
+ * @returns {string} Fecha en formato DD/MM/YYYY.
+ */
 const formatDateEs = (iso) => {
     if (!iso) return '';
     const [y, m, d] = String(iso).split('-');
@@ -77,15 +170,37 @@ const formatDateEs = (iso) => {
     return `${d}/${m}/${y}`;
 };
 
+/**
+ * Calcula la fecha del próximo lunes en formato ISO YYYY-MM-DD.
+ * Usado para añadir automáticamente un recordatorio semanal al calendario del entrenador.
+ * Si hoy es lunes, devuelve el lunes siguiente (no el mismo día).
+ *
+ * @returns {string} Fecha del próximo lunes en formato YYYY-MM-DD.
+ */
 const getNextMondayIso = () => {
     const now = new Date();
-    const day = now.getDay();
-    const delta = (8 - day) % 7 || 7;
+    const day = now.getDay(); // 0=domingo, 1=lunes, ..., 6=sábado
+    const delta = (8 - day) % 7 || 7; // días hasta el próximo lunes
     const next = new Date(now);
     next.setDate(now.getDate() + delta);
     return toIsoDate(next);
 };
 
+// ─── SERIE DE INGRESOS POR INSCRIPCIONES ─────────────────────────────────────
+
+/**
+ * Calcula la serie de datos de ingresos acumulados por inscripciones para el gráfico de línea.
+ * Itera día a día desde la primera inscripción (o hace 5 años máximo) hasta hoy,
+ * sumando el precio mensual por cada nueva inscripción en ese día.
+ * El resultado es un array de puntos {x: timestamp, y: ingresos_acumulados}.
+ *
+ * El eje X usa timestamps Unix (ms) para que Chart.js con escala 'linear' pueda
+ * representar fechas sin necesidad del plugin de adaptador de tiempo.
+ *
+ * @param {Array}  boxers         - Lista de boxeadores del entrenador (con fechaInscripcion).
+ * @param {number} precioMensual  - Precio mensual actual del entrenador.
+ * @returns {Array<{x: number, y: number}>} Puntos de la serie acumulada.
+ */
 const buildInscriptionRevenueSeries = (boxers, precioMensual) => {
     const price = Number.isFinite(Number(precioMensual)) && Number(precioMensual) >= 0 ? Number(precioMensual) : 0;
     const list = Array.isArray(boxers) ? boxers : [];
@@ -124,6 +239,22 @@ const buildInscriptionRevenueSeries = (boxers, precioMensual) => {
     return points;
 };
 
+// ─── COMPONENTES ─────────────────────────────────────────────────────────────
+
+/**
+ * Gráfico de línea de ingresos acumulados por inscripciones a lo largo del tiempo.
+ * Usa Chart.js con escala lineal en X (timestamps Unix) y LTTB decimation para
+ * rendir bien con series largas (hasta 5 años × 365 días = 1825 puntos).
+ * Los tooltips muestran la fecha formateada y el acumulado en euros.
+ *
+ * El componente deriva los puntos de la serie con useMemo para no recalcular
+ * en cada render, ya que buildInscriptionRevenueSeries puede ser costoso con
+ * historiales largos.
+ *
+ * @param {object} props
+ * @param {Array}  props.boxers        - Lista de boxeadores con fechaInscripcion.
+ * @param {number} props.precioMensual - Precio mensual del entrenador (€).
+ */
 function InscriptionRevenueLineChart({
     boxers,
     precioMensual
@@ -240,6 +371,24 @@ function InscriptionRevenueLineChart({
     }));
 }
 
+/**
+ * Construye el array de eventos automáticos del calendario del entrenador.
+ * Combina tres tipos de eventos derivados de los datos de la API:
+ *  1. Inscripciones: un evento por boxeador con su fecha de alta → clase 'gloveup-event--inscripcion'.
+ *  2. Pagos: un evento por cada pago registrado en b.pagos → clase 'gloveup-event--pago' (verde).
+ *  3. Sparrings: un evento por cada entrada en b.sparringHistory → clase 'gloveup-event--sparring'.
+ *
+ * Además añade dos recordatorios automáticos:
+ *  - Ingresos estimados del mes: aparece el día 1 del mes actual.
+ *  - Recordatorio de planificación: aparece el próximo lunes.
+ *
+ * Los eventos NO tienen extendedProps.dbId, por lo que CoachCalendar los trata
+ * como de solo lectura (no abre el modal de edición al hacer clic).
+ *
+ * @param {Array}  boxers   - Boxeadores del entrenador (con pagos, sparringHistory, etc.).
+ * @param {object} metricas - Métricas del entrenador (ingresosMes para el recordatorio).
+ * @returns {Array} Array de objetos de evento compatibles con FullCalendar v5+.
+ */
 const buildCoachCalendarEvents = (boxers, metricas) => {
     const events = [];
     const list = Array.isArray(boxers) ? boxers : [];
@@ -342,6 +491,27 @@ const buildCoachCalendarEvents = (boxers, metricas) => {
     return events;
 };
 
+/**
+ * Calendario interactivo del entrenador basado en FullCalendar.
+ * Muestra eventos automáticos (inscripciones, pagos, sparrings, recordatorios)
+ * y eventos personalizados guardados en MongoDB.
+ *
+ * Funcionalidades:
+ *  - Filtros por tipo de evento (Sparring, Inscripción, Recordatorio, Personalizado)
+ *    mediante pills clicables que alternan la opacidad de los eventos.
+ *  - CRUD de eventos personalizados via modal:
+ *      · Clic en día vacío → modal de creación.
+ *      · Clic en evento personalizado (con dbId) → modal de edición/eliminación.
+ *      · Clic en evento automático (sin dbId) → muestra detalles en texto.
+ *  - Botón "Nuevo evento" para crear desde cualquier estado.
+ *
+ * El calendario se inicializa en el primer useEffect y se destruye al desmontar.
+ * Los eventos se actualizan en el mismo useEffect cuando cambia `events` o `filters`.
+ *
+ * @param {object}   props
+ * @param {Array}    props.events          - Array de eventos FullCalendar (auto + personalizados).
+ * @param {Function} props.onEventsChange  - Callback para recargar datos desde el componente padre.
+ */
 function CoachCalendar({
     events,
     onEventsChange
@@ -1091,6 +1261,19 @@ function CoachCalendar({
     );
 }
 
+/**
+ * Gráfico de anillo (doughnut) para las tarjetas de métricas del entrenador.
+ * Variante del entrenador: resuelve colores CSS var() vía getComputedStyle para
+ * soportar el sistema de temas (claro/oscuro) definido en variables CSS.
+ * El hueco central (cutout: 68%) es ligeramente menor que en la versión del boxeador
+ * para adaptarse al tamaño más pequeño del canvas en el diseño del entrenador.
+ *
+ * @param {object} props
+ * @param {string} props.label  - Etiqueta del dataset (visible en tooltip).
+ * @param {number} props.value  - Valor actual a representar.
+ * @param {number} props.max    - Valor máximo (100 % del arco).
+ * @param {string} props.color  - Color HEX o var(--css-var) del arco principal.
+ */
 function MetricDoughnut({
     label,
     value,
@@ -1164,6 +1347,17 @@ function MetricDoughnut({
     }));
 }
 
+/**
+ * Tarjeta de métrica del dashboard del entrenador.
+ * Composición: encabezado (label + pill numérico) + MetricDoughnut + subtexto.
+ * Versión simplificada respecto a la del boxeador: no tiene icono FontAwesome.
+ *
+ * @param {object} props
+ * @param {string}  props.label       - Título de la métrica.
+ * @param {string}  props.pill        - Valor principal como texto (ej: "12").
+ * @param {string}  props.sub         - Texto descriptivo bajo el gráfico.
+ * @param {object}  props.chartProps  - Props pasadas a MetricDoughnut (label, value, max, color).
+ */
 function MetricCard({
     label,
     pill,
@@ -1192,6 +1386,23 @@ function MetricCard({
     );
 }
 
+/**
+ * Panel principal de estadísticas del entrenador (montado en #coach-stats-root).
+ *
+ * Carga en paralelo (Promise.all) cuatro endpoints:
+ *  1. /api/entrenadores/me/metricas    → métricas CRM (boxeadoresActivos, ingresosMes, etc.)
+ *  2. /api/entrenadores/me/boxeadores  → lista de boxeadores para el gráfico de línea y calendario
+ *  3. /api/entrenadores/me             → perfil del entrenador (fallback para precioMensual)
+ *  4. /api/entrenadores/me/calendar-events → eventos personalizados guardados en MongoDB
+ *
+ * Los eventos del calendario se construyen combinando:
+ *  - buildCoachCalendarEvents(boxers, metricas): eventos automáticos de inscripciones/pagos
+ *  - customEvents del MongoDB: eventos personalizados del entrenador
+ *  useMemo evita reconstruir el array en cada render cuando no cambian los datos.
+ *
+ * onEventsChange se pasa a CoachCalendar para que, tras crear/editar/borrar un evento,
+ * se llame a load() y se recarguen todos los datos.
+ */
 function CoachStatsDashboard() {
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState(null);
@@ -1346,6 +1557,33 @@ function CoachStatsDashboard() {
     );
 }
 
+/**
+ * Panel de gestión del entrenador (montado en #coach-management-root).
+ * Centraliza todas las operaciones de administración del día a día:
+ *
+ * Tabs disponibles (controlados por `activeTab`):
+ *  - 'gym'      → Perfil del gimnasio: foto, bio, contacto, horario, coordenadas (geocodificación con Nominatim)
+ *  - 'boxers'   → Lista de boxeadores: búsqueda, añadir existente, crear nuevo, editar, cobrar, eliminar
+ *  - 'pagos'    → Historial de cobros y gráfico de ingresos acumulados (InscriptionRevenueLineChart)
+ *
+ * Geocodificación lazy:
+ *  Cuando el usuario escribe una dirección y pierde el foco, se guarda en `pendingLocation`.
+ *  Un useEffect observa `pendingLocation` y llama a la API de Nominatim para convertir
+ *  la dirección en coordenadas lat/lng que se almacenan en MongoDB.
+ *
+ * Cobros:
+ *  `payingIds` es un Set de IDs de boxeadores cuyo cobro está en curso (muestra spinner).
+ *  `payConfirm` almacena el boxeador pendiente de confirmación en el modal de cobro.
+ *
+ * Estado del formulario de gimnasio:
+ *  gymInput, priceInput, bioInput, fotos, fotoPerfil, emailContacto, telefono,
+ *  direccion, ubicacion, lat, lng, horario, horaApertura, horaCierre, selectedDays, nombreEntrenador.
+ *
+ * Estado del formulario de boxeadores:
+ *  editId/editName/editDni/editLevel → edición inline del boxeador seleccionado.
+ *  assignEmail → campo para añadir boxeador existente por email.
+ *  showCreateForm → toggle del formulario de creación de nuevo boxeador.
+ */
 function CoachManagement() {
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState(null);

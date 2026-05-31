@@ -1,9 +1,30 @@
 /**
- * home.js — Lógica del panel principal de GloveUp (home/index.html).
- * Gestiona la sesión del usuario, el menú desplegable de perfil,
- * el cierre de sesión y los dashboards diferenciados por rol:
- *   · Entrenador: métricas CRM, gestión de boxeadores y gimnasio.
- *   · Boxeador: métricas de sparrings del mes con gráficos Doughnut (Chart.js).
+ * home.js — Lógica del panel principal de GloveUp (home/dashboard.html).
+ *
+ * Gestiona la sesión, el menú de usuario, el cierre de sesión y los dashboards
+ * diferenciados por rol con navegación por hash de URL:
+ *
+ *  Rol entrenador — secciones navegables vía window.location.hash:
+ *   - #coach-management → panel de gestión de boxeadores y gimnasio.
+ *   - #coach-gym        → configuración del perfil del gimnasio.
+ *   - (sin hash)        → dashboard CRM con métricas e indicadores:
+ *       · Precio mensual, boxeadores activos, inscripciones del mes e ingresos.
+ *       · Barras de progreso (escala de referencia: 30 boxeadores / precio × 30 €).
+ *       · Tres gráficos Doughnut (Chart.js) de densidad de ocupación.
+ *
+ *  Rol boxeador:
+ *   - Métricas del mes: sparrings realizados, minutos y retos pendientes.
+ *   - Tres gráficos Doughnut (Chart.js) para visualizar progreso frente al objetivo.
+ *
+ * Nota sobre React:
+ *  Si existen #coach-dashboard-root o #coach-management-root en el DOM, los componentes
+ *  React del archivo dashboard.react.js toman el control; home.js sale de esa sección
+ *  con un return anticipado para evitar dobles renderizados.
+ *
+ * Dependencias de CDN requeridas:
+ *  - Chart.js (window.Chart) — para todos los gráficos Doughnut.
+ *
+ * Los datos de sesión se leen de localStorage con las claves gloveup_user_*.
  */
 
 // ─── CLAVES DE ALMACENAMIENTO LOCAL ─────────────────────────────────────────
