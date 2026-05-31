@@ -242,14 +242,20 @@ router.put('/me', async (req, res) => {
 router.post('/me/leave-gym', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
-        if (!coach.gimnasio) return res.status(400).json({ error: 'No perteneces a ningún gimnasio' });
+        if (!coach.gimnasio) return res.status(400).json({
+            error: 'No perteneces a ningún gimnasio'
+        });
 
         coach.gimnasio = '';
         await coach.save();
 
-        return res.json({ ok: true });
+        return res.json({
+            ok: true
+        });
     } catch (err) {
-        return res.status(err.status || 400).json({ error: err.message });
+        return res.status(err.status || 400).json({
+            error: err.message
+        });
     }
 });
 
@@ -730,21 +736,37 @@ router.post('/me/boxeadores/:id/pago', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
         const boxer = await Boxeador.findById(req.params.id);
-        if (!boxer) return res.status(404).json({ error: 'Boxeador no encontrado' });
-        if (String(boxer.entrenadorId) !== String(coach._id)) return res.status(403).json({ error: 'No autorizado' });
+        if (!boxer) return res.status(404).json({
+            error: 'Boxeador no encontrado'
+        });
+        if (String(boxer.entrenadorId) !== String(coach._id)) return res.status(403).json({
+            error: 'No autorizado'
+        });
 
         const mes = new Date().toISOString().slice(0, 7);
         if (!Array.isArray(boxer.pagos)) boxer.pagos = [];
         if (boxer.pagos.some(p => p.mes === mes)) {
-            return res.status(409).json({ error: 'El boxeador ya ha pagado este mes' });
+            return res.status(409).json({
+                error: 'El boxeador ya ha pagado este mes'
+            });
         }
 
         const monto = Number(coach.precioMensual) || 0;
-        boxer.pagos.push({ mes, monto, fecha: new Date() });
+        boxer.pagos.push({
+            mes,
+            monto,
+            fecha: new Date()
+        });
         await boxer.save();
-        return res.json({ ok: true, mes, monto });
+        return res.json({
+            ok: true,
+            mes,
+            monto
+        });
     } catch (err) {
-        return res.status(err.status || 400).json({ error: err.message });
+        return res.status(err.status || 400).json({
+            error: err.message
+        });
     }
 });
 
@@ -752,15 +774,23 @@ router.delete('/me/boxeadores/:id/pago', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
         const boxer = await Boxeador.findById(req.params.id);
-        if (!boxer) return res.status(404).json({ error: 'Boxeador no encontrado' });
-        if (String(boxer.entrenadorId) !== String(coach._id)) return res.status(403).json({ error: 'No autorizado' });
+        if (!boxer) return res.status(404).json({
+            error: 'Boxeador no encontrado'
+        });
+        if (String(boxer.entrenadorId) !== String(coach._id)) return res.status(403).json({
+            error: 'No autorizado'
+        });
 
         const mes = new Date().toISOString().slice(0, 7);
         boxer.pagos = (boxer.pagos || []).filter(p => p.mes !== mes);
         await boxer.save();
-        return res.json({ ok: true });
+        return res.json({
+            ok: true
+        });
     } catch (err) {
-        return res.status(err.status || 400).json({ error: err.message });
+        return res.status(err.status || 400).json({
+            error: err.message
+        });
     }
 });
 
