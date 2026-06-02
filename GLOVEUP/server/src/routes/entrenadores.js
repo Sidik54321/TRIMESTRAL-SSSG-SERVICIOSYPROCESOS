@@ -2,9 +2,9 @@ import {
     Router
 } from 'express';
 import crypto from 'crypto';
-import Entrenador from '/models/Entrenador.js';
-import Boxeador from '/models/Boxeador.js';
-import Usuario from '/models/Usuario.js';
+import Entrenador from '../models/Entrenador.js';
+import Boxeador from '../models/Boxeador.js';
+import Usuario from '../models/Usuario.js';
 import {
     crearNotificacion
 } from './notificaciones.js';
