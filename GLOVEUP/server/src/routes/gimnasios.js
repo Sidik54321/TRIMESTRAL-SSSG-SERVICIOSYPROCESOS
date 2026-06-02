@@ -1,59 +1,19 @@
-/**
- * routes/gimnasios.js — Rutas del recurso Gimnasio
- *
- * Gestiona la creación, actualización y consulta de gimnasios de boxeo.
- * Prefijo de montaje: /api/gimnasios
- *
- * Endpoints:
- *  GET  /           → Listar todos los gimnasios (ordenados por fecha de creación)
- *  POST /           → Crear o actualizar un gimnasio (upsert basado en propietario o key)
- *  GET  /lookup     → Buscar un gimnasio por su slug (key) o por nombre
- *  GET  /:id        → Obtener un gimnasio por su ObjectId
- *
- * Lógica de upsert en POST /:
- *  1. Si ya existe un gimnasio con el mismo creadoPorEmail → actualizar ese
- *  2. Si no, buscar por key (slug del nombre):
- *     - Si el key existe y pertenece a otro entrenador → error 400
- *     - Si el key existe sin dueño → reclamar y actualizar
- *     - Si no existe → crear nuevo
- *  Esto garantiza que cada entrenador solo puede tener un gimnasio a su nombre.
- *
- * Nota: cuando el nombre del gimnasio cambia, se actualiza el campo "gimnasio"
- * en todos los documentos Boxeador que referenciaban el nombre antiguo.
- */
-
 import express from 'express';
 import Gimnasio from '../models/Gimnasio.js';
 
 const router = express.Router();
 
-/**
- * Genera un slug URL-friendly a partir del nombre de un gimnasio:
- *  - Convierte a minúsculas
- *  - Elimina acentos y diacríticos (NFD + regex)
- *  - Reemplaza espacios por guiones
- *  - Elimina caracteres que no sean letras, números o guiones
- *  - Colapsa guiones múltiples consecutivos
- *  - Elimina guiones al inicio y al final
- *
- * Ejemplo: "Gym España-Norte" → "gym-espana-norte"
- *
- * @param {string} value - Nombre del gimnasio
- * @returns {string} Slug normalizado
- */
 const normalizeGymKey = (value) => {
     const text = (value || '').toString().trim().toLowerCase();
     return text
-        .normalize('NFD')                         // Descomponer caracteres acentuados
-        .replace(/[̀-ͯ]/g, '')          // Eliminar marcas de acento
-        .replace(/\s+/g, '-')                     // Espacios → guiones
-        .replace(/[^a-z0-9-]/g, '')              // Eliminar caracteres no permitidos
-        .replace(/-+/g, '-')                      // Colapsar guiones múltiples
-        .replace(/^-|-$/g, '');                   // Recortar guiones de los extremos
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
 };
 
-// ─── GET / ─────────────────────────────────────────────────────────────────
-// Devuelve todos los gimnasios ordenados por fecha de creación (más recientes primero)
 router.get('/', async (req, res) => {
     try {
         const items = await Gimnasio.find().sort({
@@ -67,10 +27,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-// ─── POST / ────────────────────────────────────────────────────────────────
-// Crea o actualiza el gimnasio del entrenador (upsert inteligente).
-// Se acepta tanto "nombre" como "name" y "ubicacion" como "city" para
-// compatibilidad con diferentes versiones del cliente.
 router.post('/', async (req, res) => {
     try {
         const payload = req.body || {};
@@ -81,7 +37,6 @@ router.post('/', async (req, res) => {
             });
         }
 
-        // Generar el slug a partir del nombre
         const key = normalizeGymKey(nombre);
         if (!key) {
             return res.status(400).json({
@@ -89,17 +44,14 @@ router.post('/', async (req, res) => {
             });
         }
 
-        // Normalizar todos los campos opcionales
         const ubicacion = (payload.ubicacion || payload.city || '').toString().trim();
         const direccion = (payload.direccion || '').toString().trim();
         const latRaw = payload.lat;
         const lngRaw = payload.lng;
-        // Coordenadas: null si no se proporcionan o son vacías
         const lat = latRaw === null || latRaw === undefined || latRaw === '' ? null : Number(latRaw);
         const lng = lngRaw === null || lngRaw === undefined || lngRaw === '' ? null : Number(lngRaw);
         const bio = payload.bio === null || payload.bio === undefined ? undefined : String(payload.bio).trim();
         const fotosRaw = payload.fotos === null || payload.fotos === undefined ? undefined : payload.fotos;
-        // Filtrar y limitar el array de fotos a 12 entradas como máximo
         const fotos = Array.isArray(fotosRaw) ?
             fotosRaw
             .filter((item) => typeof item === 'string')
@@ -110,12 +62,10 @@ router.post('/', async (req, res) => {
         const fotoPerfil = (payload.fotoPerfil || '').toString().trim();
         const correoContacto = (payload.correoContacto || '').toString().trim().toLowerCase();
         const telefono = (payload.telefono || '').toString().trim();
-        // Email del entrenador propietario (se acepta tanto creadoPorEmail como email)
         const creadoPorEmail = (payload.creadoPorEmail || payload.email || '').toString().trim().toLowerCase();
         const horario = (payload.horario || '').toString().trim();
         const nombreEntrenador = (payload.nombreEntrenador || '').toString().trim();
 
-        // Construir el objeto de actualización con solo los campos que tienen valor
         const update = {
             nombre,
             key
@@ -133,36 +83,33 @@ router.post('/', async (req, res) => {
         if (horario) update.horario = horario;
         if (nombreEntrenador) update.nombreEntrenador = nombreEntrenador;
 
-        // ── Lógica de upsert: buscar gimnasio existente ────────────────────
+        // Improved finding logic:
         let gym = null;
-
-        // Paso 1: buscar por propietario (un entrenador solo puede tener un gimnasio)
         if (creadoPorEmail) {
             gym = await Gimnasio.findOne({ creadoPorEmail });
         }
 
-        // Paso 2: si no se encontró por propietario, buscar por slug (key)
+        // If not found by email, check if name (key) exists
         if (!gym) {
             const existingByKey = await Gimnasio.findOne({ key });
             if (existingByKey) {
-                // Si pertenece a otro entrenador distinto, no se puede usar ese nombre
+                // If it belongs to someone else, we can't take it
                 if (existingByKey.creadoPorEmail && existingByKey.creadoPorEmail !== creadoPorEmail) {
                     return res.status(400).json({ error: 'El nombre de este gimnasio ya está registrado por otro entrenador.' });
                 }
-                // Si no tiene dueño o el dueño es el mismo, se puede actualizar
+                // If it has no owner, or it's the same owner, we update it
                 gym = existingByKey;
             }
         }
 
         if (gym) {
-            // ── Actualizar gimnasio existente ──────────────────────────────
+            // Update existing
             const oldName = gym.nombre;
             Object.assign(gym, update);
-            if (creadoPorEmail) gym.creadoPorEmail = creadoPorEmail; // Reclamar si estaba sin dueño
+            if (creadoPorEmail) gym.creadoPorEmail = creadoPorEmail; // Claim it if it was ownerless
             await gym.save();
 
-            // Si el nombre cambió, actualizar el campo "gimnasio" en todos los boxeadores
-            // que tenían el nombre antiguo (para mantener consistencia de datos)
+            // If name changed, update all boxers associated with the old name
             if (oldName && oldName !== nombre) {
                 try {
                     const Boxeador = mongoose.model('Boxeador');
@@ -172,7 +119,7 @@ router.post('/', async (req, res) => {
                 }
             }
         } else {
-            // ── Crear nuevo gimnasio ───────────────────────────────────────
+            // Create new
             gym = await Gimnasio.create({
                 ...update,
                 creadoPorEmail,
@@ -189,13 +136,8 @@ router.post('/', async (req, res) => {
     }
 });
 
-// ─── GET /lookup ───────────────────────────────────────────────────────────
-// Busca un gimnasio por su slug (key) o por nombre (se convierte a slug internamente).
-// Devuelve null si no existe (sin error 404) para que el frontend pueda
-// determinar si mostrar el formulario de creación.
 router.get('/lookup', async (req, res) => {
     try {
-        // Aceptar búsqueda por "key" directo o por "nombre"/"name" (se normaliza a key)
         const qKey = (req.query.key || '').toString().trim().toLowerCase();
         const qNombre = (req.query.nombre || req.query.name || '').toString().trim();
         const key = qKey || normalizeGymKey(qNombre);
@@ -207,7 +149,7 @@ router.get('/lookup', async (req, res) => {
         const gym = await Gimnasio.findOne({
             key
         }).lean();
-        return res.json(gym || null); // null en lugar de 404 para facilitar la lógica del cliente
+        return res.json(gym || null);
     } catch (err) {
         return res.status(400).json({
             error: err.message
@@ -215,8 +157,6 @@ router.get('/lookup', async (req, res) => {
     }
 });
 
-// ─── GET /:id ──────────────────────────────────────────────────────────────
-// Obtiene un gimnasio por su ObjectId de MongoDB
 router.get('/:id', async (req, res) => {
     try {
         const id = (req.params.id || '').toString().trim();

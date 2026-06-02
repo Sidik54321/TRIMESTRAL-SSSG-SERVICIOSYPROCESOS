@@ -9,6 +9,7 @@
         "seed:boxeadores": "node --env-file=.env src/seed/seedBoxeadores.js",
         "seed:demo": "node --env-file=.env src/seed/seedBoxeadores.js --demo",
         "seed": "node src/seed/seedBoxeadores.js --demo",
+        "clear-db": "node --env-file=.env clear-db.js",
         "test": "vitest run",
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage"

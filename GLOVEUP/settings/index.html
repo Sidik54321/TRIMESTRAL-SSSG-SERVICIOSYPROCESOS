@@ -9,8 +9,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
+    <!-- Base Global Styles -->
     <link rel="stylesheet" href="../home/styles.css">
     <link rel="stylesheet" href="../home/notifications.css">
+
+    <!-- Settings Specific Styles -->
     <link rel="stylesheet" href="settings.css">
 </head>
 
@@ -65,6 +68,7 @@
         }
     </script>
 
+    <!-- SIDEBAR VERTICAL -->
     <aside class="main-sidebar">
         <div class="sidebar-header">
             <img src="../assets/images/unnamed-removebg-preview.png" alt="Logo GloveUp">
@@ -159,8 +163,10 @@
     </aside>
 
     <div class="page-content-area">
+    <!-- SETTINGS APP CONTENT -->
     <main class="dashboard-main settings-main">
 
+        <!-- Header Top Bar (matching image style) -->
         <header class="settings-top-bar">
             <button class="btn btn-ghost" id="btn-volver" style="visibility: hidden;">
                 <i class="fas fa-arrow-left"></i> Volver
@@ -169,6 +175,7 @@
 
         <div class="settings-content-wrapper">
 
+            <!-- MAIN VIEW: Configuración General -->
             <div id="settings-home-view" class="settings-view active">
                 <div class="settings-header">
                     <h1>Configuración</h1>
@@ -176,6 +183,7 @@
                 </div>
 
                 <div class="settings-cards-list">
+                    <!-- Option 1: Profile -->
                     <a href="../profile/index.html?from=settings" class="settings-card-item">
                         <div class="settings-card-body">
                             <h3>Gestionar mi Perfil</h3>
@@ -184,6 +192,7 @@
                         <i class="fas fa-chevron-right settings-card-arrow"></i>
                     </a>
 
+                    <!-- Option 2: Notifications -->
                     <div class="settings-card-item" id="nav-manage-notifications">
                         <div class="settings-card-body">
                             <h3>Gestionar mis notificaciones</h3>
@@ -192,6 +201,7 @@
                         <i class="fas fa-chevron-right settings-card-arrow"></i>
                     </div>
 
+                    <!-- Option 3: Palette -->
                     <div class="settings-card-item" id="nav-manage-palette">
                         <div class="settings-card-body">
                             <h3>Paleta de colores</h3>
@@ -202,6 +212,7 @@
                 </div>
             </div>
 
+            <!-- SUB VIEW: Notificaciones -->
             <div id="settings-notifications-view" class="settings-view hidden">
                 <div class="settings-header">
                     <h1>Mis Notificaciones</h1>
@@ -259,6 +270,7 @@
                 </div>
             </div>
 
+            <!-- SUB VIEW: Paleta de Colores -->
             <div id="settings-palette-view" class="settings-view hidden">
                 <div class="settings-header">
                     <h1>Paleta de Colores</h1>

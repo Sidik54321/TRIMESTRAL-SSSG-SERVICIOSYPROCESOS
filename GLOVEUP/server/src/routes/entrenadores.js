@@ -1,69 +1,18 @@
-/**
- * routes/entrenadores.js — Rutas del recurso Entrenador
- *
- * Gestiona todas las operaciones relacionadas con los entrenadores:
- * su perfil, sus boxeadores, el sistema de aprobación de retos de sparring,
- * el registro de pagos y sus eventos de calendario.
- * Prefijo de montaje: /api/entrenadores
- *
- * Endpoints principales:
- *  GET    /                              → Listar todos los entrenadores
- *  GET    /me?email=X                   → Obtener perfil del entrenador autenticado
- *  PUT    /me?email=X                   → Actualizar perfil del entrenador
- *  POST   /me/leave-gym?email=X         → Abandonar el gimnasio actual
- *  POST   /                             → Crear entrenador (uso interno/admin)
- *
- *  GET    /me/boxeadores?email=X        → Listar boxeadores del entrenador
- *  POST   /me/boxeadores?email=X        → Inscribir boxeador existente en el gimnasio
- *  POST   /me/boxeadores/create?email=X → Crear nuevo boxeador y usuario desde el panel del entrenador
- *  PUT    /me/boxeadores/:id?email=X    → Editar datos de un boxeador del entrenador
- *  DELETE /me/boxeadores?email=X        → Dar de baja boxeador del gimnasio (desasociar)
- *  DELETE /me/boxeadores/:id?email=X   → Eliminar boxeador y su cuenta de usuario
- *
- *  POST   /me/boxeadores/:id/pago?email=X   → Registrar pago mensual de un boxeador
- *  DELETE /me/boxeadores/:id/pago?email=X   → Anular pago mensual de un boxeador
- *
- *  GET    /me/metricas?email=X          → Estadísticas del gimnasio (boxeadores, ingresos…)
- *  GET    /me/cobros?email=X            → (Stub) historial de cobros
- *
- *  GET    /me/challenges-for-boxers?email=X → Actividad de retos de todos sus boxeadores
- *  POST   /me/challenges/respond?email=X    → Aprobar o rechazar un reto de sparring
- *  POST   /me/challenges/complete?email=X   → Marcar un reto como completado y valorarlo
- *
- *  GET|POST|PUT|DELETE /me/calendar-events  → CRUD de eventos de calendario del entrenador
- *
- * Seguridad:
- *  - requireCoachByEmail() verifica en cada endpoint protegido que el email
- *    corresponde a un Usuario con rol "entrenador". Sin JWT, el email del
- *    query string actúa como token de sesión (validado contra la BD).
- */
-
 import {
     Router
 } from 'express';
 import crypto from 'crypto';
-import Entrenador from '../models/Entrenador.js';
-import Boxeador from '../models/Boxeador.js';
-import Usuario from '../models/Usuario.js';
+import Entrenador from '/models/Entrenador.js';
+import Boxeador from '/models/Boxeador.js';
+import Usuario from '/models/Usuario.js';
 import {
     crearNotificacion
 } from './notificaciones.js';
 
 const router = Router();
 
-// Normaliza un valor a email en minúsculas y sin espacios
 const normalizeEmail = (value) => (value || '').toString().trim().toLowerCase();
 
-// ─── Helper de autenticación ───────────────────────────────────────────────
-/**
- * Verifica que el email recibido pertenece a un usuario con rol "entrenador"
- * y que existe un documento Entrenador asociado.
- * Lanza errores con propiedad "status" para que el catch del endpoint
- * devuelva el código HTTP correcto.
- *
- * @param {string} email - Email del entrenador (obtenido del query string)
- * @returns {Promise<mongoose.Document>} Documento Entrenador de Mongoose
- */
 async function requireCoachByEmail(email) {
     const cleanEmail = normalizeEmail(email);
     if (!cleanEmail) {
@@ -72,7 +21,6 @@ async function requireCoachByEmail(email) {
         throw err;
     }
 
-    // Verificar que el usuario existe y tiene el rol correcto
     const user = await Usuario.findOne({
         email: cleanEmail
     }).select('rol email').lean();
@@ -83,7 +31,6 @@ async function requireCoachByEmail(email) {
         throw err;
     }
 
-    // Obtener el documento Entrenador (con todos sus campos, no .lean() para poder .save())
     const coach = await Entrenador.findOne({
         email: cleanEmail
     });
@@ -97,31 +44,23 @@ async function requireCoachByEmail(email) {
     return coach;
 }
 
-// ─── GET / ─────────────────────────────────────────────────────────────────
-// Devuelve todos los entrenadores (usado por el frontend para listar candidatos de retos)
 router.get('/', async (req, res) => {
     const items = await Entrenador.find().lean();
     res.json(items);
 });
 
-// ─── GET /me/challenges-for-boxers ─────────────────────────────────────────
-// Devuelve toda la actividad de sparring (retos enviados, recibidos y sesiones)
-// de TODOS los boxeadores bajo la supervisión de este entrenador.
-// Los duplicados se eliminan por ID para evitar mostrar el mismo evento dos veces.
 router.get('/me/challenges-for-boxers', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
-        // Buscar todos los boxeadores asignados a este entrenador
         const boxers = await Boxeador.find({
             entrenadorId: coach._id
         }).select('nombre email sparringChallengesReceived sparringChallengesSent sparringSessions').lean();
 
         let activity = [];
         for (const b of boxers) {
-            // 1. Retos recibidos por este boxeador
+            // 1. Recibidos
             const received = Array.isArray(b.sparringChallengesReceived) ? b.sparringChallengesReceived : [];
             for (const c of received) {
-                // Enriquecer con datos del boxeador retador para mostrarlos en el panel
                 const challenger = await Boxeador.findOne({
                     email: c.fromEmail
                 }).select('nombre nivel peso foto').lean();
@@ -141,7 +80,7 @@ router.get('/me/challenges-for-boxers', async (req, res) => {
                 });
             }
 
-            // 2. Retos enviados por este boxeador
+            // 2. Enviados
             const sent = Array.isArray(b.sparringChallengesSent) ? b.sparringChallengesSent : [];
             for (const c of sent) {
                 const recipient = await Boxeador.findOne({
@@ -164,7 +103,7 @@ router.get('/me/challenges-for-boxers', async (req, res) => {
                 });
             }
 
-            // 3. Sesiones de sparring confirmadas
+            // 3. Confirmados (Sesiones)
             const sessions = Array.isArray(b.sparringSessions) ? b.sparringSessions : [];
             for (const s of sessions) {
                 const otherEmail = s.boxerA_email === b.email ? s.boxerB_email : s.boxerA_email;
@@ -194,7 +133,7 @@ router.get('/me/challenges-for-boxers', async (req, res) => {
             }
         }
 
-        // Eliminar duplicados si un reto/sesión aparece en más de un boxeador del mismo entrenador
+        // Eliminar duplicados si una sesión aparece en ambos boxeadores (aunque aquí buscamos por boxeadores del entrenador)
         const uniqueActivity = [];
         const seenIds = new Set();
         for (const item of activity) {
@@ -205,7 +144,6 @@ router.get('/me/challenges-for-boxers', async (req, res) => {
             }
         }
 
-        // Ordenar por fecha programada o de creación (más recientes primero)
         uniqueActivity.sort((a, b) => String(b.scheduledAt || b.createdAt || '').localeCompare(String(a.scheduledAt || a.createdAt || '')));
 
         return res.json(uniqueActivity);
@@ -216,8 +154,6 @@ router.get('/me/challenges-for-boxers', async (req, res) => {
     }
 });
 
-// ─── GET /me ───────────────────────────────────────────────────────────────
-// Devuelve el perfil completo del entrenador autenticado
 router.get('/me', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -237,10 +173,6 @@ router.get('/me', async (req, res) => {
     }
 });
 
-// ─── PUT /me ───────────────────────────────────────────────────────────────
-// Actualiza el perfil del entrenador.
-// Si el gimnasio cambia, se propaga el nuevo nombre a todos sus boxeadores.
-// Si el email cambia, se actualiza también en la colección "usuarios".
 router.put('/me', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -249,7 +181,6 @@ router.put('/me', async (req, res) => {
 
         let emailToSave = coach.email;
         if (nuevoEmail && nuevoEmail !== coach.email) {
-            // Verificar que el nuevo email no está ya en uso
             const existingUser = await Usuario.findOne({
                 email: nuevoEmail
             }).lean();
@@ -258,7 +189,7 @@ router.put('/me', async (req, res) => {
                     error: 'El nuevo email ya está en uso'
                 });
             }
-            // Actualizar el email en la colección principal de usuarios
+            // Actualizar en la colección principal de usuarios
             await Usuario.updateOne({
                 email: coach.email
             }, {
@@ -269,11 +200,8 @@ router.put('/me', async (req, res) => {
             emailToSave = nuevoEmail;
         }
 
-        // Sanitizar el precio mensual: si no es un número finito y positivo, usar 0
         const precioMensual = payload.precioMensual === undefined ? coach.precioMensual : Number(payload.precioMensual);
         const safePrecio = Number.isFinite(precioMensual) && precioMensual >= 0 ? precioMensual : 0;
-
-        // Construir el objeto de actualización preservando los valores actuales si no vienen en el body
         const update = {
             nombre: payload.nombre === undefined ? coach.nombre : payload.nombre,
             especialidad: payload.especialidad === undefined ? coach.especialidad : (payload.especialidad || 'Boxeo'),
@@ -288,11 +216,11 @@ router.put('/me', async (req, res) => {
             update.email = emailToSave;
         }
 
-        const oldGym = coach.gimnasio; // Guardar el nombre anterior del gimnasio para comparación
+        const oldGym = coach.gimnasio;
         coach.set(update);
         await coach.save();
 
-        // Si el nombre del gimnasio cambió, actualizar el campo "gimnasio" en todos sus boxeadores
+        // Si el gimnasio cambió, actualizarlo en todos sus boxeadores
         if (update.gimnasio !== undefined && update.gimnasio !== oldGym) {
             await Boxeador.updateMany({
                 entrenadorId: coach._id
@@ -311,8 +239,6 @@ router.put('/me', async (req, res) => {
     }
 });
 
-// ─── POST /me/leave-gym ────────────────────────────────────────────────────
-// El entrenador abandona su gimnasio (limpia el campo gimnasio de su perfil).
 router.post('/me/leave-gym', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -333,9 +259,9 @@ router.post('/me/leave-gym', async (req, res) => {
     }
 });
 
-// ──────── Calendar Events CRUD ────────────────────────────────────────────
+// ──────── Calendar Events CRUD ────────
 
-// GET /me/calendar-events — lista los eventos personalizados del entrenador
+// GET  /me/calendar-events  — lista los eventos personalizados del entrenador
 router.get('/me/calendar-events', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -347,7 +273,7 @@ router.get('/me/calendar-events', async (req, res) => {
     }
 });
 
-// POST /me/calendar-events — crear evento de calendario para el entrenador
+// POST /me/calendar-events  — crear evento
 router.post('/me/calendar-events', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -370,13 +296,12 @@ router.post('/me/calendar-events', async (req, res) => {
             start,
             end: end || '',
             allDay: allDay !== false,
-            color: color || '#3b82f6', // Azul por defecto para entrenadores
+            color: color || '#3b82f6',
             tipo: tipo || 'personalizado',
             notas: notas || ''
         };
         coach.calendarEvents.push(ev);
         await coach.save();
-        // Devolver el evento creado (último elemento del array tras el push)
         const created = coach.calendarEvents[coach.calendarEvents.length - 1];
         return res.status(201).json(created);
     } catch (err) {
@@ -386,7 +311,7 @@ router.post('/me/calendar-events', async (req, res) => {
     }
 });
 
-// PUT /me/calendar-events/:eventId — editar evento de calendario (patch parcial)
+// PUT /me/calendar-events/:eventId  — editar evento
 router.put('/me/calendar-events/:eventId', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -403,7 +328,6 @@ router.put('/me/calendar-events/:eventId', async (req, res) => {
             tipo,
             notas
         } = req.body || {};
-        // Solo actualizar los campos que lleguen en el body
         if (title !== undefined) ev.title = title;
         if (start !== undefined) ev.start = start;
         if (end !== undefined) ev.end = end;
@@ -420,7 +344,7 @@ router.put('/me/calendar-events/:eventId', async (req, res) => {
     }
 });
 
-// DELETE /me/calendar-events/:eventId — eliminar evento de calendario
+// DELETE /me/calendar-events/:eventId  — eliminar evento
 router.delete('/me/calendar-events/:eventId', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -428,7 +352,7 @@ router.delete('/me/calendar-events/:eventId', async (req, res) => {
         if (!ev) return res.status(404).json({
             error: 'Evento no encontrado.'
         });
-        ev.deleteOne(); // Eliminar el subdocumento del array de Mongoose
+        ev.deleteOne();
         await coach.save();
         return res.json({
             ok: true
@@ -440,27 +364,19 @@ router.delete('/me/calendar-events/:eventId', async (req, res) => {
     }
 });
 
-// ─── GET /me/metricas ──────────────────────────────────────────────────────
-// Devuelve estadísticas del gimnasio del entrenador:
-//  - Número de boxeadores activos
-//  - Nuevas inscripciones en el mes actual
-//  - Pagos registrados en el mes actual e ingresos estimados
 router.get('/me/metricas', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
-        // Calcular los límites del mes actual (primer y último día)
         const start = new Date();
         start.setDate(1);
         start.setHours(0, 0, 0, 0);
         const end = new Date(start);
         end.setMonth(end.getMonth() + 1);
 
-        // Total de boxeadores activos (asignados a este entrenador)
         const boxeadoresActivos = await Boxeador.countDocuments({
             entrenadorId: coach._id
         });
 
-        // Inscripciones nuevas en el mes actual (por fechaInscripcion o createdAt si no hay fecha)
         const inscripcionesMes = await Boxeador.countDocuments({
             entrenadorId: coach._id,
             $or: [{
@@ -470,7 +386,6 @@ router.get('/me/metricas', async (req, res) => {
                     }
                 },
                 {
-                    // Boxeadores sin fechaInscripcion explícita: usar fecha de creación del documento
                     fechaInscripcion: {
                         $exists: false
                     },
@@ -489,9 +404,8 @@ router.get('/me/metricas', async (req, res) => {
             ]
         });
 
-        // Calcular ingresos del mes: nº de boxeadores que han pagado × precio mensual
         const precioMensual = Number.isFinite(Number(coach.precioMensual)) ? Number(coach.precioMensual) : 0;
-        const mesPago = new Date().toISOString().slice(0, 7); // Formato "YYYY-MM"
+        const mesPago = new Date().toISOString().slice(0, 7);
         const pagosMes = await Boxeador.countDocuments({
             entrenadorId: coach._id,
             'pagos.mes': mesPago
@@ -513,8 +427,6 @@ router.get('/me/metricas', async (req, res) => {
     }
 });
 
-// ─── GET /me/boxeadores ────────────────────────────────────────────────────
-// Devuelve la lista de boxeadores inscritos en el gimnasio del entrenador
 router.get('/me/boxeadores', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -533,14 +445,9 @@ router.get('/me/boxeadores', async (req, res) => {
     }
 });
 
-// ─── POST /me/boxeadores ───────────────────────────────────────────────────
-// Inscribe un boxeador existente en el gimnasio del entrenador.
-// El boxeador se busca por email o DNI/Licencia.
-// Se actualiza entrenadorId, gimnasio y fechaInscripcion del boxeador.
 router.post('/me/boxeadores', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
-        // El identificador puede ser un email o un DNI/Licencia
         const rawIdentifier = (req.body && (req.body.boxeadorEmail || req.body.boxeadorIdentifier) ? (req.body.boxeadorEmail || req.body.boxeadorIdentifier) : '').toString().trim();
         if (!rawIdentifier) {
             return res.status(400).json({
@@ -564,13 +471,12 @@ router.post('/me/boxeadores', async (req, res) => {
             });
         }
 
-        // Asignar el entrenador y copiar el gimnasio al perfil del boxeador
         boxer.entrenadorId = coach._id;
         if (coach.gimnasio) boxer.gimnasio = coach.gimnasio;
         boxer.fechaInscripcion = new Date();
         await boxer.save();
 
-        // Notificar al boxeador de su nueva inscripción
+        // Notificación al boxeador
         await crearNotificacion({
             para: boxer.email,
             tipo: 'gimnasio',
@@ -579,7 +485,7 @@ router.post('/me/boxeadores', async (req, res) => {
             de: coach.email
         });
 
-        // Confirmar al entrenador que la inscripción fue exitosa
+        // Notificación al entrenador (confirmación)
         await crearNotificacion({
             para: coach.email,
             tipo: 'gimnasio',
@@ -598,9 +504,6 @@ router.post('/me/boxeadores', async (req, res) => {
     }
 });
 
-// ─── DELETE /me/boxeadores ────────────────────────────────────────────────
-// Desasocia un boxeador del gimnasio del entrenador (baja) sin eliminar su cuenta.
-// Solo puede hacerlo el entrenador que tiene asignado a ese boxeador.
 router.delete('/me/boxeadores', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -627,20 +530,18 @@ router.delete('/me/boxeadores', async (req, res) => {
             });
         }
 
-        // Verificar que el boxeador está asignado a ESTE entrenador (no a otro)
         if (!boxer.entrenadorId || String(boxer.entrenadorId) !== String(coach._id)) {
             return res.status(409).json({
                 error: 'Este boxeador no está asociado a tu cuenta'
             });
         }
 
-        // Limpiar la asociación sin borrar el documento del boxeador
         boxer.entrenadorId = undefined;
         boxer.gimnasio = '';
         boxer.fechaInscripcion = undefined;
         await boxer.save();
 
-        // Notificar al entrenador de la baja
+        // Notificación al entrenador
         await crearNotificacion({
             para: coach.email,
             tipo: 'gimnasio',
@@ -648,7 +549,7 @@ router.delete('/me/boxeadores', async (req, res) => {
             cuerpo: `${boxer.nombre || boxer.email} ha sido dado de baja de tu gimnasio.`,
             de: coach.email
         });
-        // Notificar al boxeador que ha sido dado de baja
+        // Notificar también al boxeador
         await crearNotificacion({
             para: boxer.email,
             tipo: 'gimnasio',
@@ -667,10 +568,6 @@ router.delete('/me/boxeadores', async (req, res) => {
     }
 });
 
-// ─── POST /me/boxeadores/create ────────────────────────────────────────────
-// Crea una cuenta completa de boxeador directamente desde el panel del entrenador.
-// Genera tanto el documento Usuario (credenciales) como el Boxeador (perfil)
-// y lo inscribe automáticamente en el gimnasio del entrenador.
 router.post('/me/boxeadores/create', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -699,7 +596,6 @@ router.post('/me/boxeadores/create', async (req, res) => {
             });
         }
 
-        // Comprobar duplicados antes de crear nada
         const existingUser = await Usuario.findOne({
             email
         }).lean();
@@ -718,13 +614,12 @@ router.post('/me/boxeadores/create', async (req, res) => {
             });
         }
 
-        // Cifrar el DNI para guardarlo en la colección de usuarios (igual que en el registro normal)
+        // Encriptar el DNI antes de guardarlo en Usuario para consistencia
         const {
             encrypt
-        } = await import('../utils/crypto.js');
+        } = await import('/utils/crypto.js');
         const encryptedDni = encrypt(dniLicencia);
 
-        // Crear las credenciales de acceso (la contraseña se hasheará en el pre-save)
         const usuario = await Usuario.create({
             nombre,
             email,
@@ -733,7 +628,6 @@ router.post('/me/boxeadores/create', async (req, res) => {
             dniLicencia: encryptedDni
         });
 
-        // Crear el perfil deportivo e inscribirlo en el gimnasio del entrenador
         const boxer = await Boxeador.create({
             usuarioId: usuario._id,
             entrenadorId: coach._id,
@@ -747,7 +641,7 @@ router.post('/me/boxeadores/create', async (req, res) => {
             sparringHistory: []
         });
 
-        // Confirmar al entrenador la creación de la cuenta
+        // Notificación al entrenador (confirmación de creación)
         await crearNotificacion({
             para: coach.email,
             tipo: 'gimnasio',
@@ -755,7 +649,7 @@ router.post('/me/boxeadores/create', async (req, res) => {
             cuerpo: `El boxeador ${nombre} ha sido registrado y añadido a tu gimnasio.`,
             de: coach.email
         });
-        // Dar la bienvenida al nuevo boxeador
+        // Notificación al nuevo boxeador
         await crearNotificacion({
             para: email,
             tipo: 'gimnasio',
@@ -774,10 +668,6 @@ router.post('/me/boxeadores/create', async (req, res) => {
     }
 });
 
-// ─── PUT /me/boxeadores/:id ────────────────────────────────────────────────
-// Edita datos básicos de un boxeador del gimnasio.
-// Solo puede editar el entrenador que tiene asignado a ese boxeador.
-// Si hay usuarioId, sincroniza los cambios también en la colección "usuarios".
 router.put('/me/boxeadores/:id', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -794,14 +684,12 @@ router.put('/me/boxeadores/:id', async (req, res) => {
                 error: 'Boxeador no encontrado'
             });
         }
-        // Verificar que el boxeador pertenece a este entrenador
         if (!boxer.entrenadorId || String(boxer.entrenadorId) !== String(coach._id)) {
             return res.status(403).json({
                 error: 'No autorizado'
             });
         }
 
-        // Actualizar solo los campos presentes en el body
         const payload = req.body || {};
         if (payload.nombre !== undefined) boxer.nombre = String(payload.nombre || '').trim();
         if (payload.nivel !== undefined) boxer.nivel = String(payload.nivel || '').trim() || boxer.nivel;
@@ -811,7 +699,6 @@ router.put('/me/boxeadores/:id', async (req, res) => {
 
         await boxer.save();
 
-        // Sincronizar cambios en la colección de usuarios si el boxeador tiene cuenta
         if (boxer.usuarioId) {
             const updateUser = {};
             if (payload.nombre !== undefined) updateUser.nombre = boxer.nombre;
@@ -826,7 +713,7 @@ router.put('/me/boxeadores/:id', async (req, res) => {
             }
         }
 
-        // Confirmar al entrenador que los cambios se guardaron
+        // Notificación al entrenador (confirmación de edición)
         await crearNotificacion({
             para: coach.email,
             tipo: 'general',
@@ -845,9 +732,6 @@ router.put('/me/boxeadores/:id', async (req, res) => {
     }
 });
 
-// ─── POST /me/boxeadores/:id/pago ──────────────────────────────────────────
-// Registra el pago mensual de un boxeador para el mes en curso.
-// Evita registrar dos pagos para el mismo mes (idempotencia).
 router.post('/me/boxeadores/:id/pago', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -859,16 +743,14 @@ router.post('/me/boxeadores/:id/pago', async (req, res) => {
             error: 'No autorizado'
         });
 
-        const mes = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+        const mes = new Date().toISOString().slice(0, 7);
         if (!Array.isArray(boxer.pagos)) boxer.pagos = [];
-        // Verificar que no se ha registrado ya un pago para este mes
         if (boxer.pagos.some(p => p.mes === mes)) {
             return res.status(409).json({
                 error: 'El boxeador ya ha pagado este mes'
             });
         }
 
-        // El monto se toma del precio mensual configurado por el entrenador
         const monto = Number(coach.precioMensual) || 0;
         boxer.pagos.push({
             mes,
@@ -888,8 +770,6 @@ router.post('/me/boxeadores/:id/pago', async (req, res) => {
     }
 });
 
-// ─── DELETE /me/boxeadores/:id/pago ───────────────────────────────────────
-// Anula el pago registrado del mes en curso para un boxeador.
 router.delete('/me/boxeadores/:id/pago', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -901,8 +781,7 @@ router.delete('/me/boxeadores/:id/pago', async (req, res) => {
             error: 'No autorizado'
         });
 
-        const mes = new Date().toISOString().slice(0, 7); // "YYYY-MM"
-        // Filtrar el array eliminando el pago del mes actual
+        const mes = new Date().toISOString().slice(0, 7);
         boxer.pagos = (boxer.pagos || []).filter(p => p.mes !== mes);
         await boxer.save();
         return res.json({
@@ -915,9 +794,6 @@ router.delete('/me/boxeadores/:id/pago', async (req, res) => {
     }
 });
 
-// ─── DELETE /me/boxeadores/:id ────────────────────────────────────────────
-// Elimina permanentemente un boxeador y su cuenta de usuario del sistema.
-// Solo puede hacerlo el entrenador que tiene asignado a ese boxeador.
 router.delete('/me/boxeadores/:id', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -942,19 +818,16 @@ router.delete('/me/boxeadores/:id', async (req, res) => {
 
         const boxerName = boxer.nombre || boxer.email;
         const usuarioId = boxer.usuarioId;
-
-        // Eliminar el documento del boxeador
         await Boxeador.deleteOne({
             _id: boxer._id
         });
-        // Si tenía cuenta de usuario, eliminarla también para no dejar huérfanos
         if (usuarioId) {
             await Usuario.deleteOne({
                 _id: usuarioId
             });
         }
 
-        // Confirmar al entrenador la eliminación
+        // Notificación al entrenador
         await crearNotificacion({
             para: coach.email,
             tipo: 'gimnasio',
@@ -973,8 +846,6 @@ router.delete('/me/boxeadores/:id', async (req, res) => {
     }
 });
 
-// ─── GET /me/cobros ────────────────────────────────────────────────────────
-// Stub para historial de cobros (funcionalidad pendiente de implementar)
 router.get('/me/cobros', async (req, res) => {
     const email = (req.query.email || '').toString().trim().toLowerCase();
     if (!email) {
@@ -988,8 +859,6 @@ router.get('/me/cobros', async (req, res) => {
     });
 });
 
-// ─── POST / ────────────────────────────────────────────────────────────────
-// Crea un entrenador directamente (uso interno/admin, sin flujo de registro)
 router.post('/', async (req, res) => {
     try {
         const payload = req.body || {};
@@ -1009,16 +878,6 @@ router.post('/', async (req, res) => {
     }
 });
 
-// ─── POST /me/challenges/respond ───────────────────────────────────────────
-// Permite al entrenador aprobar o rechazar un reto de sparring de sus boxeadores.
-//
-// Flujo de aprobación doble:
-//  - El entrenador del retado (coachTo) responde primero → status: pending_coach_from
-//  - El entrenador del retador (coachFrom) responde después → status: accepted
-//  - Si cualquiera rechaza → status: declined
-//
-// Cuando ambos aprueban se crea automáticamente una sparringSession en los
-// documentos de ambos boxeadores y se notifica a todas las partes.
 router.post('/me/challenges/respond', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -1036,15 +895,14 @@ router.post('/me/challenges/respond', async (req, res) => {
 
         const coachEmail = coach.email.toLowerCase();
 
-        // Buscar el reto en todos los boxeadores supervisados por este entrenador
+        // Search all of this coach's boxers for the challenge
         const myBoxers = await Boxeador.find({
             entrenadorId: coach._id
         }).lean();
         let foundChallenge = null;
-        let isToCoach = false; // true = este es el entrenador del retado (responde primero)
+        let isToCoach = false; // True if this is the coach of the challenged (recipient) boxer
 
         for (const boxer of myBoxers) {
-            // Buscar primero en los retos recibidos (este entrenador es el del retado)
             const received = Array.isArray(boxer.sparringChallengesReceived) ? boxer.sparringChallengesReceived : [];
             const c = received.find(x => x && String(x.id) === challengeId);
             if (c) {
@@ -1053,7 +911,6 @@ router.post('/me/challenges/respond', async (req, res) => {
                 break;
             }
 
-            // Si no está en recibidos, buscar en enviados (este entrenador es el del retador)
             const sent = Array.isArray(boxer.sparringChallengesSent) ? boxer.sparringChallengesSent : [];
             const s = sent.find(x => x && String(x.id) === challengeId);
             if (s) {
@@ -1071,10 +928,10 @@ router.post('/me/challenges/respond', async (req, res) => {
 
         const curStatus = String(foundChallenge.status || 'pending');
 
-        // Compatibilidad con retos creados antes de implementar la aprobación doble
+        // Compatibilidad con retos antiguos: 'pending' se trata como 'pending_coach_to'
         const effectiveStatus = curStatus === 'pending' ? 'pending_coach_to' : curStatus;
 
-        // Verificar que este entrenador no haya respondido ya (== captura null y undefined)
+        // Validar que este entrenador no haya respondido ya (usa == para capturar null y undefined)
         if (isToCoach && foundChallenge.coachToApproval != null) {
             return res.status(400).json({
                 error: 'Ya has respondido a este reto como el entrenador del retado.'
@@ -1095,31 +952,27 @@ router.post('/me/challenges/respond', async (req, res) => {
         const fromEmail = (foundChallenge.fromEmail || '').toLowerCase();
         const toEmail = (foundChallenge.toEmail || '').toLowerCase();
         const respondedAt = new Date().toISOString();
-
-        // Campo a actualizar según si es el entrenador del retado o del retador
         const coachApprovalField = isToCoach ? 'coachToApproval' : 'coachFromApproval';
-        const approvalValue = action === 'accept'; // true = aprobado, false = rechazado
+        const approvalValue = action === 'accept';
 
-        // ── Determinar el siguiente estado del reto ────────────────────────
+        // Determinar el siguiente estado
         let newStatus;
         if (action === 'decline') {
-            newStatus = 'declined'; // Cualquier rechazo cancela el reto inmediatamente
+            newStatus = 'declined';
         } else {
-            // Calcular si ya tienen ambas aprobaciones
             const nextTo = isToCoach ? true : !!foundChallenge.coachToApproval;
             const nextFrom = !isToCoach ? true : !!foundChallenge.coachFromApproval;
 
             if (nextTo && nextFrom) {
-                newStatus = 'accepted'; // Ambos entrenadores aprobaron
+                newStatus = 'accepted';
             } else if (!nextTo) {
-                newStatus = 'pending_coach_to'; // Falta aprobación del entrenador del retado
+                newStatus = 'pending_coach_to';
             } else {
-                newStatus = 'pending_coach_from'; // Falta aprobación del entrenador del retador
+                newStatus = 'pending_coach_from';
             }
         }
 
-        // Actualizar el reto en TODOS los documentos de boxeadores que lo tengan
-        // (tanto en sparringChallengesReceived como en sparringChallengesSent)
+        // Update the challenge in ALL boxer documents (both received and sent arrays)
         await Boxeador.updateMany({
             'sparringChallengesReceived.id': challengeId
         }, {
@@ -1147,9 +1000,9 @@ router.post('/me/challenges/respond', async (req, res) => {
             }]
         });
 
-        // ── Acciones según el resultado final del reto ─────────────────────
+        // Handle outcomes
         if (newStatus === 'accepted') {
-            // Ambos entrenadores aprobaron → crear la sesión de sparring en ambos boxeadores
+            // Both coaches approved -> create sparring session
             const sessionId = crypto.randomUUID();
             const now = new Date().toISOString();
             const session = {
@@ -1172,14 +1025,12 @@ router.post('/me/challenges/respond', async (req, res) => {
                 reviews: []
             };
 
-            // Insertar la sesión en el documento de cada boxeador evitando duplicados
             for (const bEmail of [fromEmail, toEmail]) {
                 if (!bEmail) continue;
                 const bx = await Boxeador.findOne({
                     email: bEmail
                 }).lean();
                 if (!bx) continue;
-                // Verificar que no se haya creado ya la sesión para este reto
                 const alreadyHas = (Array.isArray(bx.sparringSessions) ? bx.sparringSessions : []).some(s => String(s.challengeId) === challengeId);
                 if (!alreadyHas) {
                     await Boxeador.updateOne({
@@ -1192,7 +1043,7 @@ router.post('/me/challenges/respond', async (req, res) => {
                 }
             }
 
-            // Notificar a ambos boxeadores que el sparring ha sido confirmado
+            // Notify both boxers
             await crearNotificacion({
                 para: fromEmail,
                 tipo: 'sparring',
@@ -1209,7 +1060,7 @@ router.post('/me/challenges/respond', async (req, res) => {
             });
 
         } else if (newStatus === 'pending_coach_from') {
-            // El entrenador del retado ya aprobó → notificar al entrenador del retador
+            // Notify the challenger's coach that it's their turn
             const coachFromEmail = (foundChallenge.coachFromEmail || '');
             if (coachFromEmail) {
                 await crearNotificacion({
@@ -1221,7 +1072,7 @@ router.post('/me/challenges/respond', async (req, res) => {
                 });
             }
         } else if (newStatus === 'declined') {
-            // Cualquier entrenador rechazó → notificar a ambos boxeadores y al otro entrenador
+            // Notify both boxers of the rejection
             await crearNotificacion({
                 para: fromEmail,
                 tipo: 'sparring',
@@ -1236,7 +1087,7 @@ router.post('/me/challenges/respond', async (req, res) => {
                 cuerpo: `Un entrenador ha rechazado el sparring de ${foundChallenge.fromNombre} vs ${foundChallenge.toNombre}. El reto ha sido cancelado.`,
                 de: coachEmail
             });
-            // Avisar también al otro entrenador del rechazo
+            // Notify the other coach too
             const otherCoachEmail = isToCoach ? (foundChallenge.coachFromEmail || '') : (foundChallenge.coachToEmail || '');
             if (otherCoachEmail && otherCoachEmail !== coachEmail) {
                 await crearNotificacion({
@@ -1260,9 +1111,6 @@ router.post('/me/challenges/respond', async (req, res) => {
     }
 });
 
-// ─── POST /me/challenges/complete ─────────────────────────────────────────
-// El entrenador marca un reto aceptado como completado y le asigna una valoración.
-// Solo afecta a los boxeadores supervisados por este entrenador.
 router.post('/me/challenges/complete', async (req, res) => {
     try {
         const coach = await requireCoachByEmail(req.query.email);
@@ -1276,13 +1124,12 @@ router.post('/me/challenges/complete', async (req, res) => {
             error: 'challengeId requerido'
         });
 
-        // Buscar el reto en los boxeadores supervisados
         const myBoxers = await Boxeador.find({
             entrenadorId: coach._id
         }).lean();
         let foundChallenge = null;
         let foundBoxerEmail = '';
-        let foundIn = ''; // 'received' o 'sent'
+        let foundIn = '';
 
         for (const boxer of myBoxers) {
             const received = Array.isArray(boxer.sparringChallengesReceived) ? boxer.sparringChallengesReceived : [];
@@ -1310,7 +1157,6 @@ router.post('/me/challenges/complete', async (req, res) => {
             });
         }
 
-        // Solo se pueden valorar retos ya aceptados o previamente completados
         const st = (foundChallenge.status || '').toString().trim().toLowerCase();
         if (st !== 'accepted' && st !== 'completed') {
             return res.status(400).json({
@@ -1319,9 +1165,9 @@ router.post('/me/challenges/complete', async (req, res) => {
         }
 
         const completedAt = new Date().toISOString();
-        const rating = Number(stars) || 5; // Por defecto 5 estrellas si no se especifica
+        const rating = Number(stars) || 5;
 
-        // Marcar como 'completed' en TODOS los documentos (sin sobrescribir valoraciones ajenas)
+        // Marcar estado 'completed' para todos (sin sobrescribir valoraciones ajenas)
         await Boxeador.updateMany({
             'sparringChallengesReceived.id': challengeId
         }, {
@@ -1347,8 +1193,7 @@ router.post('/me/challenges/complete', async (req, res) => {
             }]
         });
 
-        // Guardar la valoración del entrenador SOLO en el documento del boxeador supervisado
-        // (para no sobrescribir la valoración del otro entrenador)
+        // Guardar la valoración del entrenador SOLO para el boxeador de este entrenador
         if (foundBoxerEmail) {
             if (foundIn === 'received') {
                 await Boxeador.updateOne({
@@ -1380,7 +1225,6 @@ router.post('/me/challenges/complete', async (req, res) => {
                 });
             }
 
-            // Marcar también la sesión de sparring como completada
             await Boxeador.updateMany({
                 'sparringSessions.challengeId': challengeId
             }, {
@@ -1394,7 +1238,6 @@ router.post('/me/challenges/complete', async (req, res) => {
                 }]
             });
 
-            // Guardar la valoración del entrenador en el campo específico de la sesión
             await Boxeador.updateOne({
                 email: foundBoxerEmail
             }, {
@@ -1409,7 +1252,7 @@ router.post('/me/challenges/complete', async (req, res) => {
             });
         }
 
-        // Notificar a ambos boxeadores de que el sparring ha sido completado y valorado
+        // Notificar a los boxeadores
         const notifyEmails = [foundChallenge.fromEmail, foundChallenge.toEmail];
         for (const email of notifyEmails) {
             await crearNotificacion({

@@ -68,6 +68,12 @@ router.post('/register', async (req, res) => {
             });
         }
 
+        if (cleanPassword.length < 8 || !/[A-Z]/.test(cleanPassword) || !/[0-9]/.test(cleanPassword)) {
+            return res.status(400).json({
+                error: 'La contraseña debe tener al menos 8 caracteres, 1 mayúscula y 1 número'
+            });
+        }
+
         // Solo se permiten los dos roles principales en el registro público
         if (cleanRol !== 'boxeador' && cleanRol !== 'entrenador') {
             return res.status(400).json({
@@ -269,6 +275,12 @@ router.post('/forgot-password', async (req, res) => {
             });
         }
 
+        if (cleanPassword.length < 8 || !/[A-Z]/.test(cleanPassword) || !/[0-9]/.test(cleanPassword)) {
+            return res.status(400).json({
+                error: 'La contraseña debe tener al menos 8 caracteres, 1 mayúscula y 1 número'
+            });
+        }
+
         // Buscar usuario por email
         const user = await Usuario.findOne({
             email: cleanEmail
@@ -300,6 +312,19 @@ router.post('/forgot-password', async (req, res) => {
             error: 'Error al actualizar la contraseña'
         });
     }
+});
+
+// ─── VERIFICACIÓN DE SESIÓN ───────────────────────────────────────────────────
+// Comprueba que el email almacenado en el cliente sigue existiendo en la BD.
+// Usado por auth-guard.js para invalidar sesiones de usuarios borrados.
+router.get('/me', async (req, res) => {
+    const email = (req.query.email || '').toString().trim().toLowerCase();
+    if (!email) return res.status(400).json({ error: 'Email requerido' });
+
+    const user = await Usuario.findOne({ email }).select('_id rol').lean();
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    return res.json({ ok: true, rol: user.rol });
 });
 
 export default router;

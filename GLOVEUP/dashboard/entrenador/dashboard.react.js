@@ -1929,20 +1929,18 @@ function CoachManagement() {
     const onPickFotoPerfil = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => setFotoPerfil(reader.result);
-        reader.readAsDataURL(file);
+        e.target.value = '';
+        const dataUrl = await window.openImageEditor(file, { circle: false, outputSize: 512 });
+        if (dataUrl) setFotoPerfil(dataUrl);
     };
 
     const onPickFotos = async (e) => {
         const files = Array.from(e.target.files || []).slice(0, 6);
-        const dataUrls = await Promise.all(files.map(file => new Promise(resolve => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.readAsDataURL(file);
-        })));
-        setFotos(prev => [...prev, ...dataUrls].slice(0, 12));
         e.target.value = '';
+        for (const file of files) {
+            const dataUrl = await window.openImageEditor(file, { circle: false, outputSize: 800 });
+            if (dataUrl) setFotos(prev => [...prev, dataUrl].slice(0, 12));
+        }
     };
 
     const addBoxer = async () => {

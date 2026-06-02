@@ -54,22 +54,29 @@ describe('isValidEmail', () => {
 // ─── CONTRASEÑA ───────────────────────────────────────────────────────────────
 
 describe('isValidPassword', () => {
-    it('acepta contraseñas de 8 o más caracteres', () => {
-        // Exactamente 8 (límite mínimo), y contraseñas más largas
+    it('acepta contraseñas con 8+ chars, mayúscula y número', () => {
         expect(isValidPassword('Password1')).toBe(true);
-        expect(isValidPassword('12345678')).toBe(true);
-        expect(isValidPassword('muy_larga_contraseña_segura_123!')).toBe(true);
+        expect(isValidPassword('Abc12345')).toBe(true);
+        expect(isValidPassword('MuyLarga_Segura_123!')).toBe(true);
     });
 
     it('rechaza contraseñas de menos de 8 caracteres', () => {
-        // 3, 7 y 0 caracteres → todos inválidos
-        expect(isValidPassword('abc')).toBe(false);
-        expect(isValidPassword('1234567')).toBe(false); // 7 = menos de 8
+        expect(isValidPassword('Abc1234')).toBe(false); // 7 chars
+        expect(isValidPassword('Ab1')).toBe(false);
         expect(isValidPassword('')).toBe(false);
     });
 
+    it('rechaza contraseñas sin mayúscula', () => {
+        expect(isValidPassword('password1')).toBe(false);
+        expect(isValidPassword('abc12345')).toBe(false);
+    });
+
+    it('rechaza contraseñas sin número', () => {
+        expect(isValidPassword('Password')).toBe(false);
+        expect(isValidPassword('AbcdefGH')).toBe(false);
+    });
+
     it('rechaza valores que no son strings', () => {
-        // null y undefined no tienen .length → deben devolver false
         expect(isValidPassword(null)).toBe(false);
         expect(isValidPassword(undefined)).toBe(false);
     });

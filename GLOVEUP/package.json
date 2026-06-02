@@ -9,6 +9,7 @@
         "test:coverage": "vitest run --coverage"
     },
     "devDependencies": {
+        "puppeteer": "^25.1.0",
         "vitest": "^2.0.0"
     }
 }

@@ -7,7 +7,7 @@
  *
  * Funciones exportadas:
  *  - isValidEmail      → valida formato de email
- *  - isValidPassword   → comprueba longitud mínima de contraseña
+ *  - isValidPassword   → comprueba longitud mínima, mayúscula y número
  *  - isValidDni        → valida longitud de DNI/Licencia
  *  - doPasswordsMatch  → compara dos cadenas de contraseña
  *  - escapeRegex       → escapa metacaracteres de RegExp
@@ -32,16 +32,19 @@ export function isValidEmail(email) {
 // ─── VALIDACIÓN DE CONTRASEÑA ────────────────────────────────────────────────
 
 /**
- * Comprueba que la contraseña sea un string de al menos 8 caracteres.
- * No impone requisitos de complejidad (mayúsculas, símbolos, etc.) para
- * no bloquear contraseñas largas de frase tipo "mi perro se llama rex 2024".
- * Los requisitos más estrictos se aplican en el backend con bcrypt.
+ * Comprueba que la contraseña cumpla los tres requisitos mínimos:
+ *  - Al menos 8 caracteres.
+ *  - Al menos 1 letra mayúscula (A-Z).
+ *  - Al menos 1 dígito numérico (0-9).
  *
  * @param {*} password - Contraseña a validar.
- * @returns {boolean} true si tiene 8 o más caracteres; false si no.
+ * @returns {boolean} true si cumple todos los requisitos; false si no.
  */
 export function isValidPassword(password) {
-    return typeof password === 'string' && password.length >= 8;
+    if (typeof password !== 'string' || password.length < 8) return false;
+    if (!/[A-Z]/.test(password)) return false;
+    if (!/[0-9]/.test(password)) return false;
+    return true;
 }
 
 // ─── VALIDACIÓN DE DNI / LICENCIA ────────────────────────────────────────────

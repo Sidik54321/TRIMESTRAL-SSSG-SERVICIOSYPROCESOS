@@ -144,6 +144,12 @@ export function validateSignUpForm(event) {
         return false;
     }
 
+    if (pass.length < 8 || !/[A-Z]/.test(pass) || !/[0-9]/.test(pass)) {
+        errorMessageDiv.textContent = '❌ La contraseña debe tener al menos 8 caracteres, 1 mayúscula y 1 número.';
+        errorMessageDiv.style.display = 'block';
+        return false;
+    }
+
     if (pass !== repeatPass) {
         errorMessageDiv.textContent = '❌ ¡Error! Las contraseñas no coinciden. Por favor, revísalas.';
         errorMessageDiv.style.display = 'block';
@@ -359,6 +365,12 @@ export function validateForgotPasswordForm(event) {
 
     if (dniLicencia.length < 6) {
         errorMessageDiv.textContent = '⛔ El DNI/licencia no es válido.';
+        errorMessageDiv.style.display = 'block';
+        return false;
+    }
+
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+        errorMessageDiv.textContent = '❌ La contraseña debe tener al menos 8 caracteres, 1 mayúscula y 1 número.';
         errorMessageDiv.style.display = 'block';
         return false;
     }

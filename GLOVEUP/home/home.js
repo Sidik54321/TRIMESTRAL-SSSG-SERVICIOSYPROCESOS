@@ -1,33 +1,4 @@
-/**
- * home.js — Lógica del panel principal de GloveUp (home/dashboard.html).
- *
- * Gestiona la sesión, el menú de usuario, el cierre de sesión y los dashboards
- * diferenciados por rol con navegación por hash de URL:
- *
- *  Rol entrenador — secciones navegables vía window.location.hash:
- *   - #coach-management → panel de gestión de boxeadores y gimnasio.
- *   - #coach-gym        → configuración del perfil del gimnasio.
- *   - (sin hash)        → dashboard CRM con métricas e indicadores:
- *       · Precio mensual, boxeadores activos, inscripciones del mes e ingresos.
- *       · Barras de progreso (escala de referencia: 30 boxeadores / precio × 30 €).
- *       · Tres gráficos Doughnut (Chart.js) de densidad de ocupación.
- *
- *  Rol boxeador:
- *   - Métricas del mes: sparrings realizados, minutos y retos pendientes.
- *   - Tres gráficos Doughnut (Chart.js) para visualizar progreso frente al objetivo.
- *
- * Nota sobre React:
- *  Si existen #coach-dashboard-root o #coach-management-root en el DOM, los componentes
- *  React del archivo dashboard.react.js toman el control; home.js sale de esa sección
- *  con un return anticipado para evitar dobles renderizados.
- *
- * Dependencias de CDN requeridas:
- *  - Chart.js (window.Chart) — para todos los gráficos Doughnut.
- *
- * Los datos de sesión se leen de localStorage con las claves gloveup_user_*.
- */
-
-// ─── CLAVES DE ALMACENAMIENTO LOCAL ─────────────────────────────────────────
+// Lógica de la página de inicio (home/index.html)
 
 const STORED_USERNAME_KEY = 'gloveup_user_name';
 const STORED_EMAIL_KEY = 'gloveup_user_email';
@@ -36,20 +7,10 @@ const STORED_USER_ROLE_KEY = 'gloveup_user_role';
 const STORED_USER_DNI_KEY = 'gloveup_user_dni';
 const SESSION_MAINTAINED_KEY = 'gloveup_session_maintained';
 const REGISTERED_KEY = 'gloveup_is_registered';
-
-// ─── CONFIGURACIÓN DE LA URL BASE DE LA API ──────────────────────────────────
-
-// Detección dinámica del host para entornos locales y de producción
 const _glv_h = window.location.hostname;
 const _glv_apiHost = (_glv_h === '127.0.0.1' || _glv_h === 'localhost' || _glv_h === '') ? 'localhost' : _glv_h;
 const API_BASE_URL = (localStorage.getItem('gloveup_api_base_url') || (window.location.protocol === 'file:' || window.location.port !== '8080' ? `http://${_glv_apiHost}:3000` : '')).replace(/\/+$/, '');
 
-// ─── GESTIÓN DE GRÁFICOS DOUGHNUT (CHART.JS) ────────────────────────────────
-
-/**
- * Devuelve (o crea) el objeto store global de instancias Chart.js.
- * Almacenado en window.__gloveup_charts_store para sobrevivir a cambios de hash.
- */
 const getChartsStore = () => {
     const w = window;
     if (!w.__gloveup_charts_store) {
@@ -58,12 +19,6 @@ const getChartsStore = () => {
     return w.__gloveup_charts_store;
 };
 
-/**
- * Crea o actualiza un gráfico Doughnut en el canvas indicado.
- * Si el gráfico ya existe en el store, solo actualiza los datos (evita reinicialización).
- * @param {HTMLCanvasElement} canvas - Elemento canvas donde se renderiza el gráfico.
- * @param {Object} opts - { label, value, max, color } para configurar el gráfico.
- */
 const updateDoughnutChart = (canvas, {
     label,
     value,
@@ -72,18 +27,16 @@ const updateDoughnutChart = (canvas, {
 }) => {
     if (!canvas) return;
     const ChartLib = window.Chart;
-    if (!ChartLib) return; // Chart.js cargado externamente vía CDN
+    if (!ChartLib) return;
 
-    // Normalizar valores para evitar NaN o divisiones por cero
     const safeValue = Number.isFinite(Number(value)) ? Number(value) : 0;
     const safeMax = Number.isFinite(Number(max)) && Number(max) > 0 ? Number(max) : 1;
-    const remaining = Math.max(0, safeMax - safeValue); // Porción "vacía" del donut
+    const remaining = Math.max(0, safeMax - safeValue);
 
     const store = getChartsStore();
     const key = canvas.id || label || 'chart';
     const existing = store[key];
 
-    // Añadir clase CSS para estilizar la tarjeta contenedora cuando tiene gráfico
     const parentCard = canvas.closest('.metric-card');
     if (parentCard) parentCard.classList.add('has-chart');
 
@@ -94,14 +47,12 @@ const updateDoughnutChart = (canvas, {
         hoverOffset: 2
     }];
 
-    // Si ya existe el gráfico, actualizar solo los datos en lugar de recrearlo
     if (existing && existing.data && existing.data.datasets) {
         existing.data.datasets[0].data = dataset[0].data;
         existing.update();
         return;
     }
 
-    // Primera vez: crear el gráfico Doughnut con las opciones configuradas
     store[key] = new ChartLib(canvas, {
         type: 'doughnut',
         data: {
@@ -111,10 +62,10 @@ const updateDoughnutChart = (canvas, {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '72%', // Agujero central del donut más grande para mostrar el valor dentro
+            cutout: '72%',
             plugins: {
                 legend: {
-                    display: false // Leyenda innecesaria con un único dataset
+                    display: false
                 },
                 tooltip: {
                     enabled: true
@@ -124,18 +75,11 @@ const updateDoughnutChart = (canvas, {
     });
 };
 
-// ─── FUNCIÓN LEGACY DE CHAT ──────────────────────────────────────────────────
-
-/**
- * Función legacy — ahora gestionada por chat.js.
- * Se mantiene por compatibilidad con posibles llamadas desde el HTML.
- */
+// Función legacy — ahora gestionada por chat.js
 export function toggleChatBox() {
     const chatBox = document.getElementById('chat-box');
     if (chatBox) chatBox.classList.toggle('hidden');
 }
-
-// ─── INICIALIZACIÓN AL CARGAR EL DOM ─────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', function() {
     const userIcon = document.getElementById('user-icon');
@@ -144,15 +88,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const profileNameSpan = document.getElementById('user-profile-name');
     const storedName = localStorage.getItem(STORED_USERNAME_KEY);
 
-    // ─── 1. SALUDO DE BIENVENIDA Y VERIFICACIÓN DE SESIÓN ───────────────────
-
-    // Sesión válida si el flag está en sessionStorage (pestaña activa) o en localStorage (persistida)
+    // 1. Mostrar el nombre del usuario y COMPROBAR SESIÓN
     const isSessionMaintained =
         sessionStorage.getItem(SESSION_MAINTAINED_KEY) === 'true' ||
         localStorage.getItem(SESSION_MAINTAINED_KEY) === 'true';
 
     if (storedName) {
-        // Mostrar solo el primer nombre para un saludo más personal
         const firstName = storedName.split(' ')[0];
         if (profileNameSpan) {
             profileNameSpan.textContent = `¡Hola, ${firstName}!`;
@@ -162,14 +103,13 @@ document.addEventListener('DOMContentLoaded', function() {
         profileNameSpan.textContent = isSessionMaintained ? '¡Hola, Campeón!' : '¡Hola!';
     }
 
-    // ─── 2. MENÚ DESPLEGABLE DE USUARIO ─────────────────────────────────────
-
+    // 2. Función para alternar el menú
     if (userIcon && userDropdownMenu) {
         userIcon.addEventListener('click', function() {
             userDropdownMenu.classList.toggle('hidden');
         });
 
-        // Cerrar el menú si se hace clic fuera de él (fuera del icono y del propio menú)
+        // 3. Cierra el menú si se hace clic fuera de él
         document.addEventListener('click', function(event) {
             if (!userIcon.contains(event.target) && !userDropdownMenu.contains(event.target)) {
                 userDropdownMenu.classList.add('hidden');
@@ -177,11 +117,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ─── 3. CIERRE DE SESIÓN ─────────────────────────────────────────────────
-
+    // 4. Lógica de cerrar sesión
     if (logoutButton) {
         logoutButton.addEventListener('click', function() {
-            // Limpiar todos los datos de sesión de storage
             localStorage.removeItem(SESSION_MAINTAINED_KEY);
             sessionStorage.removeItem(SESSION_MAINTAINED_KEY);
             localStorage.removeItem(STORED_USERNAME_KEY);
@@ -191,7 +129,6 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.removeItem(STORED_USER_DNI_KEY);
             sessionStorage.removeItem(STORED_USER_ID_KEY);
 
-            // La ruta a auth depende de si estamos dentro de la carpeta /dashboard/
             const authPath = window.location.pathname.includes('/dashboard/') ? '../../auth/index.html' : '../auth/index.html';
             if (typeof window.showToast === 'function') {
                 window.showToast('Has cerrado sesión correctamente.', 'info', 1200);
@@ -204,8 +141,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ─── 4. DASHBOARD DEL ENTRENADOR ────────────────────────────────────────
-
     const coachDashboardSection = document.getElementById('coach-dashboard');
     const coachManagementSection = document.getElementById('coach-management');
     const coachGymSection = document.getElementById('coach-gym');
@@ -214,14 +149,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const role = (localStorage.getItem(STORED_USER_ROLE_KEY) || 'usuario').toLowerCase();
 
     if ((coachDashboardSection || coachManagementSection || coachGymSection) && role === 'entrenador') {
-        // Mostrar los items de navegación exclusivos del entrenador
         if (coachNavItem) coachNavItem.style.display = '';
         if (coachGymNavItem) coachGymNavItem.style.display = '';
 
-        /**
-         * Actualiza qué sección del dashboard del entrenador es visible
-         * basándose en el hash de la URL (#coach-management, #coach-gym o default).
-         */
         const updateCoachView = () => {
             const hash = window.location.hash;
             const showManagement = hash === '#coach-management';
@@ -234,12 +164,9 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCoachView();
         window.addEventListener('hashchange', updateCoachView);
 
-        // Si el dashboard usa un componente modular externo, salir aquí
         const coachDashboardRoot = document.getElementById('coach-dashboard-root');
         const coachManagementRoot = document.getElementById('coach-management-root');
         if (coachDashboardRoot || coachManagementRoot) return;
-
-        // ── Referencias a elementos del dashboard del entrenador ─────────────
 
         const coachGymInput = document.getElementById('coach-gym');
         const saveGymBtn = document.getElementById('coach-save-gym');
@@ -279,16 +206,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const message = document.getElementById('coach-message');
         const coachEmail = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
 
-        // ── Utilidades del dashboard del entrenador ──────────────────────────
-
-        /** Formatea un número como precio en euros (ej: "29.99€"). Devuelve "0€" si no válido. */
         const formatCurrency = (value) => {
             const num = Number(value);
             if (!Number.isFinite(num) || num <= 0) return '0€';
             return `${num.toFixed(2)}€`;
         };
 
-        /** Muestra un mensaje de estado (éxito o error) en el área de mensajes del dashboard. */
         const showMessage = (text, kind = 'ok') => {
             if (!message) return;
             message.textContent = text;
@@ -296,10 +219,6 @@ document.addEventListener('DOMContentLoaded', function() {
             message.style.color = kind === 'error' ? '#b91c1c' : '#065f46';
         };
 
-        /**
-         * Helper HTTP reutilizable del dashboard del entrenador.
-         * Lanza un Error con el mensaje del servidor si la respuesta no es OK.
-         */
         const requestJson = (path, options = {}) => {
             const method = options.method || 'GET';
             const headers = {
@@ -322,13 +241,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         };
 
-        // ── Métricas CRM del entrenador ──────────────────────────────────────
-
-        /**
-         * Actualiza todos los indicadores CRM del entrenador:
-         * precio mensual, boxeadores activos, inscripciones del mes e ingresos.
-         * Actualiza también las barras de progreso y los gráficos Doughnut.
-         */
         const updateCrmMetrics = (metricas) => {
             const precioMensual = metricas && typeof metricas.precioMensual === 'number' ? metricas.precioMensual : 0;
             const boxeadoresActivos = metricas && typeof metricas.boxeadoresActivos === 'number' ? metricas.boxeadoresActivos : 0;
@@ -345,18 +257,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (coachRevenueMonth) coachRevenueMonth.textContent = formatCurrency(ingresosMes);
             if (coachRevenueSummary) coachRevenueSummary.textContent = formatCurrency(ingresosMes);
 
-            // Calcular porcentajes de las barras (cap a 0-100 para evitar desbordamiento)
             const cap = (n) => Math.max(0, Math.min(100, n));
             const boxerFill = boxeadoresActivos === 0 ? 0 : cap((boxeadoresActivos / 30) * 100);
             const inscFill = inscripcionesMes === 0 ? 0 : cap((inscripcionesMes / 30) * 100);
-            // Ingresos relativos al máximo teórico (precio × 30 boxeadores)
             const revenueFill = ingresosMes === 0 ? 0 : cap((ingresosMes / (precioMensual * 30 || 1)) * 100);
 
             if (coachBoxersBar) coachBoxersBar.style.width = `${boxerFill}%`;
             if (coachInscriptionsBar) coachInscriptionsBar.style.width = `${inscFill}%`;
             if (coachRevenueBar) coachRevenueBar.style.width = `${revenueFill}%`;
 
-            // Actualizar los tres gráficos Doughnut de resumen
             updateDoughnutChart(coachBoxersChart, {
                 label: 'Boxeadores',
                 value: boxeadoresActivos,
@@ -377,9 +286,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         };
 
-        // ── Formulario de edición de boxeador ────────────────────────────────
-
-        /** Rellena el formulario de edición con los datos del boxeador seleccionado. */
         const fillEditForm = (boxer) => {
             if (!boxer) return;
             if (coachEditId) coachEditId.value = boxer._id || '';
@@ -388,19 +294,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (coachEditLevel) coachEditLevel.value = boxer.nivel || 'Amateur';
         };
 
-        // ── Renderizado de la lista de boxeadores ────────────────────────────
-
-        /**
-         * Renderiza la lista de boxeadores del entrenador.
-         * Soporta dos layouts según la clase del contenedor:
-         *   · Default: tarjetas simples con botón de editar.
-         *   · Sparring layout: tarjetas estilo ranking con estrellas y avatar.
-         */
         const renderBoxers = (items = []) => {
             if (!boxersList) return;
             boxersList.innerHTML = '';
 
-            // Detectar si el contenedor usa el layout de sparring (ranking visual)
             const isSparringLayout = boxersList.classList && boxersList.classList.contains('sparring-list');
 
             if (!Array.isArray(items) || items.length === 0) {
@@ -410,7 +307,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             if (!isSparringLayout) {
-                // ── Layout de tarjeta simple ─────────────────────────────────
                 items.forEach((b) => {
                     const card = document.createElement('div');
                     card.className = 'coach-boxer-card';
@@ -489,7 +385,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     actions.appendChild(editBtn);
 
-                    // Clic en la tarjeta también rellena el formulario de edición
                     card.addEventListener('click', () => {
                         fillEditForm(b);
                     });
@@ -502,12 +397,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // ── Layout de ranking (sparring-list) ────────────────────────────
-
-            /**
-             * Convierte el nivel textual a un valor numérico para calcular estrellas.
-             * Escala: Principiante(1) → Profesional(5).
-             */
             const levelScore = (nivel = '') => {
                 const normalized = String(nivel).toLowerCase();
                 if (normalized.includes('principiante')) return 1;
@@ -515,24 +404,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (normalized.includes('avanzado')) return 3;
                 if (normalized.includes('amateur')) return 4;
                 if (normalized.includes('profesional')) return 5;
-                return 3; // Valor por defecto si el nivel no se reconoce
+                return 3;
             };
 
-            /** Genera el HTML de estrellas rellenas/vacías según el valor dado. */
             const renderStars = (value) => {
                 const total = 5;
                 const filled = Math.max(0, Math.min(total, Number(value) || 0));
                 return new Array(total).fill(0).map((_, idx) => `<i class="${idx < filled ? 'fas' : 'far'} fa-star"></i>`).join('');
             };
 
-            // URL del avatar por defecto para el layout de sparring
             const avatarUrl = new URL('../../assets/images/unnamed-removebg-preview.png', window.location.href).href;
 
             items.forEach((b, index) => {
                 const card = document.createElement('div');
                 card.className = 'sparring-card';
 
-                // Posición en el ranking (corona para el primero)
                 const rank = document.createElement('div');
                 rank.className = 'card-rank';
                 rank.innerHTML = `<span>#${index + 1}</span>${index === 0 ? '<i class="fas fa-crown"></i>' : ''}`;
@@ -599,13 +485,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         };
 
-        // Caché local de boxeadores para el filtro de búsqueda en tiempo real
         let coachBoxersCache = [];
 
-        /**
-         * Filtra la lista de boxeadores usando el input de búsqueda.
-         * Busca coincidencias en nombre, email y DNI/Licencia simultáneamente.
-         */
         const applyBoxersFilter = () => {
             const query = (coachBoxersSearch ? coachBoxersSearch.value : '').toString().trim().toLowerCase();
             if (!query) {
@@ -627,9 +508,6 @@ document.addEventListener('DOMContentLoaded', function() {
             coachBoxersSearch.addEventListener('input', applyBoxersFilter);
         }
 
-        // ── Funciones de carga de datos ──────────────────────────────────────
-
-        /** Carga el perfil del entrenador y rellena los campos de gimnasio y precio. */
         const loadCoachProfile = async () => {
             if (!coachEmail) return;
             const coach = await requestJson(`/api/entrenadores/me?email=${encodeURIComponent(coachEmail)}`);
@@ -641,7 +519,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
 
-        /** Carga la lista de boxeadores del entrenador y actualiza el caché y la vista. */
         const loadBoxers = async () => {
             if (!coachEmail) return;
             const items = await requestJson(`/api/entrenadores/me/boxeadores?email=${encodeURIComponent(coachEmail)}`);
@@ -649,24 +526,18 @@ document.addEventListener('DOMContentLoaded', function() {
             applyBoxersFilter();
         };
 
-        /** Carga las métricas CRM del entrenador desde la API y actualiza los gráficos. */
         const loadCrmMetrics = async () => {
             if (!coachEmail) return;
             const metricas = await requestJson(`/api/entrenadores/me/metricas?email=${encodeURIComponent(coachEmail)}`);
             updateCrmMetrics(metricas);
         };
 
-        /** Carga el total de cobros acumulados del entrenador. */
         const loadCobros = async () => {
             if (!coachEmail || !coachTotal) return;
             const data = await requestJson(`/api/entrenadores/me/cobros?email=${encodeURIComponent(coachEmail)}`);
             coachTotal.textContent = typeof data.total === 'number' ? `${data.total}€` : '0€';
         };
 
-        /**
-         * Recarga todos los datos del dashboard del entrenador en secuencia.
-         * Captura errores globalmente para mostrar un mensaje amigable.
-         */
         const refreshAll = async () => {
             try {
                 await loadCoachProfile();
@@ -678,9 +549,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
 
-        // ── Eventos de acciones del entrenador ───────────────────────────────
-
-        /** Guarda el nombre del gimnasio del entrenador. */
         if (saveGymBtn) {
             saveGymBtn.addEventListener('click', async () => {
                 try {
@@ -699,7 +567,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        /** Guarda el precio mensual del entrenador (validando que sea un número positivo). */
         if (savePriceBtn) {
             savePriceBtn.addEventListener('click', async () => {
                 try {
@@ -721,7 +588,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        /** Añade un boxeador existente al gimnasio del entrenador por email o DNI. */
         if (addBoxerBtn) {
             addBoxerBtn.addEventListener('click', async () => {
                 try {
@@ -745,7 +611,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        /** Desvincula un boxeador del gimnasio del entrenador. */
         if (removeBoxerBtn) {
             removeBoxerBtn.addEventListener('click', async () => {
                 try {
@@ -769,7 +634,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        /** Crea una nueva cuenta de boxeador directamente desde el dashboard del entrenador. */
         if (coachCreateBtn) {
             coachCreateBtn.addEventListener('click', async () => {
                 try {
@@ -795,7 +659,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     });
 
-                    // Limpiar el formulario tras crear con éxito
                     if (coachCreateName) coachCreateName.value = '';
                     if (coachCreateEmail) coachCreateEmail.value = '';
                     if (coachCreateDni) coachCreateDni.value = '';
@@ -810,7 +673,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        /** Guarda los cambios de nombre, DNI y nivel de un boxeador existente. */
         if (coachSaveBoxerBtn) {
             coachSaveBoxerBtn.addEventListener('click', async () => {
                 try {
@@ -838,7 +700,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        /** Elimina permanentemente un boxeador del sistema. */
         if (coachDeleteBoxerBtn) {
             coachDeleteBoxerBtn.addEventListener('click', async () => {
                 try {
@@ -849,7 +710,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         method: 'DELETE'
                     });
 
-                    // Limpiar el formulario de edición tras eliminar
                     if (coachEditId) coachEditId.value = '';
                     if (coachEditName) coachEditName.value = '';
                     if (coachEditDni) coachEditDni.value = '';
@@ -863,13 +723,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // Carga inicial del dashboard del entrenador
         refreshAll();
     }
 
-    // ─── 5. DASHBOARD DEL BOXEADOR ───────────────────────────────────────────
-
-    // Referencias a los elementos de métricas del boxeador
     const boxerSparringsMonthPill = document.getElementById('boxer-sparrings-month');
     const boxerSparringsMinutesPill = document.getElementById('boxer-sparrings-minutes');
     const boxerSparringsPendingPill = document.getElementById('boxer-sparrings-pending');
@@ -880,10 +736,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (role === 'boxeador' && (boxerSparringsMonthPill || boxerSparringsChart || boxerMinutesChart || boxerPendingChart)) {
         const email = (localStorage.getItem(STORED_EMAIL_KEY) || '').trim().toLowerCase();
         if (email) {
-            /**
-             * Helper HTTP reutilizable para el bloque del boxeador.
-             * Versión local del requestJson para este scope.
-             */
             const requestJson = (path, options = {}) => {
                 const method = options.method || 'GET';
                 const headers = {
@@ -906,10 +758,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             };
 
-            /**
-             * Verifica si una fecha en formato YYYY-MM-DD pertenece al mes actual.
-             * Usado para filtrar sparrings del mes en curso.
-             */
             const inCurrentMonth = (yyyyMmDd) => {
                 if (!yyyyMmDd || typeof yyyyMmDd !== 'string') return false;
                 const [y, m] = yyyyMmDd.split('-');
@@ -920,13 +768,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 return y === year && m === month;
             };
 
-            // Cargar el perfil y contar sparrings del mes para los gráficos del boxeador
             requestJson(`/api/boxeadores/me?email=${encodeURIComponent(email)}`)
                 .then((profile) => {
                     const history = profile && Array.isArray(profile.sparringHistory) ? profile.sparringHistory : [];
-                    // Filtrar solo los sparrings realizados en el mes actual
                     const sparringsMonth = history.filter((x) => inCurrentMonth(x && x.date ? String(x.date) : '')).length;
-                    // Minutos y pendientes no disponibles aún en el API (futura implementación)
                     const minutes = 0;
                     const pending = 0;
 
@@ -934,7 +779,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (boxerSparringsMinutesPill) boxerSparringsMinutesPill.textContent = String(minutes);
                     if (boxerSparringsPendingPill) boxerSparringsPendingPill.textContent = String(pending);
 
-                    // Actualizar los tres gráficos Doughnut con las métricas del boxeador
                     updateDoughnutChart(boxerSparringsChart, {
                         label: 'Sparrings',
                         value: sparringsMonth,
@@ -955,7 +799,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 })
                 .catch(() => {
-                    // En caso de error de API, mostrar gráficos en cero en lugar de romper la UI
                     updateDoughnutChart(boxerSparringsChart, {
                         label: 'Sparrings',
                         value: 0,
