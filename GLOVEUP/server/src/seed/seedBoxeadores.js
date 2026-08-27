@@ -23,10 +23,10 @@
  *   Boxeadores:   demo.boxeador01@gloveup.com   / Boxer01#2026  ... (hasta demo.boxeador20)
  */
 
-import mongoose from '/mongoose';
-import Boxeador from '/models/Boxeador.js';
-import Entrenador from '/models/Entrenador.js';
-import Usuario from '/models/Usuario.js';
+import mongoose from 'mongoose';
+import Boxeador from '../models/Boxeador.js';
+import Entrenador from '../models/Entrenador.js';
+import Usuario from '../models/Usuario.js';
 import {
     createRequire
 } from 'module';

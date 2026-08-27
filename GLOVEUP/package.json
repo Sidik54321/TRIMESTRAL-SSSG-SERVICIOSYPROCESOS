@@ -4,12 +4,16 @@
     "private": true,
     "type": "module",
     "scripts": {
+        "css:build": "tailwindcss --input app/css/tailwind.css --output app/public/assets/css/app.css --minify",
+        "css:watch": "tailwindcss --input app/css/tailwind.css --output app/public/assets/css/app.css --watch",
         "test": "vitest run",
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage"
     },
     "devDependencies": {
+        "@tailwindcss/cli": "^4.1.0",
         "puppeteer": "^25.1.0",
+        "tailwindcss": "^4.1.0",
         "vitest": "^2.0.0"
     }
 }

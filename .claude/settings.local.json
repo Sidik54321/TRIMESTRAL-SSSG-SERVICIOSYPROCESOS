@@ -8,7 +8,18 @@
       "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"demo.entrenador01@gloveup.com\\\\\",\\\\\"password\\\\\":\\\\\"Coach01#2026\\\\\"}\")",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(sed 's/.*\\\\.//')",
+      "Bash(php --version)",
+      "Bash(npm --version)",
+      "Bash(composer --version)",
+      "PowerShell(foreach \\($c in @\\('php','node','npm','composer','docker'\\)\\) { $g = Get-Command $c -ErrorAction SilentlyContinue; if \\($g\\) { \"$c -> $\\($g.Source\\)\" } else { \"$c -> NO ENCONTRADO\" } })",
+      "Bash(python3 -)",
+      "PowerShell(docker info --format '{{.ServerVersion}}' 2>&1)",
+      "Bash(curl -sI \"https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/locales/es.global.min.js\")",
+      "Bash(curl -sI \"https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.js\")",
+      "Bash(curl -sI \"https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/locales-all.min.js\")",
+      "Bash(docker compose exec -T db mongosh gloveup --quiet --eval ' *)"
     ]
   }
 }

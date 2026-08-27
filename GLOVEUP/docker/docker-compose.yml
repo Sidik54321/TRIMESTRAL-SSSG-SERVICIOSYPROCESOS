@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
 
   # ── Base de Datos ──────────────────────────────────────────────
@@ -32,15 +30,32 @@ services:
     depends_on:
       - db   # Node.js tiene reintentos propios, no necesita healthcheck
 
-  # ── Frontend Nginx ─────────────────────────────────────────────
+  # ── Frontend: SPA en PHP + Apache ──────────────────────────────
+  # Sirve la aplicación nueva en / y las páginas aún sin migrar bajo
+  # /legacy, y hace de proxy de /api hacia el contenedor de Node.
+  web:
+    build:
+      context: ..
+      dockerfile: docker/web/Dockerfile
+    container_name: gloveup-web
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+  # ── Frontend antiguo (Nginx) ───────────────────────────────────
+  # No arranca por defecto. Sirve para comparar con la versión previa
+  # durante la migración:  docker compose --profile legacy up -d
   frontend:
+    profiles: ["legacy"]
     build:
       context: ..
       dockerfile: docker/frontend/Dockerfile
     container_name: gloveup-frontend
     restart: always
     ports:
-      - "8080:80"
+      - "8081:80"
     depends_on:
       - api
 

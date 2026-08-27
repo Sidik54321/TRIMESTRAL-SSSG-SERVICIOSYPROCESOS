@@ -1,0 +1,268 @@
+/*
+|--------------------------------------------------------------------------
+| Archivo: tailwind.css
+| Propósito: Entrada de Tailwind v4 y sistema de diseño GloveUp
+|
+| Los tokens replican los de home/styles.css para que la SPA sea
+| indistinguible de las páginas antiguas mientras dure la migración.
+| Se compila con:  npm run css:build   (o el contenedor "web" de Docker)
+|--------------------------------------------------------------------------
+*/
+
+@import "tailwindcss";
+
+/* Dónde buscar las clases utilizadas. Se declara de forma explícita para
+   que el rastreo no dependa de la carpeta desde la que se lance el build. */
+@source "../views/**/*.php";
+@source "../js/**/*.js";
+
+/* El tema oscuro ya se controlaba con la clase .theme-dark en <body>.
+   Este variant hace que las utilidades dark:* respeten ese mismo mecanismo,
+   así el botón de tema existente sigue funcionando sin tocar su JS. */
+@custom-variant dark (&:where(.theme-dark, .theme-dark *));
+
+@theme {
+    /* ── Marca ────────────────────────────────────────────────── */
+    --color-ink: #0a0a0a;
+    --color-ink-hover: #1a1a1a;
+    --color-accent: #f97316;
+    --color-accent-hover: #ea580c;
+    --color-accent-soft: rgb(249 115 22 / 0.1);
+
+    /* ── Texto ────────────────────────────────────────────────── */
+    --color-body: #1a1a2e;
+    --color-muted: #64748b;
+    --color-faint: #94a3b8;
+
+    /* ── Superficies ──────────────────────────────────────────── */
+    --color-canvas: #f8fafc;
+    --color-surface: #ffffff;
+    --color-sunken: #f1f5f9;
+    --color-night: #0f172a;
+    --color-night-soft: #1e293b;
+
+    /* ── Bordes ───────────────────────────────────────────────── */
+    --color-hairline: rgb(0 0 0 / 0.08);
+    --color-hairline-strong: rgb(0 0 0 / 0.16);
+
+    /* ── Tipografía ───────────────────────────────────────────── */
+    --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+    --font-display: "Outfit", "Inter", system-ui, sans-serif;
+
+    /* ── Radios ───────────────────────────────────────────────── */
+    --radius-card: 16px;
+    --radius-panel: 24px;
+
+    /* ── Sombras ──────────────────────────────────────────────── */
+    --shadow-card: 0 4px 16px rgb(0 0 0 / 0.06), 0 2px 4px rgb(0 0 0 / 0.04);
+    --shadow-float: 0 12px 32px rgb(0 0 0 / 0.08), 0 4px 8px rgb(0 0 0 / 0.04);
+    --shadow-lift: 0 20px 48px rgb(0 0 0 / 0.12), 0 8px 16px rgb(0 0 0 / 0.06);
+
+    /* ── Medidas del layout ───────────────────────────────────── */
+    --spacing-sidebar: 260px;
+    --spacing-sidebar-collapsed: 76px;
+}
+
+/* ============================================================== */
+/* BASE                                                           */
+/* ============================================================== */
+
+@layer base {
+    body {
+        @apply bg-canvas text-body font-sans antialiased;
+    }
+
+    .theme-dark body,
+    body.theme-dark {
+        @apply bg-night text-white;
+    }
+
+    h1, h2, h3, h4 {
+        @apply font-display font-extrabold tracking-tight;
+    }
+
+    /* El shell fija el scroll en el área de contenido, no en el documento */
+    body[data-shell="app"] {
+        @apply overflow-hidden;
+    }
+}
+
+/* ============================================================== */
+/* COMPONENTES                                                    */
+/* ============================================================== */
+
+@layer components {
+    /* ── Botones ──────────────────────────────────────────────────
+       La base se declara sobre todas las variantes a la vez en lugar de
+       encadenar @apply .btn desde cada una: así cada clase funciona por
+       sí sola en el HTML y no depende del orden de compilación. */
+    .btn,
+    .btn-primary,
+    .btn-secondary,
+    .btn-ghost {
+        @apply inline-flex cursor-pointer items-center justify-center gap-2
+               rounded-full px-6 py-3 text-sm font-bold uppercase tracking-wide
+               transition-all duration-200
+               focus-visible:outline-2 focus-visible:outline-offset-2
+               focus-visible:outline-accent;
+    }
+
+    .btn-primary {
+        @apply bg-accent text-white shadow-card
+               hover:bg-accent-hover hover:-translate-y-0.5 hover:shadow-float;
+    }
+
+    .btn-secondary {
+        @apply bg-white/10 text-white ring-1 ring-inset ring-white/30
+               backdrop-blur hover:bg-white/20;
+    }
+
+    .btn-ghost {
+        @apply bg-sunken text-body hover:bg-hairline-strong/20
+               dark:bg-white/10 dark:text-white dark:hover:bg-white/20;
+    }
+
+    /* ── Tarjetas ─────────────────────────────────────────────── */
+    .card,
+    .card-interactive {
+        @apply rounded-card bg-surface shadow-card ring-1 ring-hairline
+               transition-all duration-250
+               dark:bg-night-soft dark:ring-white/10;
+    }
+
+    .card-interactive {
+        @apply hover:-translate-y-1 hover:shadow-lift;
+    }
+
+    /* ── Navegación lateral ───────────────────────────────────── */
+    .nav-link {
+        @apply flex items-center gap-3 rounded-xl px-3 py-2.5
+               text-sm font-semibold text-white/70
+               transition-colors duration-150
+               hover:bg-white/10 hover:text-white;
+    }
+
+    .nav-link[aria-current="page"] {
+        @apply bg-accent text-white shadow-card hover:bg-accent-hover;
+    }
+
+    .nav-link > i {
+        @apply w-5 shrink-0 text-center text-base;
+    }
+
+    /* Estado colapsado: la clase la pone el shell en <html> antes del primer
+       pintado, así la barra no "salta" de ancha a estrecha al recargar. */
+    .sidebar-collapsed #sidebar {
+        width: var(--spacing-sidebar-collapsed);
+    }
+
+    .sidebar-collapsed .nav-label {
+        @apply hidden;
+    }
+
+    .sidebar-collapsed .nav-link {
+        @apply justify-center px-0;
+    }
+
+    /* ── Campos ───────────────────────────────────────────────── */
+    .field {
+        @apply w-full rounded-xl border border-hairline bg-surface
+               px-4 py-3 text-sm text-body placeholder:text-faint
+               transition-colors duration-150
+               focus:border-accent focus:outline-none
+               focus:ring-2 focus:ring-accent-soft
+               dark:border-white/10 dark:bg-night-soft dark:text-white;
+    }
+
+    .chip {
+        @apply inline-flex items-center gap-1.5 rounded-full
+               bg-sunken px-3 py-1 text-xs font-semibold text-muted
+               dark:bg-white/10 dark:text-white/70;
+    }
+
+    /* ── Calendario (FullCalendar) ────────────────────────────────
+       La librería llega por CDN con su propio CSS; aquí sólo se ajustan
+       tamaños para que quepa en un panel del dashboard y se iguala al
+       tema oscuro, que FullCalendar no conoce. */
+    .glv-calendar {
+        font-size: 0.78rem;
+    }
+
+    .glv-calendar .fc-toolbar {
+        @apply mb-2 flex-wrap gap-1.5;
+    }
+
+    .glv-calendar .fc-toolbar-title {
+        @apply text-sm font-extrabold capitalize;
+    }
+
+    .glv-calendar .fc-button {
+        @apply rounded-lg text-xs;
+        padding: 4px 8px !important;
+    }
+
+    .glv-calendar .fc-daygrid-day-frame {
+        min-height: 34px !important;
+    }
+
+    .glv-calendar .fc-event {
+        @apply cursor-pointer rounded text-[0.68rem];
+    }
+
+    /* Colores por origen del evento: sparrings, retos confirmados y
+       eventos personalizados llevan su propio color desde el backend. */
+    .glv-event--sparring { background-color: #059669 !important; border-color: #059669 !important; color: #fff !important; }
+    .glv-event--reto     { background-color: #f97316 !important; border-color: #f97316 !important; color: #fff !important; }
+    .glv-event--custom   { color: #fff !important; }
+
+    .theme-dark .glv-calendar .fc-theme-standard td,
+    .theme-dark .glv-calendar .fc-theme-standard th,
+    .theme-dark .glv-calendar .fc-theme-standard .fc-scrollgrid {
+        border-color: rgb(255 255 255 / 0.08) !important;
+    }
+    .theme-dark .glv-calendar .fc-daygrid-day-number,
+    .theme-dark .glv-calendar .fc-col-header-cell-cushion,
+    .theme-dark .glv-calendar .fc-toolbar-title {
+        color: #e5e7eb !important;
+    }
+    .theme-dark .glv-calendar .fc-button-primary {
+        background-color: rgb(255 255 255 / 0.08) !important;
+        border-color: rgb(255 255 255 / 0.15) !important;
+        color: #e5e7eb !important;
+    }
+    .theme-dark .glv-calendar .fc-button-primary.fc-button-active {
+        background-color: #f97316 !important;
+        border-color: #f97316 !important;
+        color: #fff !important;
+    }
+    .theme-dark .glv-calendar .fc-daygrid-day.fc-day-today {
+        background-color: rgb(249 115 22 / 0.08) !important;
+    }
+}
+
+/* ============================================================== */
+/* UTILIDADES                                                     */
+/* ============================================================== */
+
+@layer utilities {
+    /* Esqueleto de carga mientras la SPA pide datos a la API */
+    .skeleton {
+        @apply animate-pulse rounded-lg bg-sunken dark:bg-white/10;
+    }
+
+    /* Recorta un texto a N líneas */
+    .clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+}

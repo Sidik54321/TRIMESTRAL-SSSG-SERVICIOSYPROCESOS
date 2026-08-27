@@ -1,0 +1,39 @@
+# ──────────────────────────────────────────────────────────────────
+# Front controller: cualquier URL que no corresponda a un fichero
+# real se envía a index.php, que decide qué vista renderizar.
+# ──────────────────────────────────────────────────────────────────
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Los ficheros y directorios existentes (CSS, JS, imágenes, /legacy)
+    # se sirven tal cual, sin pasar por PHP.
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Todo lo demás lo resuelve el router de la SPA.
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# ── Cabeceras de seguridad ────────────────────────────────────────
+# Equivalentes a las que ya aplica la API en server/src/app.js.
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ── Caché de estáticos ────────────────────────────────────────────
+# El CSS y el JS de la app llevan hash en el nombre cuando se publican,
+# así que se pueden cachear con seguridad durante un año.
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType image/png "access plus 6 months"
+    ExpiresByType image/jpeg "access plus 6 months"
+    ExpiresByType video/mp4 "access plus 6 months"
+</IfModule>
+
+DirectoryIndex index.php
