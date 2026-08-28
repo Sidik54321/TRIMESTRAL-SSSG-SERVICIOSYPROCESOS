@@ -10,6 +10,7 @@
  *   para que la aplicación Express y el cifrado AES funcionen correctamente:
  *    - MONGO_URI:       URI de la BD en memoria (ej: "mongodb://127.0.0.1:PORT/test")
  *    - ENCRYPTION_KEY:  Clave AES-256 de 64 chars hex para cifrar DNIs en los tests
+ *    - ADMIN_PASSWORD:  Contraseña fija del panel de administración en los tests
  *
  * teardown():
  *   Para el servidor MongoDB en memoria al finalizar todos los tests.
@@ -34,6 +35,8 @@ export async function setup() {
     process.env.MONGO_URI = mongod.getUri();
     // Clave AES-256-CBC válida (64 chars hex = 32 bytes): necesaria para encrypt/decrypt en los tests
     process.env.ENCRYPTION_KEY = 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
+    // Contraseña de admin fija y conocida, sólo para esta ejecución de tests
+    process.env.ADMIN_PASSWORD = 'test-admin-password-123';
 }
 
 /**

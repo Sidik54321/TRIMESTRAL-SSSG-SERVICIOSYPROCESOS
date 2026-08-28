@@ -9,9 +9,14 @@ declare(strict_types=1);
  * app/js/pages/sparring.js a /api/boxeadores y rellena la lista. El modal
  * de "retar a sparring" vive aquí como <dialog> nativo, igual que en la
  * versión clásica, porque ya trae foco y cierre con Escape sin JS extra.
+ *
+ * data-guest-ok: esta vista se puede explorar sin sesión (ver app/js/app.js,
+ * que por eso no exige guard() aquí). sparring.js gatea sus propias
+ * acciones (ver perfil, retar) abriendo el modal de login cuando no hay
+ * email en la sesión, en vez de ejecutarlas.
  */
 ?>
-<div data-page="sparring">
+<div data-page="sparring" data-guest-ok>
 
     <!-- ── Cabecera ──────────────────────────────────────────────── -->
     <section class="bg-ink px-6 py-14 text-white sm:py-20">

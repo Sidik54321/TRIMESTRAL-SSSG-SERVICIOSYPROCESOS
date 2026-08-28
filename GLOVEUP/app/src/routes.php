@@ -30,6 +30,18 @@ $router->add('/', [
     'nav'   => null,
 ]);
 
+// Panel de administración: audiencia totalmente distinta a boxeadores y
+// entrenadores, así que no usa el shell "app" (sidebar/topbar de la SPA de
+// usuarios) — construye su propia cabecera dentro de la vista, a ancho
+// completo, igual que la landing. El acceso lo controla su propio login por
+// contraseña (ver app/js/pages/admin.js), no session.js.
+$router->add('/admin', [
+    'view'  => 'pages/admin',
+    'title' => 'Administración — GloveUp',
+    'shell' => 'public',
+    'nav'   => null,
+]);
+
 // ── Secciones migradas ─────────────────────────────────────────────
 $router->add('/gimnasios', [
     'view'  => 'pages/gyms',
@@ -87,33 +99,49 @@ $router->add('/inicio', [
     'nav'   => 'inicio',
 ]);
 
+$router->add('/ajustes', [
+    'view'  => 'pages/settings',
+    'title' => 'Ajustes — GloveUp',
+    'shell' => 'app',
+    'nav'   => 'ajustes',
+]);
+
+$router->add('/primeros-pasos', [
+    'view'  => 'pages/onboarding',
+    'title' => 'Primeros Pasos — GloveUp',
+    'shell' => 'app',
+    'nav'   => 'primeros-pasos',
+]);
+
+/*
+ * /gestion y /mi-gimnasio comparten una misma vista: en el dashboard
+ * clásico, el panel de perfil del gimnasio y el de gestión de boxeadores
+ * eran en realidad UNA sola pieza con dos pestañas internas (montada en
+ * #coach-gym). El enlace "Gestión" del menú, en cambio, apuntaba a un
+ * panel de pagos/finanzas sin relación con "gestionar alumnos" — un cruce
+ * de nombres, no un diseño intencional (confirmado leyendo el punto de
+ * montaje: dashboard.react.js:4567-4571). Aquí se corrige: ambas rutas
+ * llevan al mismo panel de perfil + boxeadores, cada una con su pestaña
+ * por defecto; el panel de pagos queda pendiente de migrar aparte.
+ */
+$router->add('/gestion', [
+    'view'    => 'pages/coach-panel',
+    'title'   => 'Gestión de Alumnos — GloveUp',
+    'shell'   => 'app',
+    'nav'     => 'gestion',
+    'default_tab' => 'boxers',
+]);
+
+$router->add('/mi-gimnasio', [
+    'view'    => 'pages/coach-panel',
+    'title'   => 'Mi Gimnasio — GloveUp',
+    'shell'   => 'app',
+    'nav'     => 'mi-gimnasio',
+    'default_tab' => 'gym',
+]);
+
 // ── Secciones pendientes de migrar (Fases 2 y 3) ───────────────────
-$pending = [
-    '/ajustes' => [
-        'title'  => 'Ajustes — GloveUp',
-        'nav'    => 'ajustes',
-        'label'  => 'Ajustes',
-        'legacy' => '/legacy/settings/index.html',
-    ],
-    '/primeros-pasos' => [
-        'title'  => 'Primeros Pasos — GloveUp',
-        'nav'    => 'primeros-pasos',
-        'label'  => 'Primeros Pasos',
-        'legacy' => '/legacy/onboarding/index.html',
-    ],
-    '/gestion' => [
-        'title'  => 'Gestión — GloveUp',
-        'nav'    => 'gestion',
-        'label'  => 'Gestión de alumnos',
-        'legacy' => '/legacy/dashboard/entrenador/dashboard.html#coach-management',
-    ],
-    '/mi-gimnasio' => [
-        'title'  => 'Mi Gimnasio — GloveUp',
-        'nav'    => 'mi-gimnasio',
-        'label'  => 'Mi Gimnasio',
-        'legacy' => '/legacy/dashboard/entrenador/dashboard.html#coach-gym',
-    ],
-];
+$pending = [];
 
 foreach ($pending as $path => $meta) {
     $router->add($path, [

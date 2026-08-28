@@ -135,15 +135,16 @@ await page.waitForFunction(
 );
 check('el evento eliminado desaparece del calendario', true);
 
-// ── 5. Entrenador ve el aviso de panel pendiente ─────────────────────
+// ── 5. Entrenador ve su propio panel (calendario) ─────────────────────
+// El panel de Inicio del entrenador ahora está migrado (ver
+// coach-dashboard-smoke.mjs para su cobertura completa); aquí sólo se
+// confirma que el ramal por rol sigue eligiendo el bloque correcto.
 await loginAs('entrenador1@test.com', 'entrenador');
 await page.goto(`${BASE}/inicio`, { waitUntil: 'networkidle2' });
 check('un entrenador ve el bloque de entrenador',
     !(await page.$eval('[data-role="entrenador"]', (el) => el.hidden)));
 check('un entrenador no ve el bloque de boxeador',
     await page.$eval('[data-role="boxeador"]', (el) => el.hidden));
-check('el bloque de entrenador enlaza al panel clásico',
-    (await page.$eval('[data-role="entrenador"] a', (el) => el.getAttribute('href'))) === '/legacy/dashboard/entrenador/dashboard.html');
 
 await browser.close();
 

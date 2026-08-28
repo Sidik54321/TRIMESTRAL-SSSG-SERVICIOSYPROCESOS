@@ -24,6 +24,14 @@ let inFlight = null;
 let defaultOnRender = null;
 
 /**
+ * Ruta (pathname + search) de la vista actualmente montada, para distinguir
+ * en popstate un cambio de página real de uno que sólo tocó el #ancla: en
+ * ambos casos location.pathname ya viene actualizado cuando salta el evento,
+ * así que hay que compararlo con lo que había ANTES, no con él mismo.
+ */
+let currentPath = null;
+
+/**
  * Arranca el router.
  *
  * @param {object} handlers
@@ -31,6 +39,7 @@ let defaultOnRender = null;
  */
 export function start({ onRender }) {
     defaultOnRender = onRender;
+    currentPath = location.pathname + location.search;
 
     // Estado inicial: la vista que PHP ya ha renderizado
     history.replaceState({ path: location.pathname }, '');
@@ -45,8 +54,17 @@ export function start({ onRender }) {
     });
 
     window.addEventListener('popstate', (event) => {
-        const path = event.state?.path || location.pathname;
-        navigate(path, { onRender, push: false });
+        const target = location.pathname + location.search;
+
+        // Los navegadores modernos también disparan popstate al navegar a un
+        // ancla dentro de la misma página (p. ej. <a href="#seccion">). Si la
+        // ruta en sí no ha cambiado, no hay nada que volver a pedir: se deja
+        // que el navegador haga el scroll nativo al ancla sin de por medio
+        // recargar la vista entera y perder esa posición.
+        if (target === currentPath) return;
+
+        currentPath = target;
+        navigate(event.state?.path || location.pathname, { onRender, push: false });
     });
 }
 
@@ -124,6 +142,7 @@ export async function navigate(path, { onRender = defaultOnRender, push = true }
         if (push) {
             history.pushState({ path: target }, '', target);
         }
+        currentPath = target;
 
         swap(payload, onRender);
     } catch (err) {
@@ -190,8 +209,8 @@ function swap(payload, onRender) {
  *
  * El atributo data-page de la vista nombra el módulo que hay que cargar:
  * data-page="gyms" carga /assets/js/pages/gyms.js. Sólo lo llevan las
- * vistas que tienen módulo; las estáticas (landing, 404, pendientes) lo
- * omiten y aquí no se hace nada.
+ * vistas que tienen módulo; las estáticas (404, pendientes) lo omiten y
+ * aquí no se hace nada.
  */
 async function mountPage(view, onRender) {
     onRender?.(view);

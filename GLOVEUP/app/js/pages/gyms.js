@@ -8,6 +8,7 @@
 
 import { api, gymKey } from '../api.js';
 import * as session from '../session.js';
+import * as loginModal from '../login-modal.js';
 
 const PER_PAGE = 9;
 const FAVS_KEY = 'gloveup_gym_favorites';
@@ -296,7 +297,19 @@ function clearFilters() {
 
 function onGridClick(event) {
     const btn = event.target.closest('[data-fav]');
-    if (!btn) return;
+    const viewLink = event.target.closest('a[href^="/gimnasios/"]');
+    if (!btn && !viewLink) return;
+
+    // Explorando sin cuenta: ni el favorito ni la ficha del gimnasio están
+    // disponibles, así que cualquiera de los dos abre el login en vez de
+    // ejecutarse o navegar.
+    if (!session.email()) {
+        event.preventDefault();
+        loginModal.open();
+        return;
+    }
+
+    if (!btn) return; // el enlace "Ver gimnasio" sigue su curso normal
 
     event.preventDefault();
     const name = btn.dataset.fav;

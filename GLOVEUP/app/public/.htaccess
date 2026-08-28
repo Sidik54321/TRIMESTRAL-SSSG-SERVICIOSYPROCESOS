@@ -22,15 +22,23 @@
     Header always set X-Content-Type-Options "nosniff"
     Header always set X-Frame-Options "DENY"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # app.js y tailwind.css se sirven con el mismo nombre en cada
+    # despliegue (no hay paso de build que les añada un hash), así que
+    # cachearlos por adelantado es peligroso: un cambio de código podría
+    # no notarse en un navegador que ya los tuviera guardados. Se fuerza
+    # a revalidar siempre contra el servidor (sigue siendo barato: sin
+    # cambios responde 304 gracias al ETag/Last-Modified) en vez de
+    # confiar en la caché "heurística" del navegador.
+    <FilesMatch "\.(css|js)$">
+        Header always set Cache-Control "no-cache"
+    </FilesMatch>
 </IfModule>
 
-# ── Caché de estáticos ────────────────────────────────────────────
-# El CSS y el JS de la app llevan hash en el nombre cuando se publican,
-# así que se pueden cachear con seguridad durante un año.
+# ── Caché de estáticos que sí son seguros de guardar ──────────────
+# Las imágenes y vídeos no cambian de contenido bajo el mismo nombre.
 <IfModule mod_expires.c>
     ExpiresActive On
-    ExpiresByType text/css "access plus 1 year"
-    ExpiresByType application/javascript "access plus 1 year"
     ExpiresByType image/png "access plus 6 months"
     ExpiresByType image/jpeg "access plus 6 months"
     ExpiresByType video/mp4 "access plus 6 months"

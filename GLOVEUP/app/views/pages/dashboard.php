@@ -9,10 +9,11 @@ declare(strict_types=1);
  * renderizan los dos bloques y dashboard.js oculta el que no toca, igual
  * que hace profile.php con sus campos de boxeador/entrenador.
  *
- * El panel de Inicio del entrenador (métricas de gimnasio + calendario de
- * pagos y clases) comparte un componente de calendario mucho más grande que
- * el del boxeador — se deja para cuando se migre Gestión, con la que lo
- * comparte. Aquí sólo se migra la experiencia del boxeador.
+ * El panel del entrenador clásico calculaba métricas de gimnasio pero nunca
+ * llegó a pintarlas (el componente original sólo renderizaba la cabecera y
+ * el calendario pese a tener el estado listo) — aquí se replica lo que de
+ * verdad se veía: cabecera y calendario con eventos automáticos (altas de
+ * boxeadores, recordatorios) y personalizados.
  */
 ?>
 <div data-page="dashboard">
@@ -97,20 +98,49 @@ declare(strict_types=1);
     </div>
 
     <!-- ══ Entrenador ═════════════════════════════════════════════ -->
-    <div data-role="entrenador" hidden class="grid min-h-full place-items-center px-6 py-16">
-        <div class="card max-w-md p-10 text-center">
-            <span class="grid h-14 w-14 place-items-center justify-self-center rounded-full bg-accent-soft text-xl text-accent">
-                <i class="fas fa-chart-line" aria-hidden="true"></i>
-            </span>
-            <h2 class="mt-6 text-2xl">Panel del entrenador</h2>
-            <p class="mt-3 text-sm text-muted dark:text-white/60">
-                El resumen de tu gimnasio (métricas, calendario de pagos y clases) todavía se sirve
-                desde la versión clásica.
-            </p>
-            <a href="/legacy/dashboard/entrenador/dashboard.html" data-external class="btn-primary mt-8">
-                Abrir mi panel
-            </a>
+    <div data-role="entrenador" hidden class="mx-auto max-w-6xl px-6 py-8">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h2 id="coach-heading" class="text-2xl">Entrenador</h2>
+                <p class="mt-1 text-sm text-muted dark:text-white/60">Resumen de actividad y gestión de boxeadores.</p>
+            </div>
+            <div class="flex gap-2">
+                <a href="/gestion" class="btn-primary">Gestionar alumnos</a>
+                <a href="/mi-gimnasio" class="btn-ghost">Mi gimnasio</a>
+            </div>
         </div>
+
+        <section class="card mt-6 p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <h3 class="flex items-center gap-2 text-lg font-bold">
+                    <i class="fas fa-calendar-check text-muted" aria-hidden="true"></i> Calendario de actividad
+                </h3>
+                <div id="coach-cal-filters" class="flex flex-wrap gap-2">
+                    <?php
+                    $filters = [
+                        ['key' => 'inscripcion',   'label' => 'Altas'],
+                        ['key' => 'pago',          'label' => 'Pagos'],
+                        ['key' => 'sparring',      'label' => 'Sparrings'],
+                        ['key' => 'recordatorio',  'label' => 'Recordatorios'],
+                        ['key' => 'personalizado', 'label' => 'Personalizados'],
+                    ];
+                    foreach ($filters as $f): ?>
+                        <button type="button" data-filter="<?= $f['key'] ?>" aria-pressed="true"
+                                class="rounded-full border border-hairline px-3 py-1 text-xs font-bold text-muted
+                                       transition-colors aria-pressed:border-accent aria-pressed:bg-accent-soft
+                                       aria-pressed:text-accent dark:border-white/15 dark:text-white/60">
+                            <?= $f['label'] ?>
+                        </button>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <p id="coach-cal-details" class="mt-3 flex items-start gap-1.5 text-xs text-muted dark:text-white/60">
+                <i class="fas fa-info-circle mt-0.5" aria-hidden="true"></i>
+                <span id="coach-cal-details-text">Selecciona un evento o haz clic en un día para crear uno nuevo.</span>
+            </p>
+            <div id="coach-cal-skeleton" class="skeleton mt-4 h-96"></div>
+            <div id="coach-cal-root" hidden class="glv-calendar mt-4"></div>
+        </section>
     </div>
 
     <!-- ── Modal: nuevo/editar evento ────────────────────────────── -->

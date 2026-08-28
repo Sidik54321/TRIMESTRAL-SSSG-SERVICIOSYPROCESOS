@@ -38,7 +38,7 @@ page.on('response', (r) => { if (r.status() >= 400) failedRequests.push(`${r.sta
 // ── 1. Landing pública ────────────────────────────────────────────
 await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' });
 check('landing renderiza el hero',
-    (await page.$eval('h1', (el) => el.textContent.trim().toLowerCase())) === 'find your fight');
+    (await page.$eval('h1', (el) => el.textContent.replace(/\s+/g, ' ').trim().toLowerCase())) === 'find your fight');
 
 check('Tailwind aplicado (botón naranja)',
     (await page.$eval('.btn-primary', (el) => getComputedStyle(el).backgroundColor)) === 'rgb(249, 115, 22)');
@@ -48,9 +48,14 @@ await page.click('[data-login-trigger]');
 check('modal de login se abre', !(await page.$eval('#login-modal', (el) => el.hidden)));
 await page.click('[data-modal-close]');
 
-// ── 2. Sesión: /gimnasios sin login debe expulsar ─────────────────
+// ── 2. Sesión: Gimnasios y Sparring se exploran sin login, el resto no ──
+// (cobertura completa del modo invitado: scratch/guest-mode-smoke.mjs)
 await page.goto(`${BASE}/gimnasios`, { waitUntil: 'networkidle2' });
-check('sin sesión redirige al login',
+check('/gimnasios es explorable sin sesión (modo invitado)',
+    page.url() === `${BASE}/gimnasios`, page.url());
+
+await page.goto(`${BASE}/ajustes`, { waitUntil: 'networkidle2' });
+check('/ajustes sin sesión sigue expulsando al login',
     page.url().includes('/legacy/auth/'), page.url());
 
 // ── 3. Con sesión simulada ────────────────────────────────────────

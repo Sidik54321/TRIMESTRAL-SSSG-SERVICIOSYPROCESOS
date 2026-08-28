@@ -30,7 +30,10 @@ export async function request(path, options = {}) {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-        throw new Error(data?.error || `HTTP ${res.status}`);
+        // .status queda disponible para quien necesite distinguir un 401
+        // (p. ej. el panel de admin, para saber cuándo volver a pedir login)
+        // de otros errores; el resto de llamadas sigue leyendo sólo .message.
+        throw Object.assign(new Error(data?.error || `HTTP ${res.status}`), { status: res.status });
     }
 
     return data;
@@ -139,4 +142,95 @@ export const api = {
     deleteCalendarEvent: (email, eventId) =>
         request(`/api/boxeadores/me/calendar-events/${encodeURIComponent(eventId)}?email=${encodeURIComponent(email)}`,
             { method: 'DELETE' }),
+
+    /** @param {string} email @returns {Promise<Array<object>>} Boxeadores gestionados por este entrenador */
+    coachBoxeadores: (email) => request(`/api/entrenadores/me/boxeadores?email=${encodeURIComponent(email)}`),
+
+    /** @param {string} nombre @returns {Promise<object|null>} */
+    gimnasioByName: (nombre) => request(`/api/gimnasios/lookup?nombre=${encodeURIComponent(nombre)}`),
+
+    /** Crea o actualiza (por creadoPorEmail/nombre) el gimnasio del entrenador. @param {object} payload */
+    saveGimnasio: (payload) => request('/api/gimnasios', { method: 'POST', body: payload }),
+
+    /** @param {string} email @param {string} identifier Email o DNI/licencia del boxeador a asignar */
+    addCoachBoxeador: (email, identifier) =>
+        request(`/api/entrenadores/me/boxeadores?email=${encodeURIComponent(email)}`,
+            { method: 'POST', body: { boxeadorIdentifier: identifier } }),
+
+    /** @param {string} email @param {string} identifier */
+    removeCoachBoxeador: (email, identifier) =>
+        request(`/api/entrenadores/me/boxeadores?email=${encodeURIComponent(email)}`,
+            { method: 'DELETE', body: { boxeadorIdentifier: identifier } }),
+
+    /** @param {string} email @param {string} boxerId @param {{nombre?: string, dniLicencia?: string, nivel?: string}} payload */
+    updateCoachBoxeador: (email, boxerId, payload) =>
+        request(`/api/entrenadores/me/boxeadores/${encodeURIComponent(boxerId)}?email=${encodeURIComponent(email)}`,
+            { method: 'PUT', body: payload }),
+
+    /** Da de baja PERMANENTEMENTE al boxeador (borra su cuenta). @param {string} email @param {string} boxerId */
+    deleteCoachBoxeador: (email, boxerId) =>
+        request(`/api/entrenadores/me/boxeadores/${encodeURIComponent(boxerId)}?email=${encodeURIComponent(email)}`,
+            { method: 'DELETE' }),
+
+    /** @param {string} email @param {string} boxerId */
+    markBoxerPaid: (email, boxerId) =>
+        request(`/api/entrenadores/me/boxeadores/${encodeURIComponent(boxerId)}/pago?email=${encodeURIComponent(email)}`,
+            { method: 'POST' }),
+
+    /** @param {string} email @param {string} boxerId */
+    unmarkBoxerPaid: (email, boxerId) =>
+        request(`/api/entrenadores/me/boxeadores/${encodeURIComponent(boxerId)}/pago?email=${encodeURIComponent(email)}`,
+            { method: 'DELETE' }),
+
+    /** @param {string} email @returns {Promise<Array<object>>} Eventos personalizados del calendario del entrenador */
+    coachCalendarEvents: (email) => request(`/api/entrenadores/me/calendar-events?email=${encodeURIComponent(email)}`),
+
+    /** @param {string} email @param {object} payload */
+    createCoachCalendarEvent: (email, payload) =>
+        request(`/api/entrenadores/me/calendar-events?email=${encodeURIComponent(email)}`, { method: 'POST', body: payload }),
+
+    /** @param {string} email @param {string} eventId @param {object} payload */
+    updateCoachCalendarEvent: (email, eventId, payload) =>
+        request(`/api/entrenadores/me/calendar-events/${encodeURIComponent(eventId)}?email=${encodeURIComponent(email)}`,
+            { method: 'PUT', body: payload }),
+
+    /** @param {string} email @param {string} eventId */
+    deleteCoachCalendarEvent: (email, eventId) =>
+        request(`/api/entrenadores/me/calendar-events/${encodeURIComponent(eventId)}?email=${encodeURIComponent(email)}`,
+            { method: 'DELETE' }),
+
+    /** @param {string} email @returns {Promise<{gimnasio, precioMensual, boxeadoresActivos, inscripcionesMes, pagosMes, ingresosMes}>} */
+    coachMetricas: (email) => request(`/api/entrenadores/me/metricas?email=${encodeURIComponent(email)}`),
+
+    /** @param {string} email @returns {Promise<{total: number, items: object[]}>} */
+    coachCobros: (email) => request(`/api/entrenadores/me/cobros?email=${encodeURIComponent(email)}`),
+
+    // ── Administración ───────────────────────────────────────────────
+    // No usan el email de sesión: se identifican con el token que devuelve
+    // adminLogin(), pasado a mano en cada llamada (ver app/js/pages/admin.js).
+
+    /** @param {string} password @returns {Promise<{token: string}>} */
+    adminLogin: (password) => request('/api/admin/login', { method: 'POST', body: { password } }),
+
+    /** @param {string} token */
+    adminStats: (token) => request('/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } }),
+
+    /** @param {string} token @returns {Promise<Array<object>>} */
+    adminUsuarios: (token) => request('/api/admin/usuarios', { headers: { Authorization: `Bearer ${token}` } }),
+
+    /**
+     * @param {string} token
+     * @param {{nombre: string, email: string, password: string, rol: 'boxeador'|'entrenador',
+     *          dniLicencia: string, gimnasio?: string}} payload
+     */
+    adminCreateUsuario: (token, payload) =>
+        request('/api/admin/usuarios', { method: 'POST', body: payload, headers: { Authorization: `Bearer ${token}` } }),
+
+    /** @param {string} token @param {string} id */
+    adminDeleteUsuario: (token, id) =>
+        request(`/api/admin/usuarios/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }),
+
+    /** @param {string} token @param {string} id */
+    adminDeleteGimnasio: (token, id) =>
+        request(`/api/admin/gimnasios/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }),
 };

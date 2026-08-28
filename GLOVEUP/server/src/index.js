@@ -7,6 +7,7 @@ import authRouter from './routes/auth.js';
 import usuariosRouter from './routes/usuarios.js';
 import chatRouter from './routes/chat.js';
 import notificacionesRouter from './routes/notificaciones.js';
+import adminRouter from './routes/admin.js';
 
 const app = express();
 
@@ -121,6 +122,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/usuarios', usuariosRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/notificaciones', notificacionesRouter);
+app.use('/api/admin', adminRouter);
 
 // Puerto
 const PORT = process.env.PORT || 3000;

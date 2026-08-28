@@ -41,8 +41,19 @@ $isApp = $shell === 'app';
                 if (localStorage.getItem('gloveup_sidebar_collapsed') === 'true') {
                     document.documentElement.classList.add('sidebar-collapsed');
                 }
+                // Paleta de colores personalizada (ver color-theme.js): se aplica
+                // aquí, sin esperar al módulo, por la misma razón que el tema
+                // oscuro — evitar el parpadeo con los colores de fábrica.
+                ['gloveup_theme_bg', 'gloveup_theme_primary', 'gloveup_theme_accent'].forEach(function (key) {
+                    var raw = localStorage.getItem(key);
+                    if (!raw) return;
+                    var stored = JSON.parse(raw);
+                    for (var name in stored.vars) {
+                        document.documentElement.style.setProperty(name, stored.vars[name]);
+                    }
+                });
             } catch (e) {
-                /* localStorage bloqueado: se usa el tema claro por defecto */
+                /* localStorage bloqueado o dato corrupto: se usan los colores de fábrica */
             }
         })();
     </script>
@@ -90,6 +101,10 @@ $isApp = $shell === 'app';
             <?= $content ?>
         </main>
     <?php endif; ?>
+
+    <?php // Fuera de #app-view a propósito: persiste entre navegaciones de la
+          // SPA en vez de reinsertarse (y perder su estado) en cada una. ?>
+    <?= $view->render('layout/login-modal', []) ?>
 
     <script src="/assets/js/toasts.js"></script>
     <script type="module" src="/assets/js/app.js"></script>

@@ -27,6 +27,7 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     depends_on:
       - db   # Node.js tiene reintentos propios, no necesita healthcheck
 

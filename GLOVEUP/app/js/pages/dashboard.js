@@ -1,16 +1,25 @@
 /**
  * dashboard.js — Inicio.
  *
- * Migración de BoxerDashboard (dashboard/boxeador/dashboard.react.js) a
- * JavaScript vano: la SPA no carga React, así que se reescribe el mismo
- * comportamiento (métricas con gráfico de dona, sparrings recientes y un
- * calendario editable) directamente sobre el DOM. El panel del entrenador
- * sigue en /legacy/ — ver la nota en dashboard.php.
+ * Migración de BoxerDashboard y CoachStatsDashboard (los dashboard.react.js
+ * de boxeador y entrenador) a JavaScript vano: la SPA no carga React, así
+ * que se reescribe
+ * el mismo comportamiento directamente sobre el DOM. Ambos roles comparten
+ * el mismo modal de evento (#event-modal en dashboard.php) y el mismo
+ * patrón de calendario editable; sólo cambian los eventos automáticos que
+ * se calculan y contra qué endpoint se guardan los personalizados — eso
+ * vive en `calCtx`, la única pieza de estado que cambia entre roles.
+ *
+ * CoachStatsDashboard, el panel clásico del entrenador, calculaba métricas
+ * de gimnasio que nunca llegó a pintar (el JSX sólo devolvía cabecera +
+ * calendario pese a tener el estado listo) — aquí sólo se migra lo que de
+ * verdad se veía.
  */
 
 import { api } from '../api.js';
 import * as session from '../session.js';
 import { loadChart, loadFullCalendar } from '../cdn-loader.js';
+import { evaluate as evaluateOnboarding, hideNavIfDone } from '../onboarding.js';
 
 const STATUS_LABELS = { pending: 'Pendiente', accepted: 'Aceptado', rejected: 'Rechazado', completed: 'Completado', cancelled: 'Cancelado' };
 const STATUS_TONES = {
@@ -20,13 +29,12 @@ const STATUS_TONES = {
     rejected: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
     cancelled: 'bg-sunken text-muted dark:bg-white/10 dark:text-white/60',
 };
-const COLOR_OPTIONS = ['#f97316', '#3b82f6', '#22c55e', '#ef4444', '#8b5cf6', '#111827'];
 
 let els = {};
 let charts = {};
-let calendar = null;
-let customEvents = [];
-let editingEventId = '';
+
+/** Estado del calendario activo (boxeador o entrenador); ver bindEventModal(). */
+let calCtx = null;
 
 /** @param {HTMLElement} root Raíz de la vista, el div con data-page="dashboard" */
 export function init(root) {
@@ -35,16 +43,8 @@ export function init(root) {
     root.querySelector('[data-role="boxeador"]').hidden = isCoach;
     root.querySelector('[data-role="entrenador"]').hidden = !isCoach;
 
-    if (isCoach) return;
-
     els = {
         root,
-        recentSkeleton: root.querySelector('[data-recent-skeleton]'),
-        recentList: root.querySelector('[data-recent-list]'),
-        recentEmpty: root.querySelector('[data-recent-empty]'),
-        calSkeleton: root.querySelector('[data-cal-skeleton]'),
-        calRoot: root.querySelector('[data-cal-root]'),
-
         eventModal: root.querySelector('#event-modal'),
         eventForm: root.querySelector('#event-form'),
         eventTitle: root.querySelector('#event-title'),
@@ -60,27 +60,43 @@ export function init(root) {
         colorButtons: root.querySelector('#event-colors'),
         deleteConfirm: root.querySelector('#event-delete-confirm'),
     };
-
     charts = {};
-    calendar = null;
-    customEvents = [];
-    editingEventId = '';
-
     bindEventModal();
-    load();
+
+    if (isCoach) initCoach(root); else initBoxer(root);
 }
 
 export function destroy() {
     Object.values(charts).forEach((c) => c?.destroy());
     charts = {};
-    calendar?.destroy();
-    calendar = null;
+    calCtx?.calendar?.destroy();
+    calCtx = null;
     els = {};
 }
 
-/* ── Carga ─────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════
+   BOXEADOR
+   ══════════════════════════════════════════════════════════════════ */
 
-async function load() {
+function initBoxer(root) {
+    els.recentSkeleton = root.querySelector('[data-recent-skeleton]');
+    els.recentList = root.querySelector('[data-recent-list]');
+    els.recentEmpty = root.querySelector('[data-recent-empty]');
+
+    calCtx = makeCalendarContext({
+        skeletonEl: root.querySelector('[data-cal-skeleton]'),
+        rootEl: root.querySelector('[data-cal-root]'),
+        defaultColor: '#f97316',
+        list: () => api.calendarEvents(session.email()),
+        create: (payload) => api.createCalendarEvent(session.email(), payload),
+        update: (id, payload) => api.updateCalendarEvent(session.email(), id, payload),
+        remove: (id) => api.deleteCalendarEvent(session.email(), id),
+    });
+
+    loadBoxer();
+}
+
+async function loadBoxer() {
     const email = session.email();
 
     try {
@@ -91,14 +107,22 @@ async function load() {
 
         await renderMetrics(sessions, sent, received);
         renderRecent(sessions, email);
-        await renderCalendar(sessions, sent, received, email);
+
+        const upcoming = [
+            ...sent.filter((c) => c.status === 'accepted').map((c) => ({ ...c, _dir: 'sent' })),
+            ...received.filter((c) => c.status === 'accepted').map((c) => ({ ...c, _dir: 'recv' })),
+        ];
+        await calCtx.mount(() => buildBoxerAutoEvents(sessions, upcoming, email));
     } catch {
         renderRecent([], email);
-        await renderCalendar([], [], [], email);
+        await calCtx.mount(() => []);
     }
-}
 
-/* ── Métricas ──────────────────────────────────────────────────────── */
+    // Igual que la versión clásica: una vez completados todos los pasos de
+    // onboarding, "Primeros Pasos" desaparece del menú para no saturarlo.
+    const { steps, doneSet } = await evaluateOnboarding(email, session.role());
+    hideNavIfDone(doneSet, steps);
+}
 
 async function renderMetrics(sessions, sent, received) {
     const inCurrentMonth = (iso) => {
@@ -143,8 +167,6 @@ async function renderMetrics(sessions, sent, received) {
     });
 }
 
-/* ── Sparrings recientes ───────────────────────────────────────────── */
-
 function renderRecent(sessions, email) {
     els.recentSkeleton.hidden = true;
 
@@ -188,51 +210,7 @@ function renderRecent(sessions, email) {
     }).join('');
 }
 
-/* ── Calendario ────────────────────────────────────────────────────── */
-
-async function renderCalendar(sessions, sent, received, email) {
-    try {
-        customEvents = await api.calendarEvents(email);
-        if (!Array.isArray(customEvents)) customEvents = [];
-    } catch {
-        customEvents = [];
-    }
-
-    const FC = await loadFullCalendar();
-
-    els.calSkeleton.hidden = true;
-    els.calRoot.hidden = false;
-
-    const upcoming = [
-        ...sent.filter((c) => c.status === 'accepted').map((c) => ({ ...c, _dir: 'sent' })),
-        ...received.filter((c) => c.status === 'accepted').map((c) => ({ ...c, _dir: 'recv' })),
-    ];
-
-    calendar = new FC.Calendar(els.calRoot, {
-        initialView: 'dayGridMonth',
-        height: 'auto',
-        locale: 'es',
-        firstDay: 1,
-        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listMonth' },
-        events: buildEvents(sessions, upcoming, email),
-        dateClick: (info) => openEventModal({ start: info.dateStr }),
-        eventClick: (info) => {
-            const dbId = info.event.extendedProps?.dbId;
-            if (!dbId) return; // eventos automáticos (sparrings/retos): sólo informativos
-            openEventModal({ event: info.event, id: dbId });
-        },
-    });
-    calendar.render();
-}
-
-function buildEvents(sessions, upcomingChallenges, email) {
-    const toIsoDate = (value) => {
-        if (!value) return '';
-        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-        const d = new Date(value);
-        return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
-    };
-
+function buildBoxerAutoEvents(sessions, upcomingChallenges, email) {
     const auto = [];
 
     sessions.forEach((s, i) => {
@@ -262,31 +240,223 @@ function buildEvents(sessions, upcomingChallenges, email) {
         });
     });
 
-    const custom = customEvents.map((ev) => ({
-        id: `db-${ev._id}`,
-        title: ev.title,
-        start: ev.start,
-        end: ev.end || undefined,
-        allDay: ev.allDay !== false,
-        backgroundColor: ev.color || '#f97316',
-        borderColor: ev.color || '#f97316',
-        classNames: ['glv-event--custom'],
-        extendedProps: { dbId: ev._id },
-    }));
-
-    return [...auto, ...custom];
+    return auto;
 }
 
-async function refreshCalendarEvents() {
+/* ══════════════════════════════════════════════════════════════════
+   ENTRENADOR
+   ══════════════════════════════════════════════════════════════════ */
+
+function initCoach(root) {
+    els.coachHeading = root.querySelector('#coach-heading');
+    els.coachFilters = root.querySelector('#coach-cal-filters');
+    els.coachDetails = root.querySelector('#coach-cal-details-text');
+
+    els.coachHeading.textContent = session.name() || 'Entrenador';
+
+    const activeFilters = new Set(['inscripcion', 'pago', 'sparring', 'recordatorio', 'personalizado']);
+    els.coachFilters.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-filter]');
+        if (!btn) return;
+        const key = btn.dataset.filter;
+        const on = btn.getAttribute('aria-pressed') !== 'true';
+        if (on) { btn.setAttribute('aria-pressed', 'true'); activeFilters.add(key); }
+        else { btn.removeAttribute('aria-pressed'); activeFilters.delete(key); }
+        calCtx.applyFilter((ev) => activeFilters.has(ev.extendedProps?.kind || 'personalizado'));
+    });
+
+    calCtx = makeCalendarContext({
+        skeletonEl: root.querySelector('#coach-cal-skeleton'),
+        rootEl: root.querySelector('#coach-cal-root'),
+        defaultColor: '#3b82f6',
+        list: () => api.coachCalendarEvents(session.email()),
+        create: (payload) => api.createCoachCalendarEvent(session.email(), payload),
+        update: (id, payload) => api.updateCoachCalendarEvent(session.email(), id, payload),
+        remove: (id) => api.deleteCoachCalendarEvent(session.email(), id),
+        onAutoEventClick: (ev) => describeAutoEvent(ev),
+    });
+
+    loadCoach();
+}
+
+async function loadCoach() {
+    const email = session.email();
+
     try {
-        customEvents = await api.calendarEvents(session.email());
-        if (!Array.isArray(customEvents)) customEvents = [];
+        const boxers = await api.coachBoxeadores(email);
+        await calCtx.mount(() => buildCoachAutoEvents(Array.isArray(boxers) ? boxers : []));
     } catch {
-        customEvents = [];
+        await calCtx.mount(() => []);
     }
-    calendar.removeAllEvents();
-    // Los eventos automáticos ya están pintados; sólo se repone lo propio
-    customEvents.forEach((ev) => calendar.addEvent({
+}
+
+/**
+ * Réplica de buildCoachCalendarEvents (dashboard.react.js): altas de
+ * boxeadores, pagos registrados, sparrings de su historial, y dos
+ * recordatorios fijos (ingresos del mes, planificación semanal).
+ */
+function buildCoachAutoEvents(boxers) {
+    const events = [];
+
+    boxers.forEach((b) => {
+        const name = b.nombre || 'Alumno';
+        const insc = toIsoDate(b.fechaInscripcion || b.createdAt || '');
+        if (insc) {
+            events.push({
+                id: `inscripcion-${b._id || name}-${insc}`,
+                title: `Inscripción: ${name}`,
+                start: insc,
+                allDay: true,
+                classNames: ['glv-event--custom'],
+                backgroundColor: '#8b5cf6',
+                borderColor: '#8b5cf6',
+                extendedProps: { kind: 'inscripcion', boxer: name },
+            });
+        }
+
+        (Array.isArray(b.pagos) ? b.pagos : []).forEach((p) => {
+            if (!p?.mes) return;
+            events.push({
+                id: `pago-${b._id || name}-${p.mes}`,
+                title: `Pago: ${name}`,
+                start: p.fecha ? new Date(p.fecha).toISOString().slice(0, 10) : `${p.mes}-01`,
+                allDay: true,
+                backgroundColor: '#16a34a',
+                borderColor: '#16a34a',
+                extendedProps: { kind: 'pago', boxer: name, mes: p.mes, monto: p.monto || 0 },
+            });
+        });
+
+        (Array.isArray(b.sparringHistory) ? b.sparringHistory : []).forEach((s, i) => {
+            const date = toIsoDate(s?.date || '');
+            if (!date) return;
+            const partner = s.partner || 'Partner';
+            events.push({
+                id: `sparring-${b._id || name}-${i}-${date}`,
+                title: `Sparring: ${name} x ${partner}`,
+                start: date,
+                allDay: true,
+                classNames: ['glv-event--sparring'],
+                extendedProps: { kind: 'sparring', boxer: name, partner, place: s.place || '' },
+            });
+        });
+    });
+
+    const now = new Date();
+    const firstDay = toIsoDate(new Date(now.getFullYear(), now.getMonth(), 1));
+    events.push({
+        id: `recordatorio-mes-${firstDay}`,
+        title: 'Repasa los ingresos del mes',
+        start: firstDay,
+        allDay: true,
+        backgroundColor: '#f59e0b',
+        borderColor: '#f59e0b',
+        extendedProps: { kind: 'recordatorio' },
+    });
+
+    const nextMonday = getNextMondayIso();
+    events.push({
+        id: `recordatorio-semana-${nextMonday}`,
+        title: 'Recordatorio: planificar semana',
+        start: nextMonday,
+        allDay: true,
+        backgroundColor: '#f59e0b',
+        borderColor: '#f59e0b',
+        extendedProps: { kind: 'recordatorio' },
+    });
+
+    return events;
+}
+
+function describeAutoEvent(ev) {
+    const kind = ev.extendedProps?.kind || '';
+    const date = ev.startStr ? formatDate(ev.startStr.slice(0, 10)) : '';
+    const parts = [date, ev.title];
+    if (ev.extendedProps?.partner) parts.push(`Partner: ${ev.extendedProps.partner}`);
+    if (ev.extendedProps?.place) parts.push(`Lugar: ${ev.extendedProps.place}`);
+    els.coachDetails.textContent = parts.filter(Boolean).join(' · ');
+}
+
+function getNextMondayIso() {
+    const now = new Date();
+    const delta = (8 - now.getDay()) % 7 || 7;
+    const next = new Date(now);
+    next.setDate(now.getDate() + delta);
+    return toIsoDate(next);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   CALENDARIO (compartido): montaje, eventos personalizados y modal
+   ══════════════════════════════════════════════════════════════════ */
+
+/**
+ * Crea el controlador de un calendario FullCalendar con eventos propios
+ * en MongoDB. `crud` son las cuatro llamadas a la API (list/create/update/
+ * remove) del dueño de este calendario — el boxeador o el entrenador.
+ */
+function makeCalendarContext({ skeletonEl, rootEl, defaultColor, list, create, update, remove, onAutoEventClick }) {
+    const ctx = {
+        calendar: null,
+        customEvents: [],
+        autoEvents: [],
+        editingEventId: '',
+        defaultColor,
+        crud: { list, create, update, remove },
+
+        async mount(buildAutoEvents) {
+            try {
+                ctx.customEvents = await list();
+                if (!Array.isArray(ctx.customEvents)) ctx.customEvents = [];
+            } catch {
+                ctx.customEvents = [];
+            }
+
+            const FC = await loadFullCalendar();
+            skeletonEl.hidden = true;
+            rootEl.hidden = false;
+            ctx.autoEvents = buildAutoEvents();
+
+            ctx.calendar = new FC.Calendar(rootEl, {
+                initialView: 'dayGridMonth',
+                height: 'auto',
+                locale: 'es',
+                firstDay: 1,
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listMonth' },
+                events: [...ctx.autoEvents, ...customToFcEvents(ctx.customEvents)],
+                dateClick: (info) => openEventModal(ctx, { start: info.dateStr }),
+                eventClick: (info) => {
+                    const dbId = info.event.extendedProps?.dbId;
+                    if (dbId) openEventModal(ctx, { event: info.event, id: dbId });
+                    else onAutoEventClick?.(info.event);
+                },
+            });
+            ctx.calendar.render();
+        },
+
+        applyFilter(predicate) {
+            ctx.calendar.getEvents().forEach((ev) => {
+                if (ev.extendedProps?.dbId) return; // los personalizados no se filtran
+                ev.setProp('display', predicate(ev) ? 'auto' : 'none');
+            });
+        },
+
+        async refresh() {
+            try {
+                ctx.customEvents = await list();
+                if (!Array.isArray(ctx.customEvents)) ctx.customEvents = [];
+            } catch {
+                ctx.customEvents = [];
+            }
+            ctx.calendar.getEvents().forEach((ev) => { if (ev.extendedProps?.dbId) ev.remove(); });
+            customToFcEvents(ctx.customEvents).forEach((ev) => ctx.calendar.addEvent(ev));
+        },
+    };
+
+    return ctx;
+}
+
+function customToFcEvents(customEvents) {
+    return customEvents.map((ev) => ({
         id: `db-${ev._id}`,
         title: ev.title,
         start: ev.start,
@@ -299,7 +469,7 @@ async function refreshCalendarEvents() {
     }));
 }
 
-/* ── Modal de evento ───────────────────────────────────────────────── */
+/* ── Modal de evento (compartido) ─────────────────────────────────── */
 
 function bindEventModal() {
     els.colorButtons.addEventListener('click', (e) => {
@@ -323,9 +493,10 @@ function bindEventModal() {
     });
 }
 
-function openEventModal({ start = '', event = null, id = '' } = {}) {
+function openEventModal(ctx, { start = '', event = null, id = '' } = {}) {
     hideError();
-    editingEventId = id;
+    calCtx = ctx; // el modal siempre actúa sobre el calendario que lo abrió
+    ctx.editingEventId = id;
 
     els.eventTitle.textContent = id ? 'Editar evento' : 'Nuevo evento';
     els.eventDelete.hidden = !id;
@@ -336,14 +507,14 @@ function openEventModal({ start = '', event = null, id = '' } = {}) {
         els.fieldEnd.value = event.endStr ? event.endStr.slice(0, 10) : '';
         els.fieldType.value = event.extendedProps?.tipo || 'personalizado';
         els.fieldNotes.value = event.extendedProps?.notas || '';
-        setColor(event.backgroundColor || '#f97316');
+        setColor(event.backgroundColor || ctx.defaultColor);
     } else {
         els.fieldTitle.value = '';
         els.fieldStart.value = start || new Date().toISOString().slice(0, 10);
         els.fieldEnd.value = '';
         els.fieldType.value = 'personalizado';
         els.fieldNotes.value = '';
-        setColor('#f97316');
+        setColor(ctx.defaultColor);
     }
 
     els.eventModal.showModal();
@@ -389,30 +560,34 @@ async function onSaveEvent(e) {
     };
 
     try {
-        if (editingEventId) {
-            await api.updateCalendarEvent(session.email(), editingEventId, payload);
-        } else {
-            await api.createCalendarEvent(session.email(), payload);
-        }
+        if (calCtx.editingEventId) await calCtx.crud.update(calCtx.editingEventId, payload);
+        else await calCtx.crud.create(payload);
         els.eventModal.close();
-        await refreshCalendarEvents();
+        await calCtx.refresh();
     } catch (err) {
         showError(err.message || 'Error al guardar.');
     }
 }
 
 async function onDeleteEvent() {
-    if (!editingEventId) return;
+    if (!calCtx.editingEventId) return;
     try {
-        await api.deleteCalendarEvent(session.email(), editingEventId);
+        await calCtx.crud.remove(calCtx.editingEventId);
         els.eventModal.close();
-        await refreshCalendarEvents();
+        await calCtx.refresh();
     } catch (err) {
         showError(err.message || 'Error al eliminar.');
     }
 }
 
 /* ── Utilidades ────────────────────────────────────────────────────── */
+
+function toIsoDate(value) {
+    if (!value) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+}
 
 function formatDate(iso) {
     if (!iso) return '—';

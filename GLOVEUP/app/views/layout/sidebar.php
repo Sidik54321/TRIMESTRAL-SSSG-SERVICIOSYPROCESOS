@@ -15,12 +15,18 @@ use GloveUp\View;
  * hace app.js leyendo gloveup_user_role, igual que hacían las páginas
  * antiguas, y se aplica antes del primer pintado.
  *
+ * Los elementos con "guestLock" siguen siempre visibles (Gimnasios y
+ * Sparring ya se pueden explorar sin cuenta, así que no tendría sentido
+ * escondérselos a quien no ha iniciado sesión), pero app.js les añade
+ * data-guest-lock: sin sesión, el clic abre el modal de login en vez de
+ * navegar. Con sesión se comportan como enlaces normales.
+ *
  * @var string|null $nav
  */
 
 $items = [
-    ['id' => 'primeros-pasos', 'href' => '/primeros-pasos', 'icon' => 'fa-rocket',        'label' => 'Primeros Pasos'],
-    ['id' => 'inicio',         'href' => '/inicio',         'icon' => 'fa-home',          'label' => 'Inicio'],
+    ['id' => 'primeros-pasos', 'href' => '/primeros-pasos', 'icon' => 'fa-rocket',        'label' => 'Primeros Pasos', 'guestLock' => true],
+    ['id' => 'inicio',         'href' => '/inicio',         'icon' => 'fa-home',          'label' => 'Inicio',         'guestLock' => true],
     ['id' => 'sparring',       'href' => '/sparring',       'icon' => 'fa-fist-raised',   'label' => 'Buscar Sparring'],
     ['id' => 'gimnasios',      'href' => '/gimnasios',      'icon' => 'fa-building',      'label' => 'Gimnasios'],
     ['id' => 'mis-sparrings',  'href' => '/mis-sparrings',  'icon' => 'fa-clipboard-list','label' => 'Mis Sparrings', 'roles' => ['boxeador']],
@@ -45,6 +51,19 @@ $items = [
         <span class="nav-label font-display text-xl font-black tracking-tight">GloveUp</span>
     </div>
 
+    <!-- Aviso de modo invitado: sólo lo muestra app.js sin sesión -->
+    <div data-guest-only hidden class="mx-3 mb-2 rounded-xl bg-accent-soft p-3 text-accent">
+        <p class="text-xs font-bold">Estás explorando como invitado</p>
+        <p class="nav-label mt-1 text-[0.7rem] leading-snug text-accent/80">
+            Inicia sesión para retar a sparring, guardar favoritos y ver perfiles.
+        </p>
+        <button type="button" data-login-trigger
+                class="nav-label mt-2 inline-flex items-center gap-1 text-xs font-bold underline
+                       decoration-2 underline-offset-2">
+            Crear cuenta <i class="fas fa-arrow-right text-[0.6rem]" aria-hidden="true"></i>
+        </button>
+    </div>
+
     <!-- Navegación -->
     <nav class="min-h-0 flex-1 overflow-y-auto px-3" aria-label="Navegación principal">
         <ul class="space-y-1">
@@ -53,6 +72,7 @@ $items = [
                     <a href="<?= View::e($item['href']) ?>"
                        class="nav-link"
                        data-nav="<?= View::e($item['id']) ?>"
+                       <?= !empty($item['guestLock']) ? 'data-guest-lock' : '' ?>
                        <?= $nav === $item['id'] ? 'aria-current="page"' : '' ?>>
                         <i class="fas <?= View::e($item['icon']) ?>" aria-hidden="true"></i>
                         <span class="nav-label"><?= View::e($item['label']) ?></span>
@@ -82,15 +102,20 @@ $items = [
             <i class="fas fa-moon" aria-hidden="true"></i>
             <span class="nav-label">Tema Oscuro</span>
         </button>
-        <a href="/ajustes" class="nav-link" data-nav="ajustes"
+        <a href="/ajustes" class="nav-link" data-nav="ajustes" data-guest-lock
            <?= $nav === 'ajustes' ? 'aria-current="page"' : '' ?>>
             <i class="fas fa-cog" aria-hidden="true"></i>
             <span class="nav-label">Ajustes</span>
         </a>
-        <button type="button" id="logout-button"
+        <button type="button" id="logout-button" data-auth-only hidden
                 class="nav-link w-full text-red-400 hover:bg-red-500/10 hover:text-red-300">
             <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
             <span class="nav-label">Cerrar Sesión</span>
+        </button>
+        <button type="button" data-guest-only data-login-trigger hidden
+                class="nav-link w-full text-accent hover:bg-accent-soft">
+            <i class="fas fa-right-to-bracket" aria-hidden="true"></i>
+            <span class="nav-label">Iniciar sesión</span>
         </button>
         <button type="button" id="sidebar-toggle"
                 class="nav-link w-full max-lg:hidden" title="Alternar menú"

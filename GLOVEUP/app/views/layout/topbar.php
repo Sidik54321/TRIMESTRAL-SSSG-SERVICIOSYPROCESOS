@@ -13,6 +13,10 @@ use GloveUp\View;
  *
  * @var string      $heading Título de la sección actual
  * @var string|null $nav     Elemento activo del menú, para marcar el avatar
+ *
+ * data-guest-lock en la campana y el chip de perfil: con sesión funcionan
+ * como siempre; sin sesión, app.js hace que abran el modal de login en vez
+ * de navegar (ver el comentario sobre "guestLock" en sidebar.php).
  */
 ?>
 <header class="z-30 flex h-16 shrink-0 items-center gap-4 border-b border-hairline
@@ -32,7 +36,7 @@ use GloveUp\View;
     <h1 id="topbar-title" class="truncate text-lg font-bold sm:text-xl"><?= View::e($heading) ?></h1>
 
     <div class="ml-auto flex items-center gap-2">
-        <a href="/legacy/home/dashboard.html#notificaciones"
+        <a href="/legacy/home/dashboard.html#notificaciones" data-guest-lock
            class="relative grid h-10 w-10 place-items-center rounded-xl text-muted
                   transition-colors hover:bg-sunken
                   dark:text-white/70 dark:hover:bg-white/10"
@@ -43,7 +47,8 @@ use GloveUp\View;
                          ring-2 ring-surface dark:ring-night-soft"></span>
         </a>
 
-        <a href="/perfil" data-nav="perfil" <?= $nav === 'perfil' ? 'aria-current="page"' : '' ?>
+        <a href="/perfil" data-nav="perfil" data-guest-lock
+           <?= $nav === 'perfil' ? 'aria-current="page"' : '' ?>
            class="flex items-center gap-3 rounded-full py-1 pl-1 pr-3
                   transition-colors hover:bg-sunken dark:hover:bg-white/10">
             <img id="topbar-avatar" src="/assets/images/unnamed-removebg-preview.png" alt=""

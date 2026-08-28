@@ -4,30 +4,70 @@
  * Ordena el arranque: primero el control de sesión (para no enseñar datos a
  * quien no ha entrado), después el chrome persistente —tema, menú lateral,
  * datos del usuario— y por último el router.
+ *
+ * Modo invitado: Gimnasios y Sparring (data-guest-ok en su vista) se pueden
+ * explorar sin sesión, así que guard() se salta para esas dos. El resto de
+ * vistas con sidebar lo siguen exigiendo, tanto en la carga inicial como en
+ * cada navegación de la SPA (guardRender), porque guard() sólo corre una
+ * vez al arrancar. Dentro de las vistas explorables, cada acción que sí
+ * necesita cuenta (retar, favoritos, ver perfil…) la gatean los propios
+ * módulos de página llamando a loginModal.open().
  */
 
 import { start } from './router.js';
 import { api } from './api.js';
 import * as session from './session.js';
+import * as loginModal from './login-modal.js';
 
 const isApp = document.body.dataset.shell === 'app';
 
 boot();
 
 async function boot() {
-    // Las vistas con sidebar exigen sesión válida; si no la hay, guard()
-    // redirige y no merece la pena montar nada más.
-    if (isApp && !(await session.guard())) return;
+    if (isApp && !isGuestOkRoute() && !(await session.guard())) return;
 
+    loginModal.init();
     setupTheme();
     setupSidebar();
 
     if (isApp) {
         applyRoleVisibility();
+        applyAuthVisibility();
         fillUserChip();
+        // Chrome persistente (sidebar, topbar): se conecta una sola vez aquí
+        // porque, a diferencia del contenido de #app-view, no se vuelve a
+        // insertar en cada navegación. Con sesión no hace falta: esos
+        // enlaces deben comportarse con normalidad.
+        if (!session.email()) loginModal.wireGuestLocks(document);
     }
 
-    start({ onRender: setupModals });
+    start({
+        onRender: (view) => {
+            loginModal.wireTriggers(view);
+            guardRender(view);
+        },
+    });
+}
+
+/** ¿La vista ya renderizada en el documento se puede ver sin sesión? */
+function isGuestOkRoute() {
+    return !!document.querySelector('[data-page][data-guest-ok]');
+}
+
+/**
+ * Repite la comprobación de sesión en cada navegación de la SPA, no sólo al
+ * arrancar: si alguien sin sesión llegara por SPA a una vista que no sea
+ * explorable (no debería, todos sus enlaces están gateados, pero esto es
+ * el cinturón de seguridad), se le manda a iniciar sesión igual que haría
+ * una carga completa de esa misma URL.
+ */
+function guardRender(view) {
+    if (!isApp || session.email()) return;
+
+    const root = view.querySelector('[data-page]');
+    if (root && !root.hasAttribute('data-guest-ok')) {
+        window.location.replace('/legacy/auth/index.html');
+    }
 }
 
 /* ── Tema claro / oscuro ───────────────────────────────────────────── */
@@ -105,6 +145,18 @@ function applyRoleVisibility() {
     });
 }
 
+/**
+ * Alterna los bloques que sólo tienen sentido con sesión (data-auth-only,
+ * como "Cerrar sesión") o sin ella (data-guest-only, como el aviso de modo
+ * invitado del sidebar). Ambos arrancan con "hidden" en el HTML para no
+ * enseñar el equivocado mientras carga este script.
+ */
+function applyAuthVisibility() {
+    const loggedIn = Boolean(session.email());
+    document.querySelectorAll('[data-auth-only]').forEach((el) => { el.hidden = !loggedIn; });
+    document.querySelectorAll('[data-guest-only]').forEach((el) => { el.hidden = loggedIn; });
+}
+
 /** Rellena nombre y avatar de la barra superior. */
 async function fillUserChip() {
     const nameEl = document.getElementById('topbar-user');
@@ -123,8 +175,14 @@ async function fillUserChip() {
 
     const email = session.email();
     const role = session.role();
-    if (!email || (role !== 'boxeador' && role !== 'entrenador')) {
-        if (!cached) show(email || 'Mi cuenta');
+    if (!email) {
+        // Modo invitado: el chip de perfil lleva data-guest-lock y abre el
+        // login al pulsarlo, así que su texto debe anunciar justo eso.
+        if (!cached) show('Iniciar sesión');
+        return;
+    }
+    if (role !== 'boxeador' && role !== 'entrenador') {
+        if (!cached) show('Mi cuenta');
         return;
     }
 
@@ -137,43 +195,4 @@ async function fillUserChip() {
         // Sin conexión se deja lo que ya hubiera; no es un error que mostrar
         if (!cached) show(email);
     }
-}
-
-/* ── Modales declarativos ──────────────────────────────────────────── */
-
-/**
- * Conecta los modales de la vista activa.
- *
- * Se vuelve a llamar tras cada navegación porque los modales viven dentro
- * de la vista y desaparecen con ella.
- */
-function setupModals(scope = document) {
-    const modal = scope.querySelector?.('#login-modal');
-    if (!modal || modal.dataset.ready) return;
-    modal.dataset.ready = '1';
-
-    const open = () => {
-        modal.hidden = false;
-        document.body.style.overflow = 'hidden';
-    };
-
-    const close = () => {
-        modal.hidden = true;
-        document.body.style.overflow = '';
-    };
-
-    scope.querySelectorAll('[data-login-trigger]').forEach((el) => {
-        el.addEventListener('click', (e) => {
-            e.preventDefault();
-            open();
-        });
-    });
-
-    modal.querySelectorAll('[data-modal-close]').forEach((el) => {
-        el.addEventListener('click', close);
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !modal.hidden) close();
-    });
 }

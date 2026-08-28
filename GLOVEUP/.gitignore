@@ -1,0 +1,8 @@
+# Dependencias (se reinstalan con npm install / npm ci)
+node_modules/
+
+# Variables de entorno con secretos (claves de cifrado, contraseñas de
+# admin...). server/.env y docker/.env ya llevan su propio aviso de "no
+# subir a git" en el contenido; esta regla lo hace cumplir de verdad.
+.env
+.env.*

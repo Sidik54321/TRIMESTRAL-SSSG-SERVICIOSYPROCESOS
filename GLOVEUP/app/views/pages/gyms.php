@@ -8,9 +8,14 @@ declare(strict_types=1);
  * El marcado se sirve desde PHP con esqueletos de carga; los datos los pide
  * app/js/pages/gyms.js a /api/gimnasios y rellena la rejilla. El atributo
  * data-page le indica al router qué módulo debe cargar tras insertar la vista.
+ *
+ * data-guest-ok: esta vista se puede explorar sin sesión (ver app/js/app.js,
+ * que por eso no exige guard() aquí). gyms.js gatea sus propias acciones
+ * (favorito, "Ver gimnasio") abriendo el modal de login cuando no hay email
+ * en la sesión, en vez de ejecutarlas.
  */
 ?>
-<div data-page="gyms">
+<div data-page="gyms" data-guest-ok>
 
     <!-- ── Cabecera de sección ───────────────────────────────────── -->
     <section class="relative overflow-hidden bg-ink px-6 py-14 text-white sm:py-20">

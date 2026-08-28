@@ -91,27 +91,126 @@ antiguas, mediante un `@custom-variant`.
 | Sección | Ruta | Estado |
 |---|---|---|
 | Landing pública | `/` | Migrada |
-| Gimnasios | `/gimnasios` | Migrada (sin el mapa Leaflet) |
+| Gimnasios | `/gimnasios` | Migrada (sin el mapa Leaflet). **Explorable sin sesión** |
 | Ficha de gimnasio | `/gimnasios/{key}` | Migrada |
-| Buscar sparring | `/sparring` | Migrada (sin chat ni notificaciones flotantes) |
+| Buscar sparring | `/sparring` | Migrada (sin chat ni notificaciones flotantes). **Explorable sin sesión** |
 | Mi Perfil | `/perfil` | Migrada |
 | Ver perfil de un boxeador | `/perfil/{identifier}` | Migrada |
 | Mis Sparrings | `/mis-sparrings` | Migrada |
 | Retos (aprobación por el entrenador) | `/retos` | Migrada |
 | Inicio (boxeador) | `/inicio` | Migrada |
-| Inicio (entrenador) | `/inicio` | Pendiente (redirige a la versión clásica) |
-| Ajustes | `/ajustes` | Pendiente |
-| Primeros pasos | `/primeros-pasos` | Pendiente |
-| Gestión / Mi gimnasio | `/gestion`, `/mi-gimnasio` | Pendiente |
+| Inicio (entrenador) | `/inicio` | Migrada (calendario; sin las métricas, que el panel clásico tampoco llegaba a pintar) |
+| Ajustes | `/ajustes` | Migrada |
+| Primeros pasos | `/primeros-pasos` | Migrada |
+| Gestión de alumnos | `/gestion` | Migrada (perfil, boxeadores y pagos; pestaña "Boxeadores" por defecto) |
+| Mi Gimnasio | `/mi-gimnasio` | Migrada (misma vista que Gestión, pestaña "Gimnasio" por defecto) |
+| Panel de administración | `/admin` | Nueva (no existía en la app clásica) |
 | Login y registro | `/legacy/auth/` | Fuera de la SPA |
+
+## Panel de administración
+
+`/admin` (`app/views/pages/admin.php` + `app/js/pages/admin.js`) es una
+sección nueva, sin equivalente en la app clásica. Vive fuera del shell
+"app" (sin el sidebar de boxeador/entrenador) y tiene su propia puerta de
+entrada: una contraseña única guardada en `ADMIN_PASSWORD` (backend), sin
+relación con las cuentas de boxeador/entrenador ni con `session.js`.
+
+Al acertar la contraseña, `POST /api/admin/login` devuelve un token que se
+guarda en `localStorage` (`gloveup_admin_token`) y viaja como
+`Authorization: Bearer …` en el resto de llamadas (`server/src/middleware/
+adminAuth.js`, tokens en memoria con 6 h de validez). Un 401 en cualquier
+llamada hace volver a la pantalla de contraseña.
+
+Tres pestañas:
+- **Resumen** — contadores globales (usuarios, boxeadores, entrenadores,
+  gimnasios, retos enviados, sparrings completados) y una gráfica de altas
+  de usuario de los últimos 6 meses.
+- **Usuarios** — listado con su gimnasio (cruzado desde el perfil
+  deportivo), buscador, crear boxeador/entrenador y eliminar cuenta (borra
+  también su perfil; si es un entrenador, sus boxeadores se quedan sin
+  asignar en vez de borrarse).
+- **Gimnasios** — listado (reutiliza `GET /api/gimnasios`, que ya era
+  público) y eliminar; al borrar uno se limpia el campo `gimnasio` de los
+  boxeadores/entrenadores que lo tuvieran asignado, porque ese campo es un
+  nombre suelto, no una referencia.
+
+Endpoints nuevos en `server/src/routes/admin.js` (todos menos `/login`
+exigen el token): `GET /stats`, `GET /usuarios`, `POST /usuarios`,
+`DELETE /usuarios/:id`, `DELETE /gimnasios/:id`. Cubiertos por
+`tests/backend/admin.test.js`.
+
+**Nota de seguridad:** `server/.env` y `docker/.env` ya estaban en el
+repositorio de git desde antes de esta migración (sin `.gitignore` que lo
+impidiera) — este cambio añade un `.gitignore` en la raíz para que dejen de
+subirse a partir de ahora, pero **no** reescribe el historial. La clave de
+cifrado (`ENCRYPTION_KEY`) y la contraseña de admin que ya están commiteadas
+deben considerarse expuestas; conviene rotarlas y valorar limpiar el
+historial si el repositorio es o vaya a ser público.
+
+**Nota sobre Inicio del entrenador:** `CoachStatsDashboard`, el componente
+clásico, calculaba métricas del gimnasio (`boxeadoresActivos`,
+`inscripcionesMes`, `ingresosMes`) pero su JSX nunca llegó a pintarlas —
+sólo devolvía la cabecera y el calendario. La migración reproduce
+exactamente eso: cabecera + calendario con eventos automáticos (altas de
+boxeadores, pagos, sparrings, recordatorios) y personalizados, con filtros
+por tipo. El calendario del boxeador y el del entrenador comparten el mismo
+módulo de montaje y modal de evento en `app/js/pages/dashboard.js`.
+
+**Nota sobre Gestión / Mi Gimnasio:** en el dashboard clásico, el enlace
+"Gestión" del menú montaba por error el panel de **Pagos/Finanzas**
+(`CoachFinance`) y "Mi Gimnasio" montaba el panel real de **perfil del
+gimnasio + boxeadores** (`CoachManagement`) — un cruce de nombres confirmado
+leyendo el punto de montaje (`dashboard.react.js:4567-4571`), no un diseño
+intencional. Se corrigió en la migración: ambos enlaces llevan al mismo
+panel, con tres pestañas (Mi Gimnasio, Mis Boxeadores, Pagos), cada ruta con
+su pestaña por defecto. "Pagos" no tenía ningún enlace propio en el menú
+clásico — se añadió aquí como tercera pestaña por ser la ubicación más
+natural, ya que las otras dos ya compartían panel.
+
+De las cinco métricas de la pestaña Pagos, dos muestran siempre 0 — no es
+un fallo de esta migración, es lo que el backend real devuelve hoy:
+- **"Cobros"**: `GET /me/cobros` es un *stub* que nunca se llegó a
+  implementar (`return res.json({ total: 0, items: [] })` siempre).
+- **"Pagos este mes"**: cuenta `boxer.pagos`, el mismo campo que **no existe
+  en el esquema de Mongoose** de `Boxeador` — el mismo bug documentado en
+  Retos y en el botón "Marcar como pagado" de Gestión. `POST /pago`
+  responde `{ok:true}` pero Mongoose descarta la escritura en silencio.
+
+El gráfico de ingresos por inscripciones sí es funcional (se basa en
+`fechaInscripcion`, no en `pagos`), igual que "Tu gimnasio" y "Boxeadores
+activos".
 
 Las secciones pendientes muestran una tarjeta que enlaza a su versión clásica,
 servida bajo `/legacy/…`. La app es utilizable en todo momento.
 
+## Modo invitado
+
+Gimnasios y Sparring se pueden explorar sin haber iniciado sesión, como
+"vista previa" de la app en el rol de boxeador: `app/js/app.js` sólo llama a
+`session.guard()` (que expulsa a `/legacy/auth/` si no hay sesión) en las
+vistas que NO llevan `data-guest-ok` en su `data-page` — Gimnasios y
+Sparring sí lo llevan. El resto de las secciones con sidebar (Inicio, Mi
+Perfil, Ajustes, Primeros Pasos…) siguen exigiendo sesión igual que antes.
+
+Dentro de esas dos vistas, cualquier acción real (guardar favorito, ver la
+ficha de un gimnasio, ver el perfil de un boxeador, retar a sparring) abre
+el modal de "Inicia sesión en GloveUp" en vez de ejecutarse — lo gatean los
+propios módulos de página (`gyms.js`, `sparring.js`) llamando a
+`loginModal.open()`. Ese modal ahora vive en `layout/login-modal.php`,
+fuera de `#app-view`, para estar disponible tanto en la landing como dentro
+del panel; lo controla `app/js/login-modal.js` mediante dos atributos
+declarativos:
+- `data-login-trigger`: siempre abre el modal (los CTA de "crear cuenta").
+- `data-guest-lock`: sólo lo abre si no hay sesión; con sesión el elemento
+  se comporta con normalidad. Se usa en los enlaces del sidebar/topbar que
+  no son explorables (Inicio, Ajustes, el chip de perfil, la campana de
+  notificaciones).
+
 ## Comprobación
 
 `scratch/spa-smoke.mjs` verifica en un Chromium real el renderizado, la
-navegación sin recarga, el historial, la sesión, los filtros y el tema:
+navegación sin recarga, el historial, la sesión, los filtros y el tema;
+`scratch/guest-mode-smoke.mjs` verifica específicamente el modo invitado:
 
 ```bash
 docker run --rm --network docker_default \

@@ -181,6 +181,33 @@
                dark:bg-white/10 dark:text-white/70;
     }
 
+    /* ── Interruptor on/off ───────────────────────────────────────
+       <label class="toggle"><input type="checkbox" class="peer sr-only">
+       <span class="toggle-track">...</span></label> */
+    .toggle-track {
+        @apply relative inline-block h-7 w-12 shrink-0 rounded-full bg-hairline-strong/40
+               transition-colors duration-200
+               peer-checked:bg-accent peer-focus-visible:outline
+               peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2
+               peer-focus-visible:outline-accent
+               dark:bg-white/15;
+    }
+
+    .toggle-track::after {
+        content: "";
+        @apply absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-card
+               transition-transform duration-200;
+    }
+
+    input:checked + .toggle-track::after {
+        transform: translateX(20px);
+    }
+
+    /* ── Pestañas subrayadas (paneles del entrenador) ──────────────── */
+    .tab-underline {
+        @apply border-b-2 border-transparent transition-colors hover:text-body dark:hover:text-white;
+    }
+
     /* ── Calendario (FullCalendar) ────────────────────────────────
        La librería llega por CDN con su propio CSS; aquí sólo se ajustan
        tamaños para que quepa en un panel del dashboard y se iguala al
@@ -238,6 +265,121 @@
     }
     .theme-dark .glv-calendar .fc-daygrid-day.fc-day-today {
         background-color: rgb(249 115 22 / 0.08) !important;
+    }
+
+    /* ── Landing pública ──────────────────────────────────────────
+       Efectos de la portada: entrada escalonada del titular del hero,
+       orbes flotantes, revelado al hacer scroll (activado desde
+       app/js/pages/landing.js con IntersectionObserver) y la textura
+       animada de la franja final. */
+    @keyframes word-in {
+        from { opacity: 0; transform: translateY(28px) rotate(1.5deg); }
+        to   { opacity: 1; transform: translateY(0) rotate(0); }
+    }
+    @keyframes fade-up {
+        from { opacity: 0; transform: translateY(14px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50%      { opacity: .4; transform: scale(1.5); }
+    }
+    @keyframes orb-drift-a {
+        0%, 100% { transform: translate(0, 0); }
+        50%      { transform: translate(36px, 26px); }
+    }
+    @keyframes orb-drift-b {
+        0%, 100% { transform: translate(0, 0); }
+        50%      { transform: translate(-28px, -20px); }
+    }
+    @keyframes scroll-line {
+        0%     { transform: scaleY(0); transform-origin: top; }
+        50%    { transform: scaleY(1); transform-origin: top; }
+        50.01% { transform-origin: bottom; }
+        100%   { transform: scaleY(0); transform-origin: bottom; }
+    }
+    @keyframes stripe-move {
+        from { transform: translate(0, 0); }
+        to   { transform: translate(160px, 160px); }
+    }
+
+    .hero-word {
+        @apply inline-block opacity-0;
+        animation: word-in .8s cubic-bezier(.2, .8, .2, 1) forwards;
+    }
+    .hero-word--1 { animation-delay: .15s; }
+    .hero-word--2 { @apply text-accent; animation-delay: .28s; }
+    .hero-word--3 { animation-delay: .41s; }
+
+    .hero-fade {
+        @apply opacity-0;
+        animation: fade-up .7s ease forwards;
+    }
+    .hero-fade--1 { animation-delay: .6s; }
+    .hero-fade--2 { animation-delay: .75s; }
+    .hero-fade--3 { animation-delay: .9s; }
+    .hero-fade--4 { animation-delay: 1.05s; }
+
+    .hero-kicker-dot {
+        @apply h-1.5 w-1.5 rounded-full bg-accent;
+        animation: pulse-dot 1.8s ease infinite;
+    }
+
+    .hero-orb {
+        @apply pointer-events-none absolute rounded-full blur-[70px];
+    }
+    .hero-orb--a { @apply bg-accent opacity-30; animation: orb-drift-a 16s ease-in-out infinite; }
+    .hero-orb--b { @apply bg-white opacity-[0.06]; animation: orb-drift-b 20s ease-in-out infinite; }
+
+    .scroll-cue-line {
+        @apply h-9 w-px bg-gradient-to-b from-white/60 to-transparent;
+        animation: scroll-line 1.8s ease infinite;
+    }
+
+    .hero-chip {
+        @apply rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs
+               font-bold tracking-wide text-white/75 transition-all duration-250
+               hover:-translate-y-0.5 hover:border-accent/50 hover:bg-accent/15 hover:text-white;
+    }
+
+    .landing-nav-link {
+        @apply relative text-sm font-semibold text-white/70
+               transition-colors duration-200 hover:text-white;
+    }
+    .landing-nav-link::after {
+        content: "";
+        @apply absolute inset-x-0 -bottom-1 h-0.5 origin-left scale-x-0
+               bg-accent transition-transform duration-250;
+    }
+    .landing-nav-link:hover::after {
+        @apply scale-x-100;
+    }
+
+    /* Revelado al hacer scroll: estado inicial + clase que añade el
+       IntersectionObserver de landing.js al entrar en el viewport. */
+    .reveal {
+        @apply opacity-0 translate-y-6 transition-all duration-700 ease-out;
+    }
+    .reveal.is-visible {
+        @apply opacity-100 translate-y-0;
+    }
+    .reveal-delay-1 { transition-delay: 90ms; }
+    .reveal-delay-2 { transition-delay: 180ms; }
+
+    /* Línea punteada que conecta los 3 pasos de "Cómo funciona" en escritorio */
+    .how-connector {
+        @apply pointer-events-none absolute inset-x-[16%] top-11 hidden h-0.5 sm:block;
+        background-image: repeating-linear-gradient(90deg, var(--color-hairline) 0 10px, transparent 10px 20px);
+    }
+    .theme-dark .how-connector {
+        background-image: repeating-linear-gradient(90deg, rgb(255 255 255 / 0.12) 0 10px, transparent 10px 20px);
+    }
+
+    /* Textura de rayas en movimiento tras la llamada a la acción final */
+    .cta-stripes {
+        @apply pointer-events-none absolute -inset-x-10 -inset-y-1/2 opacity-[0.06];
+        background-image: repeating-linear-gradient(45deg, #fff 0 2px, transparent 2px 26px);
+        animation: stripe-move 26s linear infinite;
     }
 }
 

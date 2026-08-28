@@ -11,6 +11,7 @@
 
 import { api } from '../api.js';
 import * as session from '../session.js';
+import * as loginModal from '../login-modal.js';
 import { createDateTimePicker, formatDisplay } from '../datetime-picker.js';
 
 const PAGE_SIZE = 10;
@@ -198,6 +199,7 @@ function render(page) {
 
     els.count.textContent = filtered.length === 1 ? '1 sparring' : `${filtered.length} sparrings`;
 
+    const isGuest = !session.email();
     const isCoach = session.role() === 'entrenador';
     const myEmail = session.email();
     const me = !isCoach ? findBoxer(myEmail) : null;
@@ -206,17 +208,19 @@ function render(page) {
     const start = (currentPage - 1) * PAGE_SIZE;
     els.list.innerHTML = filtered
         .slice(start, start + PAGE_SIZE)
-        .map((b, i) => rowTemplate(b, start + i + 1, { isCoach, myEmail, myHasGym }))
+        .map((b, i) => rowTemplate(b, start + i + 1, { isGuest, isCoach, myEmail, myHasGym }))
         .join('');
 
     renderPagination(totalPages);
 }
 
-function rowTemplate(b, rank, { isCoach, myEmail, myHasGym }) {
+function rowTemplate(b, rank, { isGuest, isCoach, myEmail, myHasGym }) {
     const identifier = String(b.email || b.dniLicencia || '').trim();
     const isMe = identifier.toLowerCase() === myEmail;
-    const canChallenge = !isCoach && identifier && !isMe && myHasGym;
-    const challengeLabel = isMe ? 'Tú' : (!isCoach && !myHasGym ? 'Sin gimnasio' : 'Retar');
+    const canChallenge = !isGuest && !isCoach && identifier && !isMe && myHasGym;
+    const challengeLabel = isGuest
+        ? 'Inicia sesión'
+        : isMe ? 'Tú' : (!isCoach && !myHasGym ? 'Sin gimnasio' : 'Retar');
 
     const stars = { Profesional: 5, Avanzado: 4, Intermedio: 3, Principiante: 1 }[b.nivel] ?? 2;
     const starsHtml = Array.from({ length: 5 }, (_, i) =>
@@ -258,7 +262,7 @@ function rowTemplate(b, rank, { isCoach, myEmail, myHasGym }) {
                     : `<span class="btn-ghost px-4 py-2 text-xs opacity-40">Sin perfil</span>`}
 
                 <button type="button" data-challenge="${escapeAttr(identifier)}" data-name="${escapeAttr(b.nombre || '')}"
-                        ${canChallenge ? '' : 'disabled'}
+                        ${(canChallenge || isGuest) ? '' : 'disabled'}
                         class="btn-primary px-4 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-40">
                     ${escapeHtml(challengeLabel)}
                 </button>
@@ -301,6 +305,15 @@ function bindProfileLinks() {
     els.list.addEventListener('click', (e) => {
         const link = e.target.closest('[data-save-state]');
         if (!link) return;
+
+        // Sin cuenta no hay ficha de perfil que ver: se abre el login en
+        // vez de dejar que el enlace navegue.
+        if (!session.email()) {
+            e.preventDefault();
+            loginModal.open();
+            return;
+        }
+
         sessionStorage.setItem(STATE_KEY, JSON.stringify({
             page: currentPage,
             level: els.level.value,
@@ -328,6 +341,12 @@ function bindChallengeModal() {
     els.list.addEventListener('click', (e) => {
         const btn = e.target.closest('[data-challenge]');
         if (!btn || btn.disabled) return;
+
+        if (!session.email()) {
+            loginModal.open();
+            return;
+        }
+
         openChallenge(btn.dataset.challenge, btn.dataset.name);
     });
 
